@@ -14,6 +14,7 @@ import {
   adminCustomizationRoutes,
   customizationRoutes,
 } from "./modules/customizations/customization.routes.js";
+import { adminGiftOptionRoutes } from "./modules/gift-options/giftOption.routes.js";
 import {
   adminProductRoutes,
   productRoutes,
@@ -51,6 +52,7 @@ app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/customizations", customizationRoutes);
 app.use("/api/admin/customizations", adminCustomizationRoutes);
+app.use("/api/admin/gift-options", adminGiftOptionRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
