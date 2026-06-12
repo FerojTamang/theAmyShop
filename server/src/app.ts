@@ -39,6 +39,10 @@ import {
   reviewRoutes,
 } from "./modules/reviews/review.routes.js";
 import {
+  adminRewardRoutes,
+  rewardRoutes,
+} from "./modules/rewards/reward.routes.js";
+import {
   adminUploadRoutes,
   uploadRoutes,
 } from "./modules/uploads/upload.routes.js";
@@ -87,6 +91,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/payments", adminPaymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
+app.use("/api/rewards", rewardRoutes);
+app.use("/api/admin/rewards", adminRewardRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin/uploads", adminUploadRoutes);
 
