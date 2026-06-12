@@ -53,4 +53,14 @@ export const config = {
     "JWT_REFRESH_SECRET",
     "development-refresh-secret-change-me",
   ),
+  KHALTI_SECRET_KEY: process.env.KHALTI_SECRET_KEY ?? "",
+  KHALTI_PUBLIC_KEY: process.env.KHALTI_PUBLIC_KEY ?? "",
+  KHALTI_BASE_URL: process.env.KHALTI_BASE_URL ?? "",
+  ESEWA_MERCHANT_CODE: process.env.ESEWA_MERCHANT_CODE ?? "",
+  ESEWA_SECRET_KEY: process.env.ESEWA_SECRET_KEY ?? "",
+  ESEWA_BASE_URL: process.env.ESEWA_BASE_URL ?? "",
+  PAYMENT_SUCCESS_URL:
+    process.env.PAYMENT_SUCCESS_URL ?? "http://localhost:5173/payment/success",
+  PAYMENT_FAILURE_URL:
+    process.env.PAYMENT_FAILURE_URL ?? "http://localhost:5173/payment/failure",
 } as const;

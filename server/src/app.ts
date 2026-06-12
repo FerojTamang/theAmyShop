@@ -26,6 +26,10 @@ import {
   orderRoutes,
 } from "./modules/orders/order.routes.js";
 import {
+  adminPaymentRoutes,
+  paymentRoutes,
+} from "./modules/payments/payment.routes.js";
+import {
   adminProductRoutes,
   productRoutes,
 } from "./modules/products/product.routes.js";
@@ -69,6 +73,8 @@ app.use("/api/admin/customizations", adminCustomizationRoutes);
 app.use("/api/admin/gift-options", adminGiftOptionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/admin/payments", adminPaymentRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
