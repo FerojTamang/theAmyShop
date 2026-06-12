@@ -9,6 +9,7 @@ import {
   adminCategoryRoutes,
   categoryRoutes,
 } from "./modules/categories/category.routes.js";
+import { cartRoutes } from "./modules/cart/cart.routes.js";
 import {
   adminProductRoutes,
   productRoutes,
@@ -43,6 +44,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin/products", adminProductRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
