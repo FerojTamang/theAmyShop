@@ -11,6 +11,10 @@ import {
 } from "./modules/categories/category.routes.js";
 import { cartRoutes } from "./modules/cart/cart.routes.js";
 import {
+  adminCouponRoutes,
+  couponRoutes,
+} from "./modules/coupons/coupon.routes.js";
+import {
   adminCustomizationRoutes,
   customizationRoutes,
 } from "./modules/customizations/customization.routes.js";
@@ -50,6 +54,8 @@ app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/admin/coupons", adminCouponRoutes);
 app.use("/api/customizations", customizationRoutes);
 app.use("/api/admin/customizations", adminCustomizationRoutes);
 app.use("/api/admin/gift-options", adminGiftOptionRoutes);
