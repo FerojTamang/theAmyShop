@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { config } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
+import { addressRoutes } from "./modules/addresses/address.routes.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import {
   adminCategoryRoutes,
@@ -49,6 +50,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/products", productRoutes);
