@@ -5,6 +5,14 @@ import { config } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import {
+  adminCategoryRoutes,
+  categoryRoutes,
+} from "./modules/categories/category.routes.js";
+import {
+  adminProductRoutes,
+  productRoutes,
+} from "./modules/products/product.routes.js";
 import { ApiResponse } from "./utils/ApiResponse.js";
 
 export const app = express();
@@ -31,6 +39,10 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/admin/categories", adminCategoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/admin/products", adminProductRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
