@@ -20,6 +20,11 @@ import {
   customizationRoutes,
 } from "./modules/customizations/customization.routes.js";
 import { adminGiftOptionRoutes } from "./modules/gift-options/giftOption.routes.js";
+import { checkoutRoutes } from "./modules/checkout/checkout.routes.js";
+import {
+  adminOrderRoutes,
+  orderRoutes,
+} from "./modules/orders/order.routes.js";
 import {
   adminProductRoutes,
   productRoutes,
@@ -56,11 +61,14 @@ app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/checkout", checkoutRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/admin/coupons", adminCouponRoutes);
 app.use("/api/customizations", customizationRoutes);
 app.use("/api/admin/customizations", adminCustomizationRoutes);
 app.use("/api/admin/gift-options", adminGiftOptionRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/admin/orders", adminOrderRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
