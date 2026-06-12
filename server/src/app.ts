@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { config } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
+import { authRoutes } from "./modules/auth/auth.routes.js";
 import { ApiResponse } from "./utils/ApiResponse.js";
 
 export const app = express();
@@ -28,6 +29,8 @@ app.get("/api/health", (_req, res) => {
     }),
   );
 });
+
+app.use("/api/auth", authRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
