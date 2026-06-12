@@ -11,6 +11,10 @@ import {
 } from "./modules/categories/category.routes.js";
 import { cartRoutes } from "./modules/cart/cart.routes.js";
 import {
+  adminCustomizationRoutes,
+  customizationRoutes,
+} from "./modules/customizations/customization.routes.js";
+import {
   adminProductRoutes,
   productRoutes,
 } from "./modules/products/product.routes.js";
@@ -45,6 +49,8 @@ app.use("/api/admin/categories", adminCategoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/customizations", customizationRoutes);
+app.use("/api/admin/customizations", adminCustomizationRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
