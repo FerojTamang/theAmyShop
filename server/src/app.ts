@@ -33,6 +33,10 @@ import {
   adminProductRoutes,
   productRoutes,
 } from "./modules/products/product.routes.js";
+import {
+  adminUploadRoutes,
+  uploadRoutes,
+} from "./modules/uploads/upload.routes.js";
 import { ApiResponse } from "./utils/ApiResponse.js";
 
 export const app = express();
@@ -75,6 +79,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/payments", adminPaymentRoutes);
+app.use("/api/uploads", uploadRoutes);
+app.use("/api/admin/uploads", adminUploadRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

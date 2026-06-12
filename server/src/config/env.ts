@@ -63,4 +63,7 @@ export const config = {
     process.env.PAYMENT_SUCCESS_URL ?? "http://localhost:5173/payment/success",
   PAYMENT_FAILURE_URL:
     process.env.PAYMENT_FAILURE_URL ?? "http://localhost:5173/payment/failure",
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? "",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ?? "",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? "",
 } as const;
