@@ -34,6 +34,11 @@ import {
   productRoutes,
 } from "./modules/products/product.routes.js";
 import {
+  adminReviewRoutes,
+  publicProductReviewRoutes,
+  reviewRoutes,
+} from "./modules/reviews/review.routes.js";
+import {
   adminUploadRoutes,
   uploadRoutes,
 } from "./modules/uploads/upload.routes.js";
@@ -66,6 +71,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin/categories", adminCategoryRoutes);
+app.use("/api/products/:productId/reviews", publicProductReviewRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/cart", cartRoutes);
@@ -79,6 +85,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/payments", adminPaymentRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin/uploads", adminUploadRoutes);
 
