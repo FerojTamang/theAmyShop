@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
@@ -9,10 +9,15 @@ import { useAuth } from "../../context/AuthContext";
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const redirectTo =
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
+    "/account";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,7 +26,7 @@ export function LoginPage() {
 
     try {
       await login({ identifier, password });
-      navigate("/account");
+      navigate(redirectTo, { replace: true });
     } catch (apiError) {
       setError(normalizeApiError(apiError).message);
     } finally {
@@ -61,7 +66,7 @@ export function LoginPage() {
             value={password}
           />
           {error ? (
-            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm shadow-red-100">
               {error}
             </p>
           ) : null}

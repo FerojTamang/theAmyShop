@@ -19,7 +19,10 @@ import {
   UserRound,
   Plus,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { normalizeApiError } from "../../lib/apiError";
+import { productApi, type PublicProduct } from "../../services/productApi";
 
 type RelatedProduct = {
   title: string;
@@ -33,6 +36,23 @@ type RelatedProduct = {
 type Review = {
   name: string;
   text: string;
+};
+
+type DetailProduct = {
+  title: string;
+  category: string;
+  subtitle: string;
+  description: string;
+  price: string;
+  oldPrice?: string;
+  badge?: string;
+  art: RelatedProduct["art"] | "mug" | "card";
+  images: string[];
+  isCustomizable: boolean;
+  isGiftSupported: boolean;
+  material?: string | null;
+  careInstructions?: string | null;
+  makingTime?: string | null;
 };
 
 const serifStyle = {
@@ -60,6 +80,79 @@ const reviews: Review[] = [
     text: "Perfect gift for any occasion. I'll definitely be ordering again!",
   },
 ];
+
+const fallbackDetailProduct: DetailProduct = {
+  title: "Personalized Gift Box",
+  category: "Gift Boxes",
+  subtitle: "Thoughtful gifts with a handmade heart.",
+  description:
+    "A curated gift box made to celebrate life's special moments. Each item is handpicked, beautifully packed, and personalized just for your loved one.",
+  price: "$48.00",
+  oldPrice: "$60.00",
+  badge: "Bestseller",
+  art: "box",
+  images: [],
+  isCustomizable: true,
+  isGiftSupported: true,
+  material: "Handmade gift assortment",
+  careInstructions: "Keep dry and store with care.",
+  makingTime: "3-5 business days",
+};
+
+const formatPrice = (value: PublicProduct["price"]) => {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0.00";
+  }
+
+  return `$${amount.toFixed(2)}`;
+};
+
+const inferArt = (product: PublicProduct): DetailProduct["art"] => {
+  const text = `${product.name} ${product.category?.name ?? ""}`.toLowerCase();
+
+  if (text.includes("candle")) return "candle";
+  if (text.includes("mug")) return "mug";
+  if (text.includes("necklace") || text.includes("jewelry")) return "necklace";
+  if (text.includes("flower") || text.includes("decor")) return "decor";
+
+  return "box";
+};
+
+const mapApiProduct = (product: PublicProduct): DetailProduct => {
+  const compareAtPrice = product.compareAtPrice;
+  const hasCompareAt =
+    compareAtPrice !== null &&
+    compareAtPrice !== undefined &&
+    Number(compareAtPrice) > Number(product.price);
+
+  return {
+    title: product.name,
+    category: product.category?.name ?? "Shop",
+    subtitle:
+      product.shortDescription ??
+      product.category?.name ??
+      "Thoughtful gifts with a handmade heart.",
+    description: product.description,
+    price: formatPrice(product.price),
+    oldPrice: hasCompareAt ? formatPrice(compareAtPrice) : undefined,
+    badge: product.isCustomizable
+      ? "Customizable"
+      : product.isGiftSupported
+        ? "Gift ready"
+        : product.stockType === "READY_STOCK"
+          ? "Ready to ship"
+          : undefined,
+    art: inferArt(product),
+    images: product.images?.map((image) => image.imageUrl) ?? [],
+    isCustomizable: product.isCustomizable,
+    isGiftSupported: product.isGiftSupported,
+    material: product.material,
+    careInstructions: product.careInstructions,
+    makingTime: product.makingTime,
+  };
+};
 
 function AnnouncementBar() {
   return (
@@ -137,13 +230,16 @@ function ProductVisual({ type = "box", className = "" }: { type?: RelatedProduct
   );
 }
 
-function ProductGallery() {
-  const thumbnails: Array<RelatedProduct["art"] | "mug" | "card"> = ["box", "candle", "mug", "card", "decor"];
+function ProductGallery({ product }: { product: DetailProduct }) {
+  const fallbackThumbs: Array<RelatedProduct["art"] | "mug" | "card"> = [product.art, "candle", "mug", "card", "decor"];
+  const images = product.images.slice(0, 5);
 
   return (
     <section>
       <div className="relative overflow-hidden rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] shadow-sm shadow-pink-100">
-        <span className="absolute left-5 top-5 z-10 rounded-full border border-[#EC4C84] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#EC4C84]">Bestseller</span>
+        {product.badge ? (
+          <span className="absolute left-5 top-5 z-10 rounded-full border border-[#EC4C84] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#EC4C84]">{product.badge}</span>
+        ) : null}
         <button className="absolute right-5 top-5 z-10 grid h-12 w-12 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
           <Heart className="h-6 w-6" />
         </button>
@@ -153,17 +249,25 @@ function ProductGallery() {
         <button className="absolute right-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
           <ChevronRight className="h-6 w-6" />
         </button>
-        <ProductVisual className="aspect-square rounded-none" type="box" />
+        {images[0] ? (
+          <img alt={product.title} className="aspect-square w-full object-cover" src={images[0]} />
+        ) : (
+          <ProductVisual className="aspect-square rounded-none" type={product.art} />
+        )}
       </div>
       <div className="mt-4 grid grid-cols-5 gap-4">
-        {thumbnails.map((thumb, index) => (
+        {(images.length > 0 ? images : fallbackThumbs).map((thumb, index) => (
           <div
             className={`relative overflow-hidden rounded-xl border-2 ${index === 0 ? "border-[#EC4C84]" : "border-transparent"}`}
             key={`${thumb}-${index}`}
           >
-            <ProductVisual className="aspect-square rounded-none" type={thumb} />
-            {index === 4 ? (
-              <div className="absolute inset-0 grid place-items-center bg-[#1F1720]/45 text-2xl font-bold text-white">+3</div>
+            {images.includes(thumb) ? (
+              <img alt={`${product.title} ${index + 1}`} className="aspect-square w-full object-cover" src={thumb} />
+            ) : (
+              <ProductVisual className="aspect-square rounded-none" type={thumb as RelatedProduct["art"] | "mug" | "card"} />
+            )}
+            {index === 4 && product.images.length > 5 ? (
+              <div className="absolute inset-0 grid place-items-center bg-[#1F1720]/45 text-2xl font-bold text-white">+{product.images.length - 5}</div>
             ) : null}
           </div>
         ))}
@@ -182,27 +286,28 @@ function Stars({ small = false }: { small?: boolean }) {
   );
 }
 
-function ProductInfoPanel() {
+function ProductInfoPanel({ product }: { product: DetailProduct }) {
   return (
     <section className="lg:pl-6">
       <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EC4C84]">Made just for you</p>
       <h1 className="mt-4 text-5xl font-semibold leading-tight text-[#1F1720]" style={serifStyle}>
-        Personalized Gift Box
+        {product.title}
       </h1>
-      <p className="mt-3 text-lg text-[#6F6570]">Thoughtful gifts with a handmade heart.</p>
+      <p className="mt-3 text-lg text-[#6F6570]">{product.subtitle}</p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <span className="font-bold text-[#1F1720]">4.9</span>
         <Stars small />
         <span className="text-sm text-[#6F6570]">(120 reviews)</span>
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-4">
-        <span className="text-3xl font-bold text-[#1F1720]">$48.00</span>
-        <span className="text-lg text-[#9D8F98] line-through">$60.00</span>
-        <span className="rounded-full bg-[#FDECEF] px-4 py-2 text-sm font-bold text-[#EC4C84]">You save $12.00 (20%)</span>
+        <span className="text-3xl font-bold text-[#1F1720]">{product.price}</span>
+        {product.oldPrice ? <span className="text-lg text-[#9D8F98] line-through">{product.oldPrice}</span> : null}
+        {product.oldPrice ? (
+          <span className="rounded-full bg-[#FDECEF] px-4 py-2 text-sm font-bold text-[#EC4C84]">Special price</span>
+        ) : null}
       </div>
       <p className="mt-6 max-w-2xl text-sm leading-7 text-[#6F6570]">
-        A curated gift box made to celebrate life's special moments. Each item is
-        handpicked, beautifully packed, and personalized just for your loved one.
+        {product.description}
       </p>
       <FeatureIcons />
       <PersonalizationForm />
@@ -454,6 +559,33 @@ function NewsletterSection() {
   );
 }
 
+function ProductStatePanel({
+  description,
+  title,
+}: {
+  description: string;
+  title: string;
+}) {
+  return (
+    <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
+      <div className="rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-8 shadow-sm shadow-pink-100">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
+          <Gift className="h-7 w-7" />
+        </span>
+        <h1 className="mt-4 text-3xl font-semibold text-[#1F1720]" style={serifStyle}>
+          {title}
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#6F6570]">
+          {description}
+        </p>
+        <Link className="mt-6 inline-flex h-12 items-center rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white shadow-lg shadow-pink-200" to="/products">
+          Back to shop
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function ProductFooter() {
   return (
     <footer className="bg-white">
@@ -500,30 +632,110 @@ function ProductFooter() {
 }
 
 export function ProductDetailPage() {
+  const { slug } = useParams();
+  const [apiProduct, setApiProduct] = useState<DetailProduct | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProduct() {
+      if (!slug) {
+        setNotFound(true);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        setNotFound(false);
+        const product = await productApi.getBySlug(slug);
+
+        if (isMounted) {
+          setApiProduct(mapApiProduct(product));
+        }
+      } catch (productError) {
+        if (!isMounted) {
+          return;
+        }
+
+        const normalizedError = normalizeApiError(productError);
+
+        if (normalizedError.statusCode === 404) {
+          setNotFound(true);
+          setApiProduct(null);
+        } else {
+          setError(normalizedError.message);
+          setApiProduct(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadProduct();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
+
+  const product = useMemo(
+    () => apiProduct ?? fallbackDetailProduct,
+    [apiProduct],
+  );
+
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
       <AnnouncementBar />
       <ProductHeader />
       <main>
-        <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-sm text-[#6F6570]">
-            <Link to="/">Home</Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link to="/products">Shop</Link>
-            <ChevronRight className="h-4 w-4" />
-            <span>Gift Boxes</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>Personalized Gift Box</span>
-          </div>
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.82fr]">
-            <ProductGallery />
-            <ProductInfoPanel />
-          </div>
-        </div>
-        <BenefitStrip />
-        <RelatedProductsSection />
-        <ReviewsSection />
-        <NewsletterSection />
+        {isLoading ? (
+          <ProductStatePanel
+            description="We are loading the latest product details from the catalog."
+            title="Loading product"
+          />
+        ) : notFound ? (
+          <ProductStatePanel
+            description="This product could not be found in the live catalog."
+            title="Product not found"
+          />
+        ) : (
+          <>
+            {error ? (
+              <div className="mx-auto max-w-7xl px-4 pt-7 sm:px-6 lg:px-8">
+                <ProductStatePanel
+                  description={`${error}. Showing a sample product while the live catalog is unavailable.`}
+                  title="Product details are temporarily unavailable"
+                />
+              </div>
+            ) : null}
+            <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+              <div className="flex items-center gap-2 text-sm text-[#6F6570]">
+                <Link to="/">Home</Link>
+                <ChevronRight className="h-4 w-4" />
+                <Link to="/products">Shop</Link>
+                <ChevronRight className="h-4 w-4" />
+                <span>{product.category}</span>
+                <ChevronRight className="h-4 w-4" />
+                <span>{product.title}</span>
+              </div>
+              <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.82fr]">
+                <ProductGallery product={product} />
+                <ProductInfoPanel product={product} />
+              </div>
+            </div>
+            <BenefitStrip />
+            <RelatedProductsSection />
+            <ReviewsSection />
+            <NewsletterSection />
+          </>
+        )}
       </main>
       <ProductFooter />
     </div>

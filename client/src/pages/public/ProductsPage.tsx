@@ -14,7 +14,11 @@ import {
   Truck,
   UserRound,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { normalizeApiError } from "../../lib/apiError";
+import { categoryApi } from "../../services/categoryApi";
+import { productApi, type PublicProduct } from "../../services/productApi";
 
 type Product = {
   title: string;
@@ -26,13 +30,14 @@ type Product = {
   rating: string;
   reviews: number;
   art: "box" | "candle" | "mug" | "necklace" | "frame" | "star-map" | "decor";
+  imageUrl?: string;
 };
 
 const serifStyle = {
   fontFamily: "Georgia, 'Times New Roman', serif",
 };
 
-const products: Product[] = [
+const fallbackProducts: Product[] = [
   { title: "Relax & Unwind Gift Box", slug: "relax-unwind-gift-box", subtitle: "Spa gift set with candle & tumbler", badge: "Bestseller", price: "$48.00", oldPrice: "$60.00", rating: "4.9", reviews: 128, art: "box" },
   { title: "Scented Soy Candle", slug: "scented-soy-candle", subtitle: "Hand-poured with love", badge: "New", price: "$18.00", rating: "4.8", reviews: 96, art: "candle" },
   { title: "Mama Mug", slug: "mama-mug", subtitle: "Ceramic mug, 15oz", price: "$16.00", rating: "4.9", reviews: 74, art: "mug" },
@@ -43,6 +48,69 @@ const products: Product[] = [
   { title: "Best Friend Mug", slug: "best-friend-mug", subtitle: "Ceramic mug, 15oz", price: "$16.00", rating: "4.8", reviews: 88, art: "mug" },
   { title: "Dried Flower Bouquet", slug: "dried-flower-bouquet", subtitle: "Hand-tied - Everlasting blooms", price: "$22.00", rating: "4.9", reviews: 112, art: "decor" },
 ];
+
+const fallbackCategories = ["Gift Boxes", "Candles", "Mugs", "Keepsakes", "Jewelry", "Home Decor", "Accessories"];
+
+const formatPrice = (value: PublicProduct["price"]) => {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "$0.00";
+  }
+
+  return `$${amount.toFixed(2)}`;
+};
+
+const getPrimaryImage = (product: PublicProduct) => {
+  return (
+    product.images?.find((image) => image.isPrimary)?.imageUrl ??
+    product.images?.[0]?.imageUrl
+  );
+};
+
+const inferArt = (product: PublicProduct, index: number): Product["art"] => {
+  const text = `${product.name} ${product.category?.name ?? ""}`.toLowerCase();
+
+  if (text.includes("candle")) return "candle";
+  if (text.includes("mug")) return "mug";
+  if (text.includes("necklace") || text.includes("jewelry")) return "necklace";
+  if (text.includes("frame")) return "frame";
+  if (text.includes("star")) return "star-map";
+  if (text.includes("flower") || text.includes("decor")) return "decor";
+  if (text.includes("box")) return "box";
+
+  return fallbackProducts[index % fallbackProducts.length].art;
+};
+
+const mapApiProduct = (product: PublicProduct, index: number): Product => {
+  const compareAtPrice = product.compareAtPrice;
+  const hasCompareAt =
+    compareAtPrice !== null &&
+    compareAtPrice !== undefined &&
+    Number(compareAtPrice) > Number(product.price);
+
+  return {
+    title: product.name,
+    slug: product.slug,
+    subtitle:
+      product.shortDescription ??
+      product.category?.name ??
+      "Thoughtful handmade gift",
+    badge: product.isCustomizable
+      ? "Customizable"
+      : product.isGiftSupported
+        ? "Gift ready"
+        : product.stockType === "READY_STOCK"
+          ? "Ready to ship"
+          : undefined,
+    price: formatPrice(product.price),
+    oldPrice: hasCompareAt ? formatPrice(compareAtPrice) : undefined,
+    rating: "4.9",
+    reviews: 0,
+    art: inferArt(product, index),
+    imageUrl: getPrimaryImage(product),
+  };
+};
 
 function AnnouncementBar() {
   return (
@@ -97,7 +165,7 @@ function ProductsHeader() {
   );
 }
 
-function PageIntro() {
+function PageIntro({ categories }: { categories: string[] }) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center gap-2 text-sm text-[#6F6570]">
@@ -131,13 +199,13 @@ function PageIntro() {
           </div>
         </div>
       </div>
-      <CategoryChips />
+      <CategoryChips categories={categories} />
     </section>
   );
 }
 
-function CategoryChips() {
-  const chips = ["All Gifts", "Gift Boxes", "Candles", "Mugs", "Keepsakes", "Jewelry", "Home Decor", "Accessories"];
+function CategoryChips({ categories }: { categories: string[] }) {
+  const chips = ["All Gifts", ...categories];
 
   return (
     <div className="mt-8 flex gap-3 overflow-x-auto pb-1">
@@ -214,10 +282,10 @@ function HeaderRow({ title }: { title: string }) {
   );
 }
 
-function ProductToolbar() {
+function ProductToolbar({ count }: { count: number }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-[#F7D9E2] bg-[#FFF9FA] p-4 shadow-sm shadow-pink-100 md:flex-row md:items-center">
-      <p className="min-w-fit text-sm font-bold text-[#1F1720]">152 products</p>
+      <p className="min-w-fit text-sm font-bold text-[#1F1720]">{count} products</p>
       <div className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4">
         <input className="min-w-0 flex-1 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Search in results..." />
         <Search className="h-4 w-4 text-[#1F1720]" />
@@ -259,7 +327,15 @@ function ProductCard({ product }: { product: Product }) {
   return (
     <Link className="group overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-100" to={`/products/${product.slug}`}>
       <div className="relative">
-        <ProductVisual className="aspect-[1.1/1] rounded-none" type={product.art} />
+        {product.imageUrl ? (
+          <img
+            alt={product.title}
+            className="aspect-[1.1/1] w-full object-cover"
+            src={product.imageUrl}
+          />
+        ) : (
+          <ProductVisual className="aspect-[1.1/1] rounded-none" type={product.art} />
+        )}
         {product.badge ? <span className="absolute left-4 top-4 rounded-full bg-[#FFF5F7] px-3 py-1 text-xs font-bold text-[#EC4C84]">{product.badge}</span> : null}
         <button className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#EC4C84] shadow-sm" type="button"><Heart className="h-5 w-5" /></button>
       </div>
@@ -279,6 +355,28 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function ProductStatePanel({
+  description,
+  title,
+}: {
+  description: string;
+  title: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-8 text-center shadow-sm shadow-pink-100">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
+        <Gift className="h-7 w-7" />
+      </span>
+      <h2 className="mt-4 text-2xl font-semibold text-[#1F1720]" style={serifStyle}>
+        {title}
+      </h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#6F6570]">
+        {description}
+      </p>
+    </div>
   );
 }
 
@@ -343,17 +441,100 @@ function FeatureStrip() {
 }
 
 export function ProductsPage() {
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>(fallbackCategories);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCatalog() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const [productResult, categoryResult] = await Promise.all([
+          productApi.list({ page: 1, limit: 20 }),
+          categoryApi.list(),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const mappedProducts = productResult.products.map(mapApiProduct);
+        const apiCategories = categoryResult
+          .map((category) => category.name)
+          .filter((name, index, all) => all.indexOf(name) === index);
+
+        setApiProducts(mappedProducts);
+        setCategories(apiCategories.length > 0 ? apiCategories : fallbackCategories);
+        setUsedFallback(mappedProducts.length === 0);
+      } catch (catalogError) {
+        if (!isMounted) {
+          return;
+        }
+
+        setError(normalizeApiError(catalogError).message);
+        setApiProducts([]);
+        setCategories(fallbackCategories);
+        setUsedFallback(true);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadCatalog();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleProducts = useMemo(
+    () => (apiProducts.length > 0 ? apiProducts : fallbackProducts),
+    [apiProducts],
+  );
+
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
       <AnnouncementBar />
       <ProductsHeader />
-      <PageIntro />
+      <PageIntro categories={categories} />
       <main className="mx-auto grid max-w-7xl gap-8 px-4 pb-12 sm:px-6 lg:grid-cols-[18rem_1fr] lg:px-8">
         <FilterSidebar />
         <section>
-          <ProductToolbar />
+          <ProductToolbar count={visibleProducts.length} />
+          {isLoading ? (
+            <div className="mt-6">
+              <ProductStatePanel
+                description="We are gathering the latest handmade gifts from the catalog."
+                title="Loading products"
+              />
+            </div>
+          ) : null}
+          {!isLoading && error ? (
+            <div className="mt-6">
+              <ProductStatePanel
+                description={`${error}. Showing our curated fallback collection for now.`}
+                title="Catalog is temporarily unavailable"
+              />
+            </div>
+          ) : null}
+          {!isLoading && !error && usedFallback ? (
+            <div className="mt-6">
+              <ProductStatePanel
+                description="The live catalog is empty, so we are showing a sample collection until products are added."
+                title="No live products yet"
+              />
+            </div>
+          ) : null}
           <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => <ProductCard key={product.slug} product={product} />)}
+            {visibleProducts.map((product) => <ProductCard key={product.slug} product={product} />)}
           </div>
           <div className="mt-8">
             <PromoBanner />
