@@ -8,6 +8,7 @@ export function AdminLayout() {
 
   if (
     location.pathname === "/admin" ||
+    location.pathname === "/admin/customers" ||
     location.pathname === "/admin/orders" ||
     location.pathname === "/admin/products"
   ) {
