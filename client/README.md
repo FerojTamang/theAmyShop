@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# The AMY Shop Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React, TypeScript, Vite, and Tailwind CSS frontend foundation for The AMY Shop.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Create a local `.env` from `.env.example` and point it at the backend API:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL="http://localhost:5000"
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm run client:dev
+npm run client:build
 ```
+
+## Foundation
+
+- Routing is defined in `src/app/router.tsx`.
+- Global providers live in `src/app/providers.tsx`.
+- API base configuration lives in `src/config/env.ts` and `src/lib/apiClient.ts`.
+- Auth token storage is centralized in `src/lib/authStorage.ts`.
+- Auth state is managed by `src/context/AuthContext.tsx`.
+- Reusable layout shells live in `src/components/layout`.
+- Reusable UI primitives live in `src/components/ui`.
+- Backend API services are grouped by module in `src/services`.
+
+## Routes
+
+- Public: `/`, `/products`, `/products/:slug`, `/login`, `/register`
+- Customer: `/account`, `/cart`, `/checkout`, `/orders`
+- Admin: `/admin`, `/admin/products`, `/admin/orders`, `/admin/customers`
+
+The Sprint 18 pages are polished placeholders only. Business workflows, payment UI,
+image upload UI, and full admin CRUD screens are reserved for later sprints.
