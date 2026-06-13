@@ -21,6 +21,7 @@ import {
   customizationRoutes,
 } from "./modules/customizations/customization.routes.js";
 import { adminCustomerRoutes } from "./modules/customers/customer.routes.js";
+import { adminDashboardRoutes } from "./modules/dashboard/dashboard.routes.js";
 import { adminGiftOptionRoutes } from "./modules/gift-options/giftOption.routes.js";
 import { checkoutRoutes } from "./modules/checkout/checkout.routes.js";
 import {
@@ -92,6 +93,7 @@ app.use("/api/admin/coupons", adminCouponRoutes);
 app.use("/api/customizations", customizationRoutes);
 app.use("/api/admin/customizations", adminCustomizationRoutes);
 app.use("/api/admin/customers", adminCustomerRoutes);
+app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/admin/gift-options", adminGiftOptionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
