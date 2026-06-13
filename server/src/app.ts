@@ -43,6 +43,10 @@ import {
   rewardRoutes,
 } from "./modules/rewards/reward.routes.js";
 import {
+  adminReferralRoutes,
+  referralRoutes,
+} from "./modules/referrals/referral.routes.js";
+import {
   adminUploadRoutes,
   uploadRoutes,
 } from "./modules/uploads/upload.routes.js";
@@ -93,6 +97,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/rewards", rewardRoutes);
 app.use("/api/admin/rewards", adminRewardRoutes);
+app.use("/api/referrals", referralRoutes);
+app.use("/api/admin/referrals", adminReferralRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin/uploads", adminUploadRoutes);
 
