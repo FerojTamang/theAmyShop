@@ -5,6 +5,7 @@ import { config } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { addressRoutes } from "./modules/addresses/address.routes.js";
+import { accountRoutes } from "./modules/account/account.routes.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import {
   adminCategoryRoutes,
@@ -19,6 +20,7 @@ import {
   adminCustomizationRoutes,
   customizationRoutes,
 } from "./modules/customizations/customization.routes.js";
+import { adminCustomerRoutes } from "./modules/customers/customer.routes.js";
 import { adminGiftOptionRoutes } from "./modules/gift-options/giftOption.routes.js";
 import { checkoutRoutes } from "./modules/checkout/checkout.routes.js";
 import {
@@ -76,6 +78,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/account", accountRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin/categories", adminCategoryRoutes);
@@ -88,6 +91,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/admin/coupons", adminCouponRoutes);
 app.use("/api/customizations", customizationRoutes);
 app.use("/api/admin/customizations", adminCustomizationRoutes);
+app.use("/api/admin/customers", adminCustomerRoutes);
 app.use("/api/admin/gift-options", adminGiftOptionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
