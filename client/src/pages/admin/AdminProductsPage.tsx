@@ -391,17 +391,17 @@ function AddProductPanel() {
         <Field label="Category *" placeholder="Select category" select />
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Price (USD) *" placeholder="$    0.00" />
-          <Field label="Compare at Price (USD)" placeholder="$    0.00" />
+          <Field label="Compare-at price (visual only)" placeholder="$    0.00" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="SKU *" placeholder="e.g., GBOX-001" />
+          <Field label="Slug *" placeholder="relax-unwind-gift-box" />
           <Field label="Stock Quantity *" placeholder="0" />
         </div>
       </FormSection>
 
       <FormSection title="Stock & Inventory">
         <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-          <Field label="Stock Type" placeholder="Physical Product" select />
+          <Field label="Stock Type" placeholder="READY_STOCK" select />
           <label className="flex items-center justify-between gap-4 pb-3 text-sm font-semibold text-[#6F6570]">
             Track Inventory
             <Toggle />
@@ -416,10 +416,11 @@ function AddProductPanel() {
       </FormSection>
 
       <FormSection title="Product Images">
-        <p className="mb-3 text-sm font-semibold text-[#6F6570]">Image URLs</p>
+        <p className="mb-3 text-sm font-semibold text-[#6F6570]">Manual imageUrl / publicId pairs</p>
         {["https://example.com/image1.jpg", "https://example.com/image2.jpg", "https://example.com/image3.jpg"].map((url, index) => (
-          <div className="mb-3 flex items-center gap-2" key={url}>
+          <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_11rem_auto]" key={url}>
             <input className="h-10 min-w-0 flex-1 rounded-xl border border-[#F7D9E2] px-3 text-xs outline-none" defaultValue={url} />
+            <input className="h-10 min-w-0 rounded-xl border border-[#F7D9E2] px-3 text-xs outline-none" defaultValue={`amy-products/mock-${index + 1}`} />
             {index === 0 ? <span className="rounded-lg bg-[#FDECEF] px-2 py-1 text-[10px] font-bold text-[#EC4C84]">Primary</span> : null}
             <Trash2 className="h-4 w-4 text-[#C8A7B1]" />
           </div>
@@ -496,10 +497,10 @@ function EditProductModal() {
           <Field label="Category *" placeholder="Gift Boxes" select />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Price (USD) *" placeholder="$   48.00" />
-            <Field label="Compare at Price (USD)" placeholder="$   60.00" />
+            <Field label="Compare-at price (visual only)" placeholder="$   60.00" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="SKU *" placeholder="GBOX-001" />
+            <Field label="Slug *" placeholder="relax-unwind-gift-box" />
             <Field label="Stock Quantity *" placeholder="35" />
           </div>
         </div>

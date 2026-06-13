@@ -5,14 +5,15 @@ import { Header } from "./Header";
 export function PublicLayout() {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const isReferenceStorefrontPage = isHomePage || location.pathname.startsWith("/products");
 
   return (
     <div className="min-h-screen bg-[#fff8f9] text-[#332522]">
-      {isHomePage ? null : <Header />}
+      {isReferenceStorefrontPage ? null : <Header />}
       <main>
         <Outlet />
       </main>
-      {isHomePage ? null : <Footer />}
+      {isReferenceStorefrontPage ? null : <Footer />}
     </div>
   );
 }

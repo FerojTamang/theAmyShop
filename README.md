@@ -29,7 +29,7 @@ theamyshop/
 
 The backend API includes core modules for authentication, account/profile, addresses, products, categories, cart, checkout, orders, payments, coupons, customizations, gift options, reviews, rewards, referrals, customers, uploads, and admin dashboard analytics.
 
-Frontend implementation is pending.
+The frontend foundation and baby-pink UI shells are implemented for the public storefront, product listing/detail, cart/checkout, account/orders, and admin dashboard/product/order/customer pages. Many screens still use mock data until live API wiring is completed in later frontend sprints.
 
 ## Documentation
 

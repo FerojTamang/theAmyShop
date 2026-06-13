@@ -253,10 +253,12 @@ function CheckoutSteps() {
         <RadioRow label="Express Shipping (1-2 business days)" value="$14.95" />
       </Step>
       <Step title="Payment method" number="3">
-        {["Credit or Debit Card", "Shop Pay", "PayPal", "Apple Pay", "Google Pay"].map((method, index) => (
-          <RadioRow active={index === 0} key={method} label={method} value={index === 0 ? "Visa  MC  Amex" : method.split(" ")[0]} />
-        ))}
-        <p className="mt-3 text-xs text-[#9D8F98]">Your payment details are secure and encrypted.</p>
+        <RadioRow active label="Cash on Delivery" value="CASH_ON_DELIVERY" />
+        <RadioRow disabled label="Khalti" value="Coming soon" />
+        <RadioRow disabled label="eSewa" value="Coming soon" />
+        <p className="mt-3 text-xs text-[#9D8F98]">
+          Checkout currently accepts Cash on Delivery. Khalti and eSewa are shown for later once merchant verification is configured.
+        </p>
       </Step>
     </div>
   );
@@ -277,9 +279,9 @@ function Step({ action, children, number, title }: { action?: string; children: 
   );
 }
 
-function RadioRow({ active = false, label, value }: { active?: boolean; label: string; value: string }) {
+function RadioRow({ active = false, disabled = false, label, value }: { active?: boolean; disabled?: boolean; label: string; value: string }) {
   return (
-    <div className={`flex items-center justify-between border border-[#F7D9E2] px-4 py-2 text-sm first:rounded-t-xl last:rounded-b-xl ${active ? "bg-[#FFF5F7]" : "bg-white"}`}>
+    <div className={`flex items-center justify-between border border-[#F7D9E2] px-4 py-2 text-sm first:rounded-t-xl last:rounded-b-xl ${active ? "bg-[#FFF5F7]" : "bg-white"} ${disabled ? "opacity-60" : ""}`}>
       <span className="flex items-center gap-3 text-[#6F6570]">
         <span className={`grid h-4 w-4 place-items-center rounded-full border ${active ? "border-[#EC4C84]" : "border-[#F7D9E2]"}`}>
           {active ? <span className="h-2 w-2 rounded-full bg-[#EC4C84]" /> : null}
@@ -294,7 +296,7 @@ function RadioRow({ active = false, label, value }: { active?: boolean; label: s
 function OrderSummaryCard() {
   return (
     <Card>
-      <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Order summary <span className="text-[#EC4C84]">♡</span></h2>
+      <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Order summary</h2>
       <div className="mt-6 grid gap-5 text-sm">
         <SummaryRow label="Subtotal (3 items)" value="$68.00" />
         <SummaryRow label="Discount (WELCOME15)" value="-$10.20" pink />
@@ -503,7 +505,7 @@ function CheckoutFooter() {
         </div>
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[#F7D9E2] px-4 py-5 text-xs text-[#9D8F98] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <span>© 2025 The AMY Shop. All rights reserved.</span>
+        <span>(c) 2025 The AMY Shop. All rights reserved.</span>
         <span className="flex gap-6"><span>Privacy Policy</span><span>Terms of Service</span></span>
       </div>
     </footer>
@@ -523,7 +525,7 @@ export function CartCheckoutPage() {
           <ChevronRight className="h-4 w-4" />
           <span>Checkout</span>
         </div>
-        <h1 className="mt-6 text-5xl font-semibold text-[#1F1720]" style={serifStyle}>Your cart <span className="text-[#EC4C84]">♡</span></h1>
+        <h1 className="mt-6 text-5xl font-semibold text-[#1F1720]" style={serifStyle}>Your cart</h1>
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_28rem]">
           <div className="grid gap-5">
             <FreeShippingBanner />
