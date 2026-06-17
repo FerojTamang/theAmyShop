@@ -20,8 +20,10 @@ import {
   Plus,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { normalizeApiError } from "../../lib/apiError";
+import { cartApi } from "../../services/cartApi";
 import { productApi, type PublicProduct } from "../../services/productApi";
 
 type RelatedProduct = {
@@ -39,6 +41,7 @@ type Review = {
 };
 
 type DetailProduct = {
+  id?: string;
   title: string;
   category: string;
   subtitle: string;
@@ -128,6 +131,7 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     Number(compareAtPrice) > Number(product.price);
 
   return {
+    id: product.id,
     title: product.name,
     category: product.category?.name ?? "Shop",
     subtitle:
@@ -286,7 +290,21 @@ function Stars({ small = false }: { small?: boolean }) {
   );
 }
 
-function ProductInfoPanel({ product }: { product: DetailProduct }) {
+function ProductInfoPanel({
+  addToCartMessage,
+  addToCartStatus,
+  onAddToCart,
+  onQuantityChange,
+  product,
+  quantity,
+}: {
+  addToCartMessage: string | null;
+  addToCartStatus: "idle" | "loading" | "success" | "error";
+  onAddToCart: () => void;
+  onQuantityChange: (quantity: number) => void;
+  product: DetailProduct;
+  quantity: number;
+}) {
   return (
     <section className="lg:pl-6">
       <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EC4C84]">Made just for you</p>
@@ -312,7 +330,14 @@ function ProductInfoPanel({ product }: { product: DetailProduct }) {
       <FeatureIcons />
       <PersonalizationForm />
       <AccordionRows />
-      <ActionButtons />
+      <ActionButtons
+        addToCartMessage={addToCartMessage}
+        addToCartStatus={addToCartStatus}
+        canAddToCart={Boolean(product.id)}
+        onAddToCart={onAddToCart}
+        onQuantityChange={onQuantityChange}
+        quantity={quantity}
+      />
       <DeliveryNote />
     </section>
   );
@@ -393,28 +418,91 @@ function AccordionRows() {
   );
 }
 
-function QuantitySelector() {
+function QuantitySelector({
+  disabled = false,
+  onChange,
+  quantity,
+}: {
+  disabled?: boolean;
+  onChange: (quantity: number) => void;
+  quantity: number;
+}) {
   return (
     <div className="inline-flex h-14 items-center rounded-xl border border-[#F7D9E2] bg-white">
-      <button className="grid h-14 w-14 place-items-center text-[#6F6570]"><Minus className="h-4 w-4" /></button>
-      <span className="grid h-14 w-12 place-items-center font-bold text-[#1F1720]">1</span>
-      <button className="grid h-14 w-14 place-items-center text-[#6F6570]"><Plus className="h-4 w-4" /></button>
+      <button
+        className="grid h-14 w-14 place-items-center text-[#6F6570] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled || quantity <= 1}
+        onClick={() => onChange(Math.max(1, quantity - 1))}
+        type="button"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="grid h-14 w-12 place-items-center font-bold text-[#1F1720]">{quantity}</span>
+      <button
+        className="grid h-14 w-14 place-items-center text-[#6F6570] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled}
+        onClick={() => onChange(quantity + 1)}
+        type="button"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
     </div>
   );
 }
 
-function ActionButtons() {
+function ActionButtons({
+  addToCartMessage,
+  addToCartStatus,
+  canAddToCart,
+  onAddToCart,
+  onQuantityChange,
+  quantity,
+}: {
+  addToCartMessage: string | null;
+  addToCartStatus: "idle" | "loading" | "success" | "error";
+  canAddToCart: boolean;
+  onAddToCart: () => void;
+  onQuantityChange: (quantity: number) => void;
+  quantity: number;
+}) {
+  const isAdding = addToCartStatus === "loading";
+
   return (
     <div className="mt-7 grid gap-3">
       <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
-        <QuantitySelector />
-        <button className="inline-flex h-14 items-center justify-center gap-3 rounded-xl bg-[#EC4C84] text-base font-bold text-white shadow-lg shadow-pink-200 hover:bg-[#D93D73]">
+        <QuantitySelector
+          disabled={!canAddToCart || isAdding}
+          onChange={onQuantityChange}
+          quantity={quantity}
+        />
+        <button
+          className="inline-flex h-14 items-center justify-center gap-3 rounded-xl bg-[#EC4C84] text-base font-bold text-white shadow-lg shadow-pink-200 hover:bg-[#D93D73] disabled:cursor-not-allowed disabled:bg-[#EAB5C6] disabled:shadow-none"
+          disabled={!canAddToCart || isAdding}
+          onClick={onAddToCart}
+          type="button"
+        >
           <ShoppingCart className="h-5 w-5" />
-          Add to cart
+          {isAdding ? "Adding..." : canAddToCart ? "Add to cart" : "Product not available yet"}
         </button>
       </div>
-      <button className="h-14 rounded-xl bg-[#EC4C84] text-base font-bold text-white shadow-lg shadow-pink-200 hover:bg-[#D93D73]">
-        Buy it now
+      {addToCartMessage ? (
+        <p
+          className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+            addToCartStatus === "success"
+              ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+              : "border-red-100 bg-red-50 text-red-700"
+          }`}
+        >
+          {addToCartMessage}
+        </p>
+      ) : null}
+      <button
+        className="h-14 cursor-not-allowed rounded-xl bg-[#FDECEF] text-base font-bold text-[#C8A7B1]"
+        disabled
+        title="Coming soon"
+        type="button"
+      >
+        Buy it now Soon
       </button>
     </div>
   );
@@ -633,10 +721,18 @@ function ProductFooter() {
 
 export function ProductDetailPage() {
   const { slug } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [apiProduct, setApiProduct] = useState<DetailProduct | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [addToCartStatus, setAddToCartStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -690,6 +786,30 @@ export function ProductDetailPage() {
     [apiProduct],
   );
 
+  const handleAddToCart = async () => {
+    if (!product.id) {
+      setAddToCartStatus("error");
+      setAddToCartMessage("Product not available yet.");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+
+    try {
+      setAddToCartStatus("loading");
+      setAddToCartMessage(null);
+      await cartApi.addItem(product.id, quantity);
+      setAddToCartStatus("success");
+      setAddToCartMessage("Added to cart.");
+    } catch (cartError) {
+      setAddToCartStatus("error");
+      setAddToCartMessage(normalizeApiError(cartError).message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
       <AnnouncementBar />
@@ -727,7 +847,18 @@ export function ProductDetailPage() {
               </div>
               <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.82fr]">
                 <ProductGallery product={product} />
-                <ProductInfoPanel product={product} />
+                <ProductInfoPanel
+                  addToCartMessage={addToCartMessage}
+                  addToCartStatus={addToCartStatus}
+                  onAddToCart={() => void handleAddToCart()}
+                  onQuantityChange={(nextQuantity) => {
+                    setQuantity(nextQuantity);
+                    setAddToCartStatus("idle");
+                    setAddToCartMessage(null);
+                  }}
+                  product={product}
+                  quantity={quantity}
+                />
               </div>
             </div>
             <BenefitStrip />

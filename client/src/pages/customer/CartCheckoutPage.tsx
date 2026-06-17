@@ -11,65 +11,92 @@ import {
   Search,
   ShieldCheck,
   ShoppingBag,
+  Trash2,
   Truck,
   UserRound,
   Plus,
 } from "lucide-react";
-import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { normalizeApiError } from "../../lib/apiError";
+import { addressApi, type Address, type AddressPayload } from "../../services/addressApi";
+import { cartApi, type CartItem, type CartResult } from "../../services/cartApi";
+import { checkoutApi, type CheckoutOrder, type CheckoutPayload } from "../../services/checkoutApi";
+import { formatCurrency } from "../../utils/formatCurrency";
 
-type CartItem = {
-  id: string;
-  name: string;
-  subtitle: string;
-  price: string;
-  customization: [string, string][];
-  quantity: number;
-  art: "mug" | "candle" | "necklace";
+type AddressFormState = AddressPayload;
+
+type GiftFormState = {
+  enabled: boolean;
+  receiverName: string;
+  senderName: string;
+  giftMessage: string;
+  giftWrapRequired: boolean;
 };
 
-const cartItems: CartItem[] = [
-  {
-    id: "mug",
-    name: "Personalized Mama Mug",
-    subtitle: "11oz Ceramic Mug",
-    price: "$24.00",
-    customization: [
-      ["Color", "White"],
-      ["Personalization", "mama"],
-      ["Gift Box", "Signature Pink Box"],
-    ],
-    quantity: 1,
-    art: "mug",
-  },
-  {
-    id: "candle",
-    name: "Scented Soy Candle",
-    subtitle: "Amazing Grace",
-    price: "$18.00",
-    customization: [
-      ["Scent", "Amazing Grace"],
-      ["Gift Box", "Signature Pink Box"],
-    ],
-    quantity: 1,
-    art: "candle",
-  },
-  {
-    id: "necklace",
-    name: "Initial Necklace",
-    subtitle: "Gold Plated - 16-18in",
-    price: "$26.00",
-    customization: [
-      ["Initial", "A"],
-      ["Gift Box", "Signature Pink Box"],
-    ],
-    quantity: 1,
-    art: "necklace",
-  },
-];
+const emptyAddressForm: AddressFormState = {
+  fullName: "",
+  phone: "",
+  province: "",
+  district: "",
+  city: "",
+  streetAddress: "",
+  landmark: "",
+  isDefault: true,
+};
+
+const emptyGiftForm: GiftFormState = {
+  enabled: false,
+  receiverName: "",
+  senderName: "",
+  giftMessage: "",
+  giftWrapRequired: false,
+};
 
 const serifStyle = {
   fontFamily: "Georgia, 'Times New Roman', serif",
+};
+
+const giftWrapFee = 50;
+const shippingFee = 0;
+const minimumPhoneDigits = 7;
+const maximumPhoneDigits = 15;
+
+const asNumber = (value: number | string | undefined) => {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const getProductImage = (item: CartItem) => (
+  item.product.images?.find((image) => image.isPrimary)?.imageUrl ??
+  item.product.images?.[0]?.imageUrl
+);
+
+const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, maximumPhoneDigits);
+
+const getApiErrorMessage = (error: unknown) => {
+  const normalized = normalizeApiError(error);
+  const firstError = normalized.errors?.[0];
+
+  if (
+    firstError &&
+    typeof firstError === "object" &&
+    "message" in firstError &&
+    typeof firstError.message === "string"
+  ) {
+    return firstError.message;
+  }
+
+  return normalized.message;
+};
+
+const inferArtLabel = (item: CartItem) => {
+  const text = `${item.product.name} ${item.product.category?.name ?? ""}`.toLowerCase();
+
+  if (text.includes("mug")) return "mama";
+  if (text.includes("candle")) return "Amazing";
+  if (text.includes("necklace") || text.includes("jewelry")) return "A";
+  return "gift";
 };
 
 function AnnouncementBar() {
@@ -89,7 +116,7 @@ function AnnouncementBar() {
   );
 }
 
-function CheckoutHeader() {
+function CheckoutHeader({ totalItems }: { totalItems: number }) {
   return (
     <header className="border-b border-[#F7D9E2] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
@@ -112,7 +139,7 @@ function CheckoutHeader() {
           ))}
         </nav>
         <div className="ml-auto hidden h-10 w-52 items-center gap-2 rounded-full border border-[#F7D9E2] bg-white px-4 text-sm text-[#9D8F98] md:flex">
-          <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#9D8F98]" placeholder="Search gifts..." />
+          <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#9D8F98]" disabled placeholder="Search coming soon" />
           <Search className="h-4 w-4 text-[#1F1720]" />
         </div>
         <Link className="grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/account">
@@ -120,64 +147,118 @@ function CheckoutHeader() {
         </Link>
         <Link className="relative grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/cart">
           <ShoppingBag className="h-5 w-5" />
-          <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-[#EC4C84] text-[10px] font-bold text-white">3</span>
+          <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-[#EC4C84] text-[10px] font-bold text-white">
+            {totalItems}
+          </span>
         </Link>
       </div>
     </header>
   );
 }
 
-function ProductImage({ type }: { type: CartItem["art"] }) {
-  const label = type === "mug" ? "mama" : type === "candle" ? "Amazing" : "A";
+function ProductImage({ item }: { item: CartItem }) {
+  const imageUrl = getProductImage(item);
+
+  if (imageUrl) {
+    return (
+      <img
+        alt={item.product.name}
+        className="h-44 w-56 shrink-0 rounded-xl object-cover"
+        src={imageUrl}
+      />
+    );
+  }
 
   return (
     <div className="relative h-44 w-56 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#FDECEF] via-white to-[#FFF0DA]">
       <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#EC4C84]/20 blur-xl" />
       <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/80 bg-white/70 p-4 text-center shadow-sm">
-        <p className="text-lg font-semibold text-[#EC4C84]" style={serifStyle}>{label}</p>
+        <p className="text-lg font-semibold text-[#EC4C84]" style={serifStyle}>{inferArtLabel(item)}</p>
         <p className="mt-1 text-xs text-[#9D8F98]">signature gift detail</p>
       </div>
     </div>
   );
 }
 
-function QuantitySelector() {
+function QuantitySelector({
+  disabled,
+  item,
+  onUpdate,
+}: {
+  disabled: boolean;
+  item: CartItem;
+  onUpdate: (itemId: string, quantity: number) => void;
+}) {
   return (
     <div className="inline-flex h-11 items-center rounded-xl border border-[#F7D9E2] bg-white">
-      <button className="grid h-11 w-11 place-items-center text-[#6F6570]"><Minus className="h-4 w-4" /></button>
-      <span className="grid h-11 w-10 place-items-center text-sm font-bold text-[#1F1720]">1</span>
-      <button className="grid h-11 w-11 place-items-center text-[#6F6570]"><Plus className="h-4 w-4" /></button>
+      <button
+        className="grid h-11 w-11 place-items-center text-[#6F6570] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled || item.quantity <= 1}
+        onClick={() => onUpdate(item.id, item.quantity - 1)}
+        type="button"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="grid h-11 w-10 place-items-center text-sm font-bold text-[#1F1720]">{item.quantity}</span>
+      <button
+        className="grid h-11 w-11 place-items-center text-[#6F6570] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled}
+        onClick={() => onUpdate(item.id, item.quantity + 1)}
+        type="button"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
     </div>
   );
 }
 
-function CartItemCard({ item }: { item: CartItem }) {
+function CartItemCard({
+  isBusy,
+  item,
+  onRemove,
+  onUpdate,
+}: {
+  isBusy: boolean;
+  item: CartItem;
+  onRemove: (itemId: string) => void;
+  onUpdate: (itemId: string, quantity: number) => void;
+}) {
   return (
     <div className="grid gap-5 border-b border-[#F7D9E2] py-6 md:grid-cols-[2rem_auto_1fr_auto]">
       <span className="mt-16 grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-white">
         <Check className="h-4 w-4" />
       </span>
-      <ProductImage type={item.art} />
+      <ProductImage item={item} />
       <div className="py-2">
-        <h2 className="text-lg font-bold text-[#1F1720]">{item.name}</h2>
-        <p className="mt-1 text-sm text-[#6F6570]">{item.subtitle}</p>
+        <h2 className="text-lg font-bold text-[#1F1720]">{item.product.name}</h2>
+        <p className="mt-1 text-sm text-[#6F6570]">{item.product.shortDescription ?? item.product.category?.name ?? "Handmade gift"}</p>
         <div className="mt-5 grid gap-2 text-sm">
-          {item.customization.map(([label, value]) => (
-            <p className="grid grid-cols-[7rem_1fr] gap-3 text-[#6F6570]" key={label}>
-              <span className="font-semibold text-[#1F1720]">{label}:</span>
-              <span>{value}</span>
-            </p>
-          ))}
+          <p className="grid grid-cols-[7rem_1fr] gap-3 text-[#6F6570]">
+            <span className="font-semibold text-[#1F1720]">Price:</span>
+            <span>{formatCurrency(item.priceSnapshot)}</span>
+          </p>
+          <p className="grid grid-cols-[7rem_1fr] gap-3 text-[#6F6570]">
+            <span className="font-semibold text-[#1F1720]">Line total:</span>
+            <span>{formatCurrency(item.lineTotal)}</span>
+          </p>
         </div>
       </div>
       <div className="flex flex-col items-start justify-between gap-4 py-2 md:items-end">
-        <p className="text-xl font-bold text-[#1F1720]">{item.price}</p>
+        <p className="text-xl font-bold text-[#1F1720]">{formatCurrency(item.lineTotal)}</p>
         <div className="grid gap-3">
-          <QuantitySelector />
+          <QuantitySelector disabled={isBusy} item={item} onUpdate={onUpdate} />
           <div className="flex justify-end gap-4 text-xs font-semibold text-[#9D8F98]">
-            <button className="underline">Edit</button>
+            <button className="cursor-not-allowed underline opacity-60" disabled type="button">Edit Soon</button>
             <span>|</span>
-            <button className="underline">Remove</button>
+            <button
+              className="inline-flex items-center gap-1 underline disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isBusy}
+              onClick={() => onRemove(item.id)}
+              type="button"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Remove
+            </button>
           </div>
         </div>
       </div>
@@ -185,20 +266,28 @@ function CartItemCard({ item }: { item: CartItem }) {
   );
 }
 
-function FreeShippingBanner() {
+function FreeShippingBanner({ subtotal }: { subtotal: number }) {
+  const target = 75;
+  const remaining = Math.max(0, target - subtotal);
+  const progress = Math.min(100, (subtotal / target) * 100);
+
   return (
     <div className="rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] px-6 py-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <p className="text-sm font-semibold text-[#6F6570]">
-          You're <span className="text-[#EC4C84]">$15</span> away from FREE shipping!
+          {remaining > 0 ? (
+            <>You're <span className="text-[#EC4C84]">{formatCurrency(remaining)}</span> away from FREE shipping!</>
+          ) : (
+            <span className="text-[#EC4C84]">Free shipping unlocked</span>
+          )}
         </p>
         <div className="min-w-0 flex-1">
           <div className="h-2 rounded-full bg-white">
-            <div className="h-2 w-4/5 rounded-full bg-[#EC4C84]" />
+            <div className="h-2 rounded-full bg-[#EC4C84]" style={{ width: `${progress}%` }} />
           </div>
           <div className="mt-2 flex justify-between text-xs font-semibold text-[#EC4C84]">
-            <span>$60</span>
-            <span>$75</span>
+            <span>{formatCurrency(subtotal)}</span>
+            <span>{formatCurrency(target)}</span>
           </div>
         </div>
       </div>
@@ -206,7 +295,13 @@ function FreeShippingBanner() {
   );
 }
 
-function CouponRewardsBox() {
+function CouponRewardsBox({
+  couponCode,
+  onCouponCodeChange,
+}: {
+  couponCode: string;
+  onCouponCodeChange: (value: string) => void;
+}) {
   return (
     <section className="rounded-xl border border-[#F7D9E2] bg-white">
       <div className="flex items-center justify-between border-b border-[#F7D9E2] px-5 py-4">
@@ -214,43 +309,175 @@ function CouponRewardsBox() {
         <ChevronRight className="h-4 w-4 -rotate-90 text-[#EC4C84]" />
       </div>
       <div className="grid grid-cols-3 border-b border-[#F7D9E2] text-center text-sm font-semibold text-[#6F6570]">
-        <button className="border-b-2 border-[#EC4C84] py-4 text-[#EC4C84]">Coupon code</button>
-        <button>Referral code</button>
-        <button>Rewards</button>
+        <button className="border-b-2 border-[#EC4C84] py-4 text-[#EC4C84]" type="button">Coupon code</button>
+        <button className="cursor-not-allowed text-[#C8A7B1]" disabled type="button">Referral Soon</button>
+        <button className="cursor-not-allowed text-[#C8A7B1]" disabled type="button">Rewards Soon</button>
       </div>
       <div className="p-5">
-        <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
-          <input className="h-12 rounded-xl border border-[#F7D9E2] px-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Enter coupon code" />
-          <button className="rounded-xl bg-[#EC4C84] text-sm font-bold text-white shadow-lg shadow-pink-200">Apply</button>
-        </div>
-        <div className="mt-4 flex w-fit items-center gap-4 rounded-lg bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#EC4C84]">
-          <span>WELCOME15</span>
-          <span>15% off applied</span>
-          <span>x</span>
-        </div>
+        <input
+          className="h-12 w-full rounded-xl border border-[#F7D9E2] px-4 text-sm outline-none placeholder:text-[#9D8F98]"
+          onChange={(event) => onCouponCodeChange(event.target.value)}
+          placeholder="Enter coupon code"
+          value={couponCode}
+        />
+        <p className="mt-3 text-xs text-[#9D8F98]">Coupon validation happens during backend checkout.</p>
       </div>
     </section>
   );
 }
 
-function CheckoutSteps() {
+function AddressForm({
+  error,
+  form,
+  onChange,
+}: {
+  error: string | null;
+  form: AddressFormState;
+  onChange: (form: AddressFormState) => void;
+}) {
+  const update = (updates: Partial<AddressFormState>) => onChange({ ...form, ...updates });
+
+  return (
+    <div className="grid gap-3 rounded-xl border border-[#F7D9E2] bg-white p-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Full name *" onChange={(fullName) => update({ fullName })} value={form.fullName} />
+        <Field
+          inputMode="numeric"
+          label="Phone *"
+          maxLength={maximumPhoneDigits}
+          onChange={(phone) => update({ phone: digitsOnly(phone) })}
+          value={form.phone}
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field label="Province *" onChange={(province) => update({ province })} value={form.province} />
+        <Field label="District *" onChange={(district) => update({ district })} value={form.district} />
+        <Field label="City *" onChange={(city) => update({ city })} value={form.city} />
+      </div>
+      <Field label="Street address *" onChange={(streetAddress) => update({ streetAddress })} value={form.streetAddress} />
+      <Field label="Landmark" onChange={(landmark) => update({ landmark })} value={form.landmark ?? ""} />
+      <label className="flex items-center gap-2 text-sm font-semibold text-[#6F6570]">
+        <input
+          checked={form.isDefault}
+          className="h-4 w-4 accent-[#EC4C84]"
+          onChange={(event) => update({ isDefault: event.target.checked })}
+          type="checkbox"
+        />
+        Save as default address
+      </label>
+      {error ? (
+        <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm shadow-red-100">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function Field({
+  inputMode,
+  label,
+  maxLength,
+  onChange,
+  value,
+}: {
+  inputMode?: "text" | "numeric";
+  label: string;
+  maxLength?: number;
+  onChange: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#6F6570]">
+      {label}
+      <input
+        className="h-11 rounded-xl border border-[#F7D9E2] px-4 text-sm outline-none placeholder:text-[#9D8F98] focus:border-[#EC4C84]"
+        inputMode={inputMode}
+        maxLength={maxLength}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      />
+    </label>
+  );
+}
+
+function CheckoutSteps({
+  addressError,
+  addressForm,
+  addresses,
+  giftForm,
+  onAddressFormChange,
+  onGiftFormChange,
+  onSelectAddress,
+  selectedAddressId,
+  showAddressForm,
+  setShowAddressForm,
+}: {
+  addressError: string | null;
+  addressForm: AddressFormState;
+  addresses: Address[];
+  giftForm: GiftFormState;
+  onAddressFormChange: (form: AddressFormState) => void;
+  onGiftFormChange: (form: GiftFormState) => void;
+  onSelectAddress: (id: string) => void;
+  selectedAddressId: string;
+  showAddressForm: boolean;
+  setShowAddressForm: (show: boolean) => void;
+}) {
   return (
     <div className="grid gap-5">
-      <Step title="Shipping address" number="1" action="Edit">
-        <div className="w-full max-w-sm rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] p-4">
-          <div className="mb-2 flex items-center gap-2">
-            <p className="font-bold text-[#1F1720]">Emily Johnson</p>
-            <span className="rounded bg-[#FDECEF] px-2 py-0.5 text-xs font-bold text-[#EC4C84]">Default</span>
-            <Check className="ml-auto h-5 w-5 rounded-full bg-[#EC4C84] p-1 text-white" />
+      <Step title="Shipping address" number="1">
+        {addresses.length > 0 ? (
+          <div className="grid gap-3">
+            {addresses.map((address) => (
+              <button
+                className={`w-full max-w-sm rounded-xl border p-4 text-left ${
+                  selectedAddressId === address.id
+                    ? "border-[#EC4C84] bg-[#FFF5F7]"
+                    : "border-[#F7D9E2] bg-white"
+                }`}
+                key={address.id}
+                onClick={() => {
+                  onSelectAddress(address.id);
+                  setShowAddressForm(false);
+                }}
+                type="button"
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="font-bold text-[#1F1720]">{address.fullName}</p>
+                  {address.isDefault ? <span className="rounded bg-[#FDECEF] px-2 py-0.5 text-xs font-bold text-[#EC4C84]">Default</span> : null}
+                  {selectedAddressId === address.id ? <Check className="ml-auto h-5 w-5 rounded-full bg-[#EC4C84] p-1 text-white" /> : null}
+                </div>
+                <p className="text-sm leading-6 text-[#6F6570]">
+                  {address.streetAddress}<br />
+                  {address.city}, {address.district}<br />
+                  {address.province}<br />
+                  {address.phone}
+                </p>
+              </button>
+            ))}
           </div>
-          <p className="text-sm leading-6 text-[#6F6570]">123 Bloomfield Lane<br />San Diego, CA 92101<br />United States<br />(619) 555-0198</p>
-        </div>
-        <button className="mt-3 text-sm font-bold text-[#EC4C84]">+ Add a new address</button>
+        ) : null}
+        <button
+          className="mt-3 text-sm font-bold text-[#EC4C84]"
+          onClick={() => {
+            setShowAddressForm(true);
+            onSelectAddress("");
+          }}
+          type="button"
+        >
+          + Add a new address
+        </button>
+        {showAddressForm || addresses.length === 0 ? (
+          <div className="mt-3">
+            <AddressForm error={addressError} form={addressForm} onChange={onAddressFormChange} />
+          </div>
+        ) : null}
       </Step>
       <Step title="Shipping method" number="2">
-        <RadioRow active label="Standard Shipping (3-5 business days)" value="FREE" />
-        <RadioRow label="Expedited Shipping (2-3 business days)" value="$8.95" />
-        <RadioRow label="Express Shipping (1-2 business days)" value="$14.95" />
+        <RadioRow active label="Standard Shipping" value="FREE" />
+        <RadioRow disabled label="Expedited Shipping" value="Coming soon" />
+        <RadioRow disabled label="Express Shipping" value="Coming soon" />
       </Step>
       <Step title="Payment method" number="3">
         <RadioRow active label="Cash on Delivery" value="CASH_ON_DELIVERY" />
@@ -260,18 +487,59 @@ function CheckoutSteps() {
           Checkout currently accepts Cash on Delivery. Khalti and eSewa are shown for later once merchant verification is configured.
         </p>
       </Step>
+      <Step title="Gift details" number="4">
+        <label className="flex items-center gap-3 text-sm text-[#6F6570]">
+          <input
+            checked={giftForm.enabled}
+            className="h-5 w-5 accent-[#EC4C84]"
+            onChange={(event) => onGiftFormChange({ ...giftForm, enabled: event.target.checked })}
+            type="checkbox"
+          />
+          This order is a gift
+        </label>
+        {giftForm.enabled ? (
+          <div className="mt-4 grid gap-3 rounded-xl border border-[#F7D9E2] bg-white p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Receiver name *" onChange={(receiverName) => onGiftFormChange({ ...giftForm, receiverName })} value={giftForm.receiverName} />
+              <Field label="Sender name *" onChange={(senderName) => onGiftFormChange({ ...giftForm, senderName })} value={giftForm.senderName} />
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-[#6F6570]">
+              Gift message *
+              <textarea
+                className="h-24 rounded-xl border border-[#F7D9E2] p-4 text-sm outline-none placeholder:text-[#9D8F98] focus:border-[#EC4C84]"
+                onChange={(event) => onGiftFormChange({ ...giftForm, giftMessage: event.target.value })}
+                value={giftForm.giftMessage}
+              />
+            </label>
+            <label className="flex items-start justify-between gap-4 text-sm text-[#6F6570]">
+              <span className="flex gap-3">
+                <input
+                  checked={giftForm.giftWrapRequired}
+                  className="mt-1 h-5 w-5 accent-[#EC4C84]"
+                  onChange={(event) => onGiftFormChange({ ...giftForm, giftWrapRequired: event.target.checked })}
+                  type="checkbox"
+                />
+                <span>
+                  Add special wrapping
+                  <span className="block text-xs text-[#9D8F98]">Includes premium wrapping and dried florals</span>
+                </span>
+              </span>
+              <span className="font-bold text-[#1F1720]">{formatCurrency(giftWrapFee)}</span>
+            </label>
+          </div>
+        ) : null}
+      </Step>
     </div>
   );
 }
 
-function Step({ action, children, number, title }: { action?: string; children: ReactNode; number: string; title: string }) {
+function Step({ children, number, title }: { children: ReactNode; number: string; title: string }) {
   return (
     <section className="grid grid-cols-[2rem_1fr] gap-4">
       <span className="grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-sm font-bold text-white">{number}</span>
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[#1F1720]">{title}</h2>
-          {action ? <button className="text-sm font-bold text-[#EC4C84]">{action}</button> : null}
         </div>
         {children}
       </div>
@@ -293,23 +561,44 @@ function RadioRow({ active = false, disabled = false, label, value }: { active?:
   );
 }
 
-function OrderSummaryCard() {
+function OrderSummaryCard({
+  couponCode,
+  giftForm,
+  isSubmitting,
+  onCheckout,
+  summary,
+}: {
+  couponCode: string;
+  giftForm: GiftFormState;
+  isSubmitting: boolean;
+  onCheckout: () => void;
+  summary: CartResult["summary"] | null;
+}) {
+  const subtotal = asNumber(summary?.subtotal);
+  const giftFee = giftForm.enabled && giftForm.giftWrapRequired ? giftWrapFee : 0;
+  const displayTotal = subtotal + shippingFee + giftFee;
+
   return (
     <Card>
       <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Order summary</h2>
       <div className="mt-6 grid gap-5 text-sm">
-        <SummaryRow label="Subtotal (3 items)" value="$68.00" />
-        <SummaryRow label="Discount (WELCOME15)" value="-$10.20" pink />
+        <SummaryRow label={`Subtotal (${summary?.totalItems ?? 0} items)`} value={formatCurrency(subtotal)} />
+        {couponCode.trim() ? <SummaryRow label={`Coupon (${couponCode.trim().toUpperCase()})`} value="Calculated at checkout" pink /> : null}
         <SummaryRow label="Shipping" value="FREE" green />
-        <SummaryRow label="Estimated tax" value="$5.21" />
+        {giftFee > 0 ? <SummaryRow label="Gift wrap" value={formatCurrency(giftFee)} /> : null}
         <div className="flex justify-between border-t border-[#F7D9E2] pt-5 text-2xl font-semibold text-[#1F1720]">
           <span>Order total</span>
-          <span>$62.81</span>
+          <span>{formatCurrency(displayTotal)}</span>
         </div>
       </div>
-      <div className="mt-6 rounded-xl bg-[#FFF5F7] px-5 py-4 text-center text-sm font-bold text-[#EC4C84]">
-        You saved $10.20
-      </div>
+      <button
+        className="mt-6 h-13 w-full rounded-xl bg-[#EC4C84] text-sm font-bold text-white shadow-lg shadow-pink-200 disabled:cursor-not-allowed disabled:bg-[#EAB5C6] disabled:shadow-none"
+        disabled={isSubmitting || !summary?.totalItems}
+        onClick={onCheckout}
+        type="button"
+      >
+        {isSubmitting ? "Creating order..." : "Place order"}
+      </button>
     </Card>
   );
 }
@@ -338,60 +627,38 @@ function StoryCard() {
     <Card className="overflow-hidden bg-[radial-gradient(circle_at_85%_40%,rgba(236,76,132,0.18),transparent_9rem),linear-gradient(135deg,#FFF5F7,#fff)]">
       <h2 className="text-3xl font-semibold text-[#EC4C84]" style={serifStyle}>Every gift tells a story</h2>
       <div className="mt-6 grid grid-cols-3 gap-4 text-center text-xs font-semibold text-[#6F6570]">
-        {storyItems.map(([label, Icon]) => {
-          return (
-            <div key={label}>
-              <span className="mx-auto grid h-13 w-13 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#EC4C84]">
-                <Icon className="h-6 w-6" />
-              </span>
-              <p className="mt-3">{label}</p>
-            </div>
-          );
-        })}
+        {storyItems.map(([label, Icon]) => (
+          <div key={label}>
+            <span className="mx-auto grid h-13 w-13 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#EC4C84]">
+              <Icon className="h-6 w-6" />
+            </span>
+            <p className="mt-3">{label}</p>
+          </div>
+        ))}
       </div>
     </Card>
   );
 }
 
-function GiftOptionsCard() {
-  return (
-    <Card>
-      <h2 className="text-xl font-bold text-[#1F1720]">Gift options</h2>
-      <label className="mt-6 flex items-center gap-3 text-sm text-[#6F6570]">
-        <input className="h-5 w-5 accent-[#EC4C84]" type="checkbox" />
-        Add a gift message (free)
-      </label>
-      <textarea className="mt-4 h-24 w-full rounded-xl border border-[#F7D9E2] p-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Write your message here..." />
-      <p className="mt-1 text-right text-xs text-[#9D8F98]">0/200</p>
-      <label className="mt-5 flex items-start justify-between gap-4 text-sm text-[#6F6570]">
-        <span className="flex gap-3">
-          <input className="mt-1 h-5 w-5 accent-[#EC4C84]" type="checkbox" />
-          <span>
-            Add special wrapping
-            <span className="block text-xs text-[#9D8F98]">Includes premium wrapping & dried florals</span>
-          </span>
-        </span>
-        <span className="font-bold text-[#1F1720]">$4.00</span>
-      </label>
-    </Card>
-  );
-}
-
-function ReviewOrderCard() {
+function ReviewOrderCard({ items }: { items: CartItem[] }) {
   return (
     <Card>
       <h2 className="text-xl font-bold text-[#1F1720]">Review your order</h2>
       <div className="mt-5 rounded-xl bg-white shadow-sm">
-        {cartItems.map((item) => (
+        {items.length > 0 ? items.map((item) => (
           <div className="flex items-center gap-3 border-b border-[#F7D9E2]/70 py-3 last:border-b-0" key={item.id}>
-            <ProductImage type={item.art} />
+            <div className="h-14 w-14 overflow-hidden rounded-xl">
+              <ProductImage item={item} />
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-[#1F1720]">{item.name}</p>
+              <p className="truncate text-sm font-bold text-[#1F1720]">{item.product.name}</p>
               <p className="text-xs text-[#6F6570]">Qty: {item.quantity}</p>
             </div>
-            <span className="font-bold text-[#1F1720]">{item.price}</span>
+            <span className="font-bold text-[#1F1720]">{formatCurrency(item.lineTotal)}</span>
           </div>
-        ))}
+        )) : (
+          <p className="text-sm text-[#6F6570]">Your cart is empty.</p>
+        )}
       </div>
     </Card>
   );
@@ -402,7 +669,7 @@ function TrustCard() {
     <Card className="bg-[#FFF5F7]">
       <h2 className="text-xl font-bold text-[#1F1720]">Shop with confidence</h2>
       <div className="mt-5 grid gap-3 text-sm text-[#6F6570]">
-        {["30-day happiness guarantee", "Secure checkout", "Thousands of 5-star reviews", "Made with premium materials"].map((item) => (
+        {["Backend-validated checkout", "Secure customer session", "Cash on Delivery available", "Made with premium materials"].map((item) => (
           <p className="flex items-center gap-3" key={item}>
             <Check className="h-4 w-4 text-[#EC4C84]" />
             {item}
@@ -415,7 +682,7 @@ function TrustCard() {
 
 function FeatureStrip() {
   const features: Array<[string, string, typeof Heart]> = [
-    ["Secure payments", "SSL secured checkout", ShieldCheck],
+    ["Secure checkout", "Backend validated order", ShieldCheck],
     ["Handmade with love", "Every gift is made to order", Heart],
     ["24/7 support", "We're here to help", Headphones],
     ["Hassle-free returns", "Love it or return it", PackageCheck],
@@ -424,17 +691,15 @@ function FeatureStrip() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-4 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-5 md:grid-cols-4">
-        {features.map(([title, subtitle, Icon]) => {
-          return (
-            <div className="flex gap-4 md:border-r md:border-[#F7D9E2] md:last:border-r-0" key={title}>
-              <Icon className="h-8 w-8 shrink-0 text-[#EC4C84]" />
-              <div>
-                <p className="font-bold text-[#1F1720]">{title}</p>
-                <p className="text-sm text-[#6F6570]">{subtitle}</p>
-              </div>
+        {features.map(([title, subtitle, Icon]) => (
+          <div className="flex gap-4 md:border-r md:border-[#F7D9E2] md:last:border-r-0" key={title}>
+            <Icon className="h-8 w-8 shrink-0 text-[#EC4C84]" />
+            <div>
+              <p className="font-bold text-[#1F1720]">{title}</p>
+              <p className="text-sm text-[#6F6570]">{subtitle}</p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -454,7 +719,7 @@ function NewsletterSection() {
         <div>
           <div className="flex gap-3 rounded-full border border-[#F7D9E2] bg-white p-1">
             <input className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Enter your email address" />
-            <button className="rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white">Subscribe</button>
+            <button className="rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white" type="button">Subscribe</button>
           </div>
           <p className="mt-2 px-4 text-xs text-[#9D8F98]">No spam, unsubscribe anytime.</p>
         </div>
@@ -474,11 +739,6 @@ function CheckoutFooter() {
               <p className="text-xl font-semibold text-[#1F1720]" style={serifStyle}>The AMY Shop</p>
               <p className="text-xs text-[#9D8F98]">Handmade custom gifts made with love</p>
             </div>
-          </div>
-          <div className="mt-5 flex gap-3">
-            {["ig", "fb", "p", "tt"].map((item) => (
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-xs font-bold text-white" key={item}>{item}</span>
-            ))}
           </div>
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
@@ -512,11 +772,261 @@ function CheckoutFooter() {
   );
 }
 
+function StatePanel({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <section className="rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-8 text-center shadow-sm shadow-pink-100">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
+        <Gift className="h-7 w-7" />
+      </span>
+      <h2 className="mt-4 text-2xl font-semibold text-[#1F1720]" style={serifStyle}>{title}</h2>
+      <div className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#6F6570]">{children}</div>
+    </section>
+  );
+}
+
 export function CartCheckoutPage() {
+  const navigate = useNavigate();
+  const [cart, setCart] = useState<CartResult | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressForm, setAddressForm] = useState<AddressFormState>(emptyAddressForm);
+  const [giftForm, setGiftForm] = useState<GiftFormState>(emptyGiftForm);
+  const [couponCode, setCouponCode] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyItemId, setBusyItemId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null);
+
+  const items = cart?.cart.items ?? [];
+  const subtotal = useMemo(() => {
+    if (cart?.summary?.subtotal !== undefined) {
+      return asNumber(cart.summary.subtotal);
+    }
+
+    return items.reduce((sum, item) => sum + asNumber(item.lineTotal), 0);
+  }, [cart?.summary?.subtotal, items]);
+
+  const loadCart = async () => {
+    const result = await cartApi.get();
+    setCart(result);
+  };
+
+  const loadPageData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [cartResult, addressResult] = await Promise.all([
+        cartApi.get(),
+        addressApi.listMine(),
+      ]);
+      setCart(cartResult);
+      setAddresses(addressResult);
+
+      if (!selectedAddressId) {
+        setSelectedAddressId(addressResult.find((address) => address.isDefault)?.id ?? addressResult[0]?.id ?? "");
+      }
+
+      setShowAddressForm(addressResult.length === 0);
+    } catch (loadError) {
+      setError(getApiErrorMessage(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadPageData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleUpdateQuantity = async (itemId: string, quantity: number) => {
+    try {
+      setBusyItemId(itemId);
+      setError(null);
+      setSuccessMessage(null);
+      const result = await cartApi.updateItem(itemId, quantity);
+      setCart(result);
+      setSuccessMessage("Cart updated.");
+    } catch (updateError) {
+      setError(getApiErrorMessage(updateError));
+    } finally {
+      setBusyItemId(null);
+    }
+  };
+
+  const handleRemoveItem = async (itemId: string) => {
+    try {
+      setBusyItemId(itemId);
+      setError(null);
+      setSuccessMessage(null);
+      const result = await cartApi.removeItem(itemId);
+      setCart(result);
+      setSuccessMessage("Item removed from cart.");
+    } catch (removeError) {
+      setError(getApiErrorMessage(removeError));
+    } finally {
+      setBusyItemId(null);
+    }
+  };
+
+  const handleClearCart = async () => {
+    try {
+      setError(null);
+      setSuccessMessage(null);
+      const result = await cartApi.clear();
+      setCart(result);
+      setSuccessMessage("Cart cleared.");
+    } catch (clearError) {
+      setError(getApiErrorMessage(clearError));
+    }
+  };
+
+  const validateAddressForm = (): string | null => {
+    if (!addressForm.fullName.trim()) {
+      return "Full name is required.";
+    }
+
+    if (!addressForm.phone.trim()) {
+      return "Phone number is required.";
+    }
+
+    if (!/^\d+$/.test(addressForm.phone)) {
+      return "Phone number must contain digits only.";
+    }
+
+    if (addressForm.phone.length < minimumPhoneDigits) {
+      return "Phone number must contain at least 7 digits.";
+    }
+
+    if (!addressForm.province.trim()) {
+      return "Province is required.";
+    }
+
+    if (!addressForm.district.trim()) {
+      return "District is required.";
+    }
+
+    if (!addressForm.city.trim()) {
+      return "City is required.";
+    }
+
+    if (!addressForm.streetAddress.trim()) {
+      return "Street address is required.";
+    }
+
+    return null;
+  };
+
+  const getCheckoutAddressId = async () => {
+    if (selectedAddressId) {
+      return selectedAddressId;
+    }
+
+    const validationError = validateAddressForm();
+
+    if (validationError) {
+      setAddressError(validationError);
+      throw new Error(validationError);
+    }
+
+    setAddressError(null);
+
+    const addressPayload: AddressPayload = {
+      fullName: addressForm.fullName.trim(),
+      phone: addressForm.phone.trim(),
+      province: addressForm.province.trim(),
+      district: addressForm.district.trim(),
+      city: addressForm.city.trim(),
+      streetAddress: addressForm.streetAddress.trim(),
+      isDefault: addressForm.isDefault,
+      ...(addressForm.landmark?.trim() && {
+        landmark: addressForm.landmark.trim(),
+      }),
+    };
+    const createdAddress = await addressApi.create(addressPayload);
+    setAddresses((current) => [createdAddress, ...current]);
+    setSelectedAddressId(createdAddress.id);
+    setShowAddressForm(false);
+    return createdAddress.id;
+  };
+
+  const validateGift = () => {
+    if (!giftForm.enabled) {
+      return true;
+    }
+
+    return Boolean(
+      giftForm.receiverName.trim() &&
+      giftForm.senderName.trim() &&
+      giftForm.giftMessage.trim(),
+    );
+  };
+
+  const handleCheckout = async () => {
+    if (items.length === 0) {
+      setError("Your cart is empty.");
+      return;
+    }
+
+    if (!validateGift()) {
+      setError("Receiver name, sender name, and gift message are required for gift orders.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      setAddressError(null);
+      setSuccessMessage(null);
+      const addressId = await getCheckoutAddressId();
+      const payload: CheckoutPayload = {
+        addressId,
+        paymentMethod: "CASH_ON_DELIVERY",
+        shippingFee,
+        ...(couponCode.trim() && { couponCode: couponCode.trim().toUpperCase() }),
+        ...(giftForm.enabled && {
+          gift: {
+            receiverName: giftForm.receiverName.trim(),
+            senderName: giftForm.senderName.trim(),
+            giftMessage: giftForm.giftMessage.trim(),
+            giftWrapRequired: giftForm.giftWrapRequired,
+            giftWrapFee: giftForm.giftWrapRequired ? giftWrapFee : 0,
+          },
+        }),
+      };
+      const order = await checkoutApi.createOrder(payload);
+      setCreatedOrder(order);
+      setSuccessMessage(`Order ${order.orderNumber} created successfully.`);
+      await loadCart();
+    } catch (checkoutError) {
+      setError(
+        checkoutError instanceof Error &&
+          (
+            checkoutError.message === "Full name is required." ||
+            checkoutError.message === "Phone number is required." ||
+            checkoutError.message === "Phone number must contain digits only." ||
+            checkoutError.message === "Phone number must contain at least 7 digits." ||
+            checkoutError.message === "Province is required." ||
+            checkoutError.message === "District is required." ||
+            checkoutError.message === "City is required." ||
+            checkoutError.message === "Street address is required."
+          )
+          ? checkoutError.message
+          : getApiErrorMessage(checkoutError),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
       <AnnouncementBar />
-      <CheckoutHeader />
+      <CheckoutHeader totalItems={cart?.summary.totalItems ?? 0} />
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 text-sm text-[#6F6570]">
           <Link to="/">Home</Link>
@@ -526,36 +1036,106 @@ export function CartCheckoutPage() {
           <span>Checkout</span>
         </div>
         <h1 className="mt-6 text-5xl font-semibold text-[#1F1720]" style={serifStyle}>Your cart</h1>
+
+        {error ? (
+          <p className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm shadow-red-100">
+            {error}
+          </p>
+        ) : null}
+        {successMessage ? (
+          <p className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm shadow-emerald-100">
+            {successMessage}
+          </p>
+        ) : null}
+        {createdOrder ? (
+          <div className="mt-5 flex flex-col gap-3 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-[#6F6570]">
+              Your Cash on Delivery order is pending. Order number: <span className="text-[#EC4C84]">{createdOrder.orderNumber}</span>
+            </p>
+            <button
+              className="rounded-xl bg-[#EC4C84] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-200"
+              onClick={() => navigate("/orders")}
+              type="button"
+            >
+              View orders
+            </button>
+          </div>
+        ) : null}
+
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_28rem]">
-          <div className="grid gap-5">
-            <FreeShippingBanner />
-            <section>
-              {cartItems.map((item) => <CartItemCard item={item} key={item.id} />)}
-            </section>
-            <div className="flex flex-col gap-3 rounded-xl border border-[#F7D9E2] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-4">
-                <Gift className="h-7 w-7 text-[#EC4C84]" />
-                <input className="h-5 w-5 accent-[#EC4C84]" type="checkbox" />
-                <div>
-                  <p className="font-semibold text-[#1F1720]">This order is a gift</p>
-                  <p className="text-sm text-[#6F6570]">Add a gift message or special wrapping</p>
+          <div className="grid content-start gap-5">
+            {isLoading ? (
+              <StatePanel title="Loading cart">
+                We are loading your cart from the backend.
+              </StatePanel>
+            ) : items.length === 0 ? (
+              <StatePanel title="Your cart is empty">
+                Add a real catalog product to your cart before checkout.
+                <Link className="mt-5 inline-flex h-11 items-center rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white shadow-lg shadow-pink-200" to="/products">
+                  Continue shopping
+                </Link>
+              </StatePanel>
+            ) : (
+              <>
+                <FreeShippingBanner subtotal={subtotal} />
+                <section>
+                  {items.map((item) => (
+                    <CartItemCard
+                      isBusy={busyItemId === item.id}
+                      item={item}
+                      key={item.id}
+                      onRemove={(itemId) => void handleRemoveItem(itemId)}
+                      onUpdate={(itemId, quantity) => void handleUpdateQuantity(itemId, quantity)}
+                    />
+                  ))}
+                </section>
+                <div className="flex flex-col gap-3 rounded-xl border border-[#F7D9E2] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <Gift className="h-7 w-7 text-[#EC4C84]" />
+                    <div>
+                      <p className="font-semibold text-[#1F1720]">Backend cart actions</p>
+                      <p className="text-sm text-[#6F6570]">Clear cart uses the real DELETE /api/cart endpoint.</p>
+                    </div>
+                  </div>
+                  <button className="rounded-xl border border-[#F7D9E2] px-5 py-3 text-sm font-bold text-[#EC4C84]" onClick={() => void handleClearCart()} type="button">
+                    Clear cart
+                  </button>
                 </div>
-              </div>
-              <button className="rounded-xl border border-[#F7D9E2] px-5 py-3 text-sm font-bold text-[#EC4C84]">Add gift options</button>
-            </div>
-            <section className="rounded-xl border border-[#F7D9E2] bg-white p-4">
-              <h2 className="mb-3 font-bold text-[#1F1720]">Add a note to your order</h2>
-              <textarea className="h-20 w-full rounded-xl border border-[#F7D9E2] p-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="We love special requests! (optional)" />
-              <p className="text-right text-xs text-[#9D8F98]">0/150</p>
-            </section>
-            <CouponRewardsBox />
-            <CheckoutSteps />
+                <CouponRewardsBox couponCode={couponCode} onCouponCodeChange={setCouponCode} />
+                <CheckoutSteps
+                  addressError={addressError}
+                  addressForm={addressForm}
+                  addresses={addresses}
+                  giftForm={giftForm}
+                  onAddressFormChange={(nextAddressForm) => {
+                    setAddressForm({
+                      ...nextAddressForm,
+                      phone: digitsOnly(nextAddressForm.phone),
+                    });
+                    setAddressError(null);
+                  }}
+                  onGiftFormChange={setGiftForm}
+                  onSelectAddress={(addressId) => {
+                    setSelectedAddressId(addressId);
+                    setAddressError(null);
+                  }}
+                  selectedAddressId={selectedAddressId}
+                  setShowAddressForm={setShowAddressForm}
+                  showAddressForm={showAddressForm}
+                />
+              </>
+            )}
           </div>
           <aside className="grid content-start gap-7">
-            <OrderSummaryCard />
+            <OrderSummaryCard
+              couponCode={couponCode}
+              giftForm={giftForm}
+              isSubmitting={isSubmitting}
+              onCheckout={() => void handleCheckout()}
+              summary={cart?.summary ?? null}
+            />
             <StoryCard />
-            <GiftOptionsCard />
-            <ReviewOrderCard />
+            <ReviewOrderCard items={items} />
             <TrustCard />
           </aside>
         </div>
