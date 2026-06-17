@@ -48,4 +48,10 @@ export const addressApi = {
     );
     return response.data.data.address;
   },
+  async delete(id: string) {
+    const response = await apiClient.delete<ApiResponse<{ address: Address }>>(
+      `/api/addresses/${id}`,
+    );
+    return response.data.data.address;
+  },
 };
