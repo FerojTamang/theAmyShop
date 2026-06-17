@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 import {
   BarChart3,
   Bell,
@@ -58,15 +59,15 @@ type ProductFormState = {
 };
 
 const navItems = [
-  { label: "Dashboard", icon: Home },
-  { label: "Products", icon: Gift, active: true, open: true },
+  { label: "Dashboard", icon: Home, to: "/admin" },
+  { label: "Products", icon: Gift, active: true, open: true, to: "/admin/products" },
   { label: "All Products", child: true, active: true },
-  { label: "Add New Product", child: true },
+  { label: "Add New Product", child: true, comingSoon: true },
   { label: "Categories", child: true, comingSoon: true },
   { label: "Tags", child: true, comingSoon: true },
   { label: "Collections", child: true, comingSoon: true },
-  { label: "Orders", icon: ShoppingCart, count: "24" },
-  { label: "Customers", icon: UsersRound },
+  { label: "Orders", icon: ShoppingCart, count: "24", to: "/admin/orders" },
+  { label: "Customers", icon: UsersRound, to: "/admin/customers" },
   { label: "Gift Orders", icon: Gift, comingSoon: true },
   { label: "Reviews", icon: Heart, comingSoon: true },
   { label: "Marketing", icon: Tags, comingSoon: true },
@@ -327,6 +328,37 @@ function Sidebar() {
             );
           }
 
+          const content = (
+            <>
+              <span className="flex items-center gap-3">
+                {Icon ? <Icon className="h-5 w-5" /> : null}
+                {item.label}
+                {item.comingSoon ? <span className="text-[10px] font-bold text-[#C8A7B1]">Soon</span> : null}
+              </span>
+              {item.open ? <ChevronDown className="h-4 w-4" /> : null}
+              {item.count ? (
+                <span className="rounded-full bg-[#EC4C84] px-2 py-0.5 text-xs text-white">{item.count}</span>
+              ) : null}
+            </>
+          );
+
+          if (item.to && !item.comingSoon) {
+            return (
+              <NavLink
+                className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold ${
+                  item.active
+                    ? "bg-[#FDECEF] text-[#EC4C84]"
+                    : "text-[#5E5962] hover:bg-white/80"
+                }`}
+                end={item.to === "/admin"}
+                key={item.label}
+                to={item.to}
+              >
+                {content}
+              </NavLink>
+            );
+          }
+
           return (
             <div
               className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold ${
@@ -339,15 +371,7 @@ function Sidebar() {
               key={item.label}
               title={item.comingSoon ? "Coming soon" : undefined}
             >
-              <span className="flex items-center gap-3">
-                {Icon ? <Icon className="h-5 w-5" /> : null}
-                {item.label}
-                {item.comingSoon ? <span className="text-[10px] font-bold text-[#C8A7B1]">Soon</span> : null}
-              </span>
-              {item.open ? <ChevronDown className="h-4 w-4" /> : null}
-              {item.count ? (
-                <span className="rounded-full bg-[#EC4C84] px-2 py-0.5 text-xs text-white">{item.count}</span>
-              ) : null}
+              {content}
             </div>
           );
         })}
@@ -381,8 +405,10 @@ function TopHeader() {
         <div className="hidden h-11 w-full max-w-lg items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4 shadow-sm lg:flex">
           <Search className="h-5 w-5 text-[#9D8F98]" />
           <input
-            className="min-w-0 flex-1 text-sm outline-none placeholder:text-[#9D8F98]"
-            placeholder="Search products, category, slug..."
+            className="min-w-0 flex-1 cursor-not-allowed text-sm outline-none placeholder:text-[#C8A7B1]"
+            disabled
+            placeholder="Search coming soon"
+            title="Coming soon"
           />
           <span className="rounded-lg bg-[#FFF5F7] px-2 py-1 text-xs font-bold text-[#6F6570]">Ctrl K</span>
         </div>
@@ -523,18 +549,20 @@ function ProductTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100">
-      <div className="grid min-w-[62rem] grid-cols-[3rem_minmax(13rem,1.6fr)_8rem_7rem_7rem_7rem_12rem] border-b border-[#F7D9E2] px-4 py-3 text-xs font-bold text-[#6F6570]">
+      <div className="grid min-w-[74rem] grid-cols-[3rem_minmax(14rem,1.6fr)_8rem_7rem_7rem_7rem_16rem] border-b border-[#F7D9E2] bg-white px-4 py-3 text-xs font-bold text-[#6F6570]">
         <span><input className="h-4 w-4 accent-[#EC4C84]" type="checkbox" /></span>
         <span>Product</span>
         <span>Category</span>
         <span>Price</span>
         <span>Stock</span>
         <span>Status</span>
-        <span className="sticky right-0 z-10 bg-white pl-3">Actions</span>
+        <span className="sticky right-0 z-10 border-l border-[#F7D9E2] bg-white pl-4 shadow-[-10px_0_18px_-18px_rgba(31,23,32,0.55)]">
+          Actions
+        </span>
       </div>
       {products.map((product) => (
         <div
-          className="grid min-w-[62rem] grid-cols-[3rem_minmax(13rem,1.6fr)_8rem_7rem_7rem_7rem_12rem] items-center border-b border-[#F7D9E2]/70 px-4 py-4 text-sm last:border-b-0"
+          className="grid min-w-[74rem] grid-cols-[3rem_minmax(14rem,1.6fr)_8rem_7rem_7rem_7rem_16rem] items-center border-b border-[#F7D9E2]/70 bg-white px-4 py-4 text-sm last:border-b-0"
           key={product.id}
         >
           <span><input className="h-4 w-4 accent-[#EC4C84]" type="checkbox" /></span>
@@ -566,13 +594,13 @@ function ProductTable({
               {product.isActive ? "Active" : "Inactive"}
             </span>
           </span>
-          <span className="sticky right-0 z-10 flex items-center gap-2 bg-white pl-3">
+          <span className="sticky right-0 z-10 flex min-h-14 items-center gap-2 border-l border-[#F7D9E2] bg-white pl-4 shadow-[-10px_0_18px_-18px_rgba(31,23,32,0.55)]">
             <button
               aria-label="Edit product"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-[#F7D9E2] bg-white px-3 text-xs font-bold text-[#EC4C84] hover:bg-[#FFF5F7] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#EC4C84] bg-[#EC4C84] px-3.5 text-xs font-bold text-white shadow-sm shadow-pink-100 hover:bg-[#D93D75] disabled:border-[#F7D9E2] disabled:bg-[#FFF9FA] disabled:text-[#C8A7B1] disabled:shadow-none disabled:cursor-not-allowed"
               disabled={isFallback}
               onClick={() => onEdit(product)}
-              title={isFallback ? "Edit product unavailable for demo data" : "Edit product"}
+              title={isFallback ? "Actions disabled for demo data" : "Edit product"}
               type="button"
             >
               <Edit3 className="h-4 w-4" />
@@ -580,10 +608,10 @@ function ProductTable({
             </button>
             <button
               aria-label="Archive product"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-[#F7D9E2] bg-white px-3 text-xs font-bold text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3.5 text-xs font-bold text-red-600 shadow-sm shadow-pink-50 hover:bg-red-50 disabled:border-[#F7D9E2] disabled:bg-[#FFF9FA] disabled:text-[#C8A7B1] disabled:shadow-none disabled:cursor-not-allowed"
               disabled={isFallback}
               onClick={() => onArchive(product)}
-              title={isFallback ? "Archive product unavailable for demo data" : "Archive product"}
+              title={isFallback ? "Actions disabled for demo data" : "Archive product"}
               type="button"
             >
               <Trash2 className="h-4 w-4" />
@@ -760,9 +788,14 @@ function ProductFormPanel({
   return (
     <aside className="border-l border-[#F7D9E2] bg-white px-5 py-7 xl:w-[29rem] xl:shrink-0">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#1F1720]">{editingProduct ? "Edit Product" : "Add Product"}</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-[#1F1720]">{editingProduct ? "Edit Product" : "Add Product"}</h2>
+          {editingProduct ? (
+            <p className="mt-1 text-xs font-semibold text-[#EC4C84]">Editing {editingProduct.name}</p>
+          ) : null}
+        </div>
         {editingProduct ? (
-          <button onClick={onCancelEdit} type="button">
+          <button aria-label="Cancel edit" onClick={onCancelEdit} title="Cancel edit" type="button">
             <X className="h-5 w-5 text-[#9D8F98]" />
           </button>
         ) : (
@@ -1228,8 +1261,13 @@ export function AdminProductsPage() {
                 <div className="flex flex-col gap-3 lg:flex-row">
                   <div className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4">
                     <Search className="h-4 w-4 text-[#9D8F98]" />
-                    <input className="min-w-0 flex-1 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Search product name, category, slug..." />
-                    <Search className="h-4 w-4 text-[#9D8F98]" />
+                    <input
+                      className="min-w-0 flex-1 cursor-not-allowed text-sm outline-none placeholder:text-[#C8A7B1]"
+                      disabled
+                      placeholder="Search coming soon"
+                      title="Coming soon"
+                    />
+                    <span className="rounded-full bg-[#FFF5F7] px-2 py-0.5 text-[10px] font-bold text-[#C8A7B1]">Soon</span>
                   </div>
                   <FilterControl label="All Categories" />
                   <FilterControl label="Stock Status" />
@@ -1245,7 +1283,7 @@ export function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto">
+              <div className="mt-5">
                 {isLoading ? (
                   <StateCard
                     description="Loading products from the real product API."
