@@ -22,6 +22,7 @@ import { normalizeApiError } from "../../lib/apiError";
 import { addressApi, type Address, type AddressPayload } from "../../services/addressApi";
 import { cartApi, type CartItem, type CartResult } from "../../services/cartApi";
 import { checkoutApi, type CheckoutOrder, type CheckoutPayload } from "../../services/checkoutApi";
+import { couponApi, type CouponValidationResult } from "../../services/couponApi";
 import { formatCurrency } from "../../utils/formatCurrency";
 
 type AddressFormState = AddressPayload;
@@ -297,11 +298,25 @@ function FreeShippingBanner({ subtotal }: { subtotal: number }) {
 
 function CouponRewardsBox({
   couponCode,
+  couponError,
+  couponValidation,
+  isApplyingCoupon,
+  isCouponStale,
+  onApplyCoupon,
   onCouponCodeChange,
+  onRemoveCoupon,
 }: {
   couponCode: string;
+  couponError: string | null;
+  couponValidation: CouponValidationResult | null;
+  isApplyingCoupon: boolean;
+  isCouponStale: boolean;
+  onApplyCoupon: () => void;
   onCouponCodeChange: (value: string) => void;
+  onRemoveCoupon: () => void;
 }) {
+  const isValidCoupon = Boolean(couponValidation?.valid && !isCouponStale);
+
   return (
     <section className="rounded-xl border border-[#F7D9E2] bg-white">
       <div className="flex items-center justify-between border-b border-[#F7D9E2] px-5 py-4">
@@ -314,13 +329,49 @@ function CouponRewardsBox({
         <button className="cursor-not-allowed text-[#C8A7B1]" disabled type="button">Rewards Soon</button>
       </div>
       <div className="p-5">
-        <input
-          className="h-12 w-full rounded-xl border border-[#F7D9E2] px-4 text-sm outline-none placeholder:text-[#9D8F98]"
-          onChange={(event) => onCouponCodeChange(event.target.value)}
-          placeholder="Enter coupon code"
-          value={couponCode}
-        />
-        <p className="mt-3 text-xs text-[#9D8F98]">Coupon validation happens during backend checkout.</p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            className="h-12 min-w-0 flex-1 rounded-xl border border-[#F7D9E2] px-4 text-sm uppercase outline-none placeholder:text-[#9D8F98]"
+            onChange={(event) => onCouponCodeChange(event.target.value.toUpperCase())}
+            placeholder="Enter coupon code"
+            value={couponCode}
+          />
+          <button
+            className="h-12 rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white shadow-lg shadow-pink-200 disabled:cursor-not-allowed disabled:bg-[#EAB5C6] disabled:shadow-none"
+            disabled={isApplyingCoupon || !couponCode.trim()}
+            onClick={onApplyCoupon}
+            type="button"
+          >
+            {isApplyingCoupon ? "Applying..." : "Apply"}
+          </button>
+          {couponCode.trim() ? (
+            <button
+              className="h-12 rounded-xl border border-[#F7D9E2] bg-white px-5 text-sm font-bold text-[#6F6570]"
+              onClick={onRemoveCoupon}
+              type="button"
+            >
+              Remove
+            </button>
+          ) : null}
+        </div>
+        {couponError ? (
+          <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+            {couponError}
+          </p>
+        ) : null}
+        {isCouponStale ? (
+          <p className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+            Coupon code changed. Apply again before checkout.
+          </p>
+        ) : null}
+        {isValidCoupon ? (
+          <p className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+            {couponValidation?.coupon?.code} applied. Discount preview: {formatCurrency(couponValidation?.discountAmount ?? 0)}.
+          </p>
+        ) : null}
+        {!couponError && !couponValidation ? (
+          <p className="mt-3 text-xs text-[#9D8F98]">Apply a coupon to preview the backend discount before checkout.</p>
+        ) : null}
       </div>
     </section>
   );
@@ -563,27 +614,36 @@ function RadioRow({ active = false, disabled = false, label, value }: { active?:
 
 function OrderSummaryCard({
   couponCode,
+  couponValidation,
   giftForm,
   isSubmitting,
+  isCouponStale,
   onCheckout,
   summary,
 }: {
   couponCode: string;
+  couponValidation: CouponValidationResult | null;
   giftForm: GiftFormState;
   isSubmitting: boolean;
+  isCouponStale: boolean;
   onCheckout: () => void;
   summary: CartResult["summary"] | null;
 }) {
   const subtotal = asNumber(summary?.subtotal);
   const giftFee = giftForm.enabled && giftForm.giftWrapRequired ? giftWrapFee : 0;
-  const displayTotal = subtotal + shippingFee + giftFee;
+  const hasValidCoupon = Boolean(couponValidation?.valid && !isCouponStale);
+  const displayTotal = hasValidCoupon ? couponValidation?.finalAmount ?? subtotal + shippingFee + giftFee : subtotal + shippingFee + giftFee;
 
   return (
     <Card>
       <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Order summary</h2>
       <div className="mt-6 grid gap-5 text-sm">
         <SummaryRow label={`Subtotal (${summary?.totalItems ?? 0} items)`} value={formatCurrency(subtotal)} />
-        {couponCode.trim() ? <SummaryRow label={`Coupon (${couponCode.trim().toUpperCase()})`} value="Calculated at checkout" pink /> : null}
+        {hasValidCoupon ? (
+          <SummaryRow label={`Coupon (${couponValidation?.coupon?.code ?? couponCode.trim().toUpperCase()})`} value={`-${formatCurrency(couponValidation?.discountAmount ?? 0)}`} pink />
+        ) : couponCode.trim() ? (
+          <SummaryRow label={`Coupon (${couponCode.trim().toUpperCase()})`} value={isCouponStale ? "Apply again" : "Apply to validate"} pink />
+        ) : null}
         <SummaryRow label="Shipping" value="FREE" green />
         {giftFee > 0 ? <SummaryRow label="Gift wrap" value={formatCurrency(giftFee)} /> : null}
         <div className="flex justify-between border-t border-[#F7D9E2] pt-5 text-2xl font-semibold text-[#1F1720]">
@@ -798,6 +858,10 @@ export function CartCheckoutPage() {
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponValidation, setCouponValidation] = useState<CouponValidationResult | null>(null);
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null);
 
@@ -809,6 +873,16 @@ export function CartCheckoutPage() {
 
     return items.reduce((sum, item) => sum + asNumber(item.lineTotal), 0);
   }, [cart?.summary?.subtotal, items]);
+  const giftFee = giftForm.enabled && giftForm.giftWrapRequired ? giftWrapFee : 0;
+  const normalizedCouponCode = couponCode.trim().toUpperCase();
+  const isCouponStale = Boolean(
+    couponValidation && normalizedCouponCode && normalizedCouponCode !== appliedCouponCode,
+  );
+  const hasValidCoupon = Boolean(
+    couponValidation?.valid &&
+      normalizedCouponCode &&
+      normalizedCouponCode === appliedCouponCode,
+  );
 
   const loadCart = async () => {
     const result = await cartApi.get();
@@ -883,6 +957,54 @@ export function CartCheckoutPage() {
     } catch (clearError) {
       setError(getApiErrorMessage(clearError));
     }
+  };
+
+  const handleCouponCodeChange = (value: string) => {
+    setCouponCode(value);
+    setCouponError(null);
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = normalizedCouponCode;
+
+    if (!code) {
+      setCouponError("Enter a coupon code first.");
+      return;
+    }
+
+    try {
+      setIsApplyingCoupon(true);
+      setCouponError(null);
+      setError(null);
+      const result = await couponApi.validate({
+        code,
+        giftWrapFee: giftFee,
+        orderAmount: subtotal + giftFee,
+        shippingFee,
+      });
+      setCouponValidation(result);
+      setAppliedCouponCode(code);
+
+      if (!result.valid) {
+        setCouponError(result.reason ?? "Coupon is not valid.");
+        return;
+      }
+
+      setSuccessMessage(`Coupon ${result.coupon?.code ?? code} applied.`);
+    } catch (couponApplyError) {
+      setCouponValidation(null);
+      setAppliedCouponCode("");
+      setCouponError(getApiErrorMessage(couponApplyError));
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode("");
+    setCouponError(null);
+    setCouponValidation(null);
+    setAppliedCouponCode("");
   };
 
   const validateAddressForm = (): string | null => {
@@ -977,6 +1099,11 @@ export function CartCheckoutPage() {
       return;
     }
 
+    if (normalizedCouponCode && !hasValidCoupon) {
+      setError("Apply the coupon successfully or remove it before checkout.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError(null);
@@ -987,7 +1114,7 @@ export function CartCheckoutPage() {
         addressId,
         paymentMethod: "CASH_ON_DELIVERY",
         shippingFee,
-        ...(couponCode.trim() && { couponCode: couponCode.trim().toUpperCase() }),
+        ...(hasValidCoupon && { couponCode: normalizedCouponCode }),
         ...(giftForm.enabled && {
           gift: {
             receiverName: giftForm.receiverName.trim(),
@@ -1101,7 +1228,16 @@ export function CartCheckoutPage() {
                     Clear cart
                   </button>
                 </div>
-                <CouponRewardsBox couponCode={couponCode} onCouponCodeChange={setCouponCode} />
+                <CouponRewardsBox
+                  couponCode={couponCode}
+                  couponError={couponError}
+                  couponValidation={couponValidation}
+                  isApplyingCoupon={isApplyingCoupon}
+                  isCouponStale={isCouponStale}
+                  onApplyCoupon={() => void handleApplyCoupon()}
+                  onCouponCodeChange={handleCouponCodeChange}
+                  onRemoveCoupon={handleRemoveCoupon}
+                />
                 <CheckoutSteps
                   addressError={addressError}
                   addressForm={addressForm}
@@ -1129,8 +1265,10 @@ export function CartCheckoutPage() {
           <aside className="grid content-start gap-7">
             <OrderSummaryCard
               couponCode={couponCode}
+              couponValidation={couponValidation}
               giftForm={giftForm}
               isSubmitting={isSubmitting}
+              isCouponStale={isCouponStale}
               onCheckout={() => void handleCheckout()}
               summary={cart?.summary ?? null}
             />

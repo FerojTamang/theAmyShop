@@ -235,7 +235,7 @@ export const createCheckoutOrder = async (
   userId: string,
   input: CheckoutInput,
 ) => {
-  return prisma.$transaction(async (tx) => {
+  const orderId = await prisma.$transaction(async (tx) => {
     await validateAddress(tx, userId, input.addressId);
 
     const cart = await getCartForCheckout(tx, userId);
@@ -411,9 +411,11 @@ export const createCheckoutOrder = async (
       where: { cartId: cart.id },
     });
 
-    return tx.order.findUniqueOrThrow({
-      where: { id: order.id },
-      include: orderInclude,
-    });
+    return order.id;
+  }, { timeout: 15000 });
+
+  return prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: orderInclude,
   });
 };

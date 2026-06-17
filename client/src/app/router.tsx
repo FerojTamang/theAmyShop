@@ -3,6 +3,7 @@ import { AdminLayout } from "../components/layout/AdminLayout";
 import { CustomerLayout } from "../components/layout/CustomerLayout";
 import { PublicLayout } from "../components/layout/PublicLayout";
 import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
+import { AdminCouponsPage } from "../pages/admin/AdminCouponsPage";
 import { AdminCustomersPage } from "../pages/admin/AdminCustomersPage";
 import { AdminOrdersPage } from "../pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "../pages/admin/AdminProductsPage";
@@ -44,6 +45,7 @@ export function AppRouter() {
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="coupons" element={<AdminCouponsPage />} />
         </Route>
       </Route>
 

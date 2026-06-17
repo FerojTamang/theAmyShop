@@ -1,4 +1,4 @@
-import { BarChart3, Boxes, ClipboardList, UsersRound } from "lucide-react";
+import { BarChart3, Boxes, ClipboardList, Tags, UsersRound } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { classNames } from "../../lib/classNames";
 
@@ -7,6 +7,7 @@ const adminLinks = [
   { label: "Products", to: "/admin/products", icon: Boxes },
   { label: "Orders", to: "/admin/orders", icon: ClipboardList },
   { label: "Customers", to: "/admin/customers", icon: UsersRound },
+  { label: "Coupons", to: "/admin/coupons", icon: Tags },
 ];
 
 export function AdminSidebar() {
