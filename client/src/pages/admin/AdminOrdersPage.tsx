@@ -167,10 +167,10 @@ const getDisplayPaymentStatusLabel = (order: CustomerOrder) => {
   return displayStatus(paymentStatus);
 };
 
-function Badge({ label }: { label: string }) {
+function Badge({ displayLabel, label }: { displayLabel?: string; label: string }) {
   return (
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${statusStyles[label] ?? "bg-[#FDECEF] text-[#EC4C84] ring-[#F7D9E2]"}`}>
-      {displayStatus(label)}
+      {displayLabel ?? displayStatus(label)}
     </span>
   );
 }
@@ -340,7 +340,7 @@ function OrderDetailPanel({
               </h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge label={order.orderStatus} />
-                <Badge label={getDisplayPaymentStatus(order)} />
+                <Badge displayLabel={getDisplayPaymentStatusLabel(order)} label={getDisplayPaymentStatus(order)} />
               </div>
               <p className="mt-3 text-sm text-[#6F6570]">{formatDate(order.createdAt)}</p>
             </div>
@@ -482,7 +482,9 @@ function OrdersTable({
             <span><Badge label={order.orderStatus} /></span>
             <span>
               <span className="block text-xs font-semibold text-[#6F6570]">{displayStatus(order.paymentMethod)}</span>
-              <span className="mt-1 inline-flex"><Badge label={getDisplayPaymentStatus(order)} /></span>
+              <span className="mt-1 inline-flex">
+                <Badge displayLabel={getDisplayPaymentStatusLabel(order)} label={getDisplayPaymentStatus(order)} />
+              </span>
             </span>
             <span className="font-semibold text-[#1F1720]">{formatCurrency(order.totalAmount)}</span>
             <span className="font-semibold text-[#6F6570]">{getItemCount(order)}</span>
