@@ -1,6 +1,4 @@
-export type UploadFolder =
-  | "the-amy-shop/products"
-  | "the-amy-shop/customization-references";
+export type UploadFolder = string;
 
 export type UploadedImageResult = {
   imageUrl: string;
