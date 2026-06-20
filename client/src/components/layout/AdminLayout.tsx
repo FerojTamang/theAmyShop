@@ -11,7 +11,8 @@ export function AdminLayout() {
     location.pathname === "/admin/coupons" ||
     location.pathname === "/admin/customers" ||
     location.pathname === "/admin/orders" ||
-    location.pathname === "/admin/products"
+    location.pathname === "/admin/products" ||
+    location.pathname === "/admin/reviews"
   ) {
     return <Outlet />;
   }

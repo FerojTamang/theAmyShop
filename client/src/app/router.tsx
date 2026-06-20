@@ -7,6 +7,7 @@ import { AdminCouponsPage } from "../pages/admin/AdminCouponsPage";
 import { AdminCustomersPage } from "../pages/admin/AdminCustomersPage";
 import { AdminOrdersPage } from "../pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "../pages/admin/AdminProductsPage";
+import { AdminReviewsPage } from "../pages/admin/AdminReviewsPage";
 import { AccountPage } from "../pages/customer/AccountPage";
 import { CartPage } from "../pages/customer/CartPage";
 import { CheckoutPage } from "../pages/customer/CheckoutPage";
@@ -46,6 +47,7 @@ export function AppRouter() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="coupons" element={<AdminCouponsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
         </Route>
       </Route>
 
