@@ -535,7 +535,7 @@ function CheckoutSteps({
         <RadioRow disabled label="Khalti" value="Coming soon" />
         <RadioRow disabled label="eSewa" value="Coming soon" />
         <p className="mt-3 text-xs text-[#9D8F98]">
-          Checkout currently accepts Cash on Delivery. Khalti and eSewa are shown for later once merchant verification is configured.
+          Checkout currently accepts Cash on Delivery only. Online payments are not selectable because backend provider verification is not production-ready yet.
         </p>
       </Step>
       <Step title="Gift details" number="4">

@@ -359,6 +359,11 @@ Notes: delete deactivates the coupon.
 
 ## Customizations
 
+The customization backend can store standalone customization requests, but the
+current storefront product page does not persist customization selections or attach
+them to cart/order flows. Customers should not be presented with active
+personalization fields until that integration is complete.
+
 Customer:
 
 - `POST /api/customizations`
@@ -505,7 +510,11 @@ Status body:
 }
 ```
 
-Notes: Khalti/eSewa live verification is pending and currently returns `501` after credential checks. Admin status updates also sync the related order `paymentStatus`.
+Notes: Cash on Delivery is the only active storefront checkout method.
+Khalti/eSewa initiation and verification routes are integration placeholders and
+must not be enabled as production payment choices. Live verification is pending and
+currently returns `501` after credential checks. Admin status updates also sync the
+related order `paymentStatus`.
 
 ## Reviews
 

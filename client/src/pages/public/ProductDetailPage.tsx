@@ -1,7 +1,5 @@
 import {
   ArrowRight,
-  Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Gift,
@@ -141,7 +139,7 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     price: formatPrice(product.price),
     oldPrice: hasCompareAt ? formatPrice(compareAtPrice) : undefined,
     badge: product.isCustomizable
-      ? "Customizable"
+      ? "Custom orders soon"
       : product.isGiftSupported
         ? "Gift ready"
         : product.stockType === "READY_STOCK"
@@ -585,8 +583,7 @@ function ProductInfoPanel({
         {product.description}
       </p>
       <FeatureIcons />
-      <PersonalizationForm />
-      <AccordionRows />
+      {product.isCustomizable ? <CustomizationNotice /> : null}
       <ActionButtons
         addToCartMessage={addToCartMessage}
         addToCartStatus={addToCartStatus}
@@ -619,59 +616,16 @@ function FeatureIcons() {
   );
 }
 
-function PersonalizationForm() {
+function CustomizationNotice() {
   return (
-    <section className="mt-8">
-      <h2 className="flex items-center gap-3 font-bold text-[#1F1720]">
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-[#EC4C84] text-sm text-white">1</span>
-        Personalize your gift
-      </h2>
-      <div className="mt-5 grid gap-5">
-        <Field label="Name on mug *" value="Best Sister Ever" count="15/20" />
-        <Field label="Gift message (on card)" value="just for you" count="11/80" />
-        <div>
-          <p className="mb-3 text-sm font-bold text-[#1F1720]">Accent color</p>
-          <div className="flex gap-4">
-            {["#EC4C84", "#E9CDBB", "#BFA9E8", "#BEC6B2"].map((color, index) => (
-              <button className="grid h-11 w-11 place-items-center rounded-full" style={{ backgroundColor: color }} key={color}>
-                {index === 0 ? <Check className="h-5 w-5 text-white" /> : null}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+    <section className="mt-8 rounded-2xl border border-[#F7D9E2] bg-gradient-to-br from-[#FFF9FA] to-[#FFF5F7] p-5 shadow-sm shadow-pink-100">
+      <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EC4C84]">
+        Custom orders coming soon
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[#6F6570]">
+        Custom orders are coming soon. For custom gift requests, contact us after placing your order.
+      </p>
     </section>
-  );
-}
-
-function Field({ count, label, value }: { count: string; label: string; value: string }) {
-  return (
-    <label className="grid gap-2 text-sm font-bold text-[#1F1720]">
-      {label}
-      <div className="flex h-12 items-center rounded-xl border border-[#F7D9E2] bg-white px-4">
-        <input className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#6F6570] outline-none" defaultValue={value} />
-        <span className="text-xs text-[#9D8F98]">{count}</span>
-      </div>
-    </label>
-  );
-}
-
-function AccordionRows() {
-  return (
-    <div className="mt-7 divide-y divide-[#F7D9E2] border-y border-[#F7D9E2]">
-      {[
-        ["2", "Add a special touch (optional)"],
-        ["3", "Choose your gift box style"],
-      ].map(([number, label]) => (
-        <button className="flex w-full items-center justify-between py-5 text-left font-bold text-[#1F1720]" key={label}>
-          <span className="flex items-center gap-3">
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-[#FDECEF] text-xs text-[#EC4C84]">{number}</span>
-            {label}
-          </span>
-          <ChevronDown className="h-5 w-5" />
-        </button>
-      ))}
-    </div>
   );
 }
 

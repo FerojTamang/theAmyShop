@@ -207,6 +207,10 @@ product prices and server-owned fees.
 
 ## Payments
 
+Cash on Delivery is the only active storefront checkout method. Khalti and eSewa
+routes remain backend integration placeholders and must not be presented as usable
+production payment options.
+
 ```powershell
 Invoke-RestMethod -Method GET "$API/api/payments/my" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" }
 
@@ -221,7 +225,9 @@ Invoke-RestMethod -Method PATCH "$API/api/admin/payments/$PAYMENT_ID/status" -He
 } | ConvertTo-Json -Depth 5)
 ```
 
-Khalti/eSewa verification currently requires credentials and live verification is pending:
+The following is a negative placeholder test only: Khalti/eSewa verification
+requires credentials and live verification remains pending, so it must not be used
+as a successful payment-flow test.
 
 ```powershell
 Invoke-RestMethod -Method POST "$API/api/payments/khalti/verify" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" } -ContentType "application/json" -Body (@{
@@ -254,6 +260,10 @@ Invoke-RestMethod -Method POST "$API/api/coupons/validate" -ContentType "applica
 ```
 
 ## Customizations and Uploads
+
+The backend can store standalone customization requests. The storefront does not
+yet persist product-page customization selections or attach them to cart/order
+flows, so customization requests in this section are API-only manual QA.
 
 Cloudinary must be configured for upload routes.
 
