@@ -110,7 +110,7 @@ function AnnouncementBar() {
         </span>
         <span className="hidden items-center gap-2 sm:inline-flex">
           <Truck className="h-4 w-4 text-[#EC4C84]" />
-          Free shipping on orders over $75
+          Free standard shipping on every order
         </span>
       </div>
     </div>
@@ -267,30 +267,14 @@ function CartItemCard({
   );
 }
 
-function FreeShippingBanner({ subtotal }: { subtotal: number }) {
-  const target = 75;
-  const remaining = Math.max(0, target - subtotal);
-  const progress = Math.min(100, (subtotal / target) * 100);
-
+function FreeShippingBanner() {
   return (
     <div className="rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] px-6 py-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex items-center gap-3">
+        <Truck className="h-5 w-5 shrink-0 text-[#EC4C84]" />
         <p className="text-sm font-semibold text-[#6F6570]">
-          {remaining > 0 ? (
-            <>You're <span className="text-[#EC4C84]">{formatCurrency(remaining)}</span> away from FREE shipping!</>
-          ) : (
-            <span className="text-[#EC4C84]">Free shipping unlocked</span>
-          )}
+          Free standard shipping is applied to every order by the server.
         </p>
-        <div className="min-w-0 flex-1">
-          <div className="h-2 rounded-full bg-white">
-            <div className="h-2 rounded-full bg-[#EC4C84]" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="mt-2 flex justify-between text-xs font-semibold text-[#EC4C84]">
-            <span>{formatCurrency(subtotal)}</span>
-            <span>{formatCurrency(target)}</span>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -890,6 +874,12 @@ export function CartCheckoutPage() {
       normalizedCouponCode === appliedCouponCode,
   );
 
+  const invalidateCouponPreview = () => {
+    setCouponValidation(null);
+    setAppliedCouponCode("");
+    setCouponError(null);
+  };
+
   const loadCart = async () => {
     const result = await cartApi.get();
     setCart(result);
@@ -930,6 +920,7 @@ export function CartCheckoutPage() {
       setSuccessMessage(null);
       const result = await cartApi.updateItem(itemId, quantity);
       setCart(result);
+      invalidateCouponPreview();
       setSuccessMessage("Cart updated.");
     } catch (updateError) {
       setError(getApiErrorMessage(updateError));
@@ -945,6 +936,7 @@ export function CartCheckoutPage() {
       setSuccessMessage(null);
       const result = await cartApi.removeItem(itemId);
       setCart(result);
+      invalidateCouponPreview();
       setSuccessMessage("Item removed from cart.");
     } catch (removeError) {
       setError(getApiErrorMessage(removeError));
@@ -959,6 +951,7 @@ export function CartCheckoutPage() {
       setSuccessMessage(null);
       const result = await cartApi.clear();
       setCart(result);
+      invalidateCouponPreview();
       setSuccessMessage("Cart cleared.");
     } catch (clearError) {
       setError(getApiErrorMessage(clearError));
@@ -967,7 +960,16 @@ export function CartCheckoutPage() {
 
   const handleCouponCodeChange = (value: string) => {
     setCouponCode(value);
-    setCouponError(null);
+    invalidateCouponPreview();
+  };
+
+  const handleGiftFormChange = (nextGiftForm: GiftFormState) => {
+    const pricingChanged =
+      nextGiftForm.enabled !== giftForm.enabled ||
+      nextGiftForm.giftWrapRequired !== giftForm.giftWrapRequired;
+
+    setGiftForm(nextGiftForm);
+    if (pricingChanged) invalidateCouponPreview();
   };
 
   const handleApplyCoupon = async () => {
@@ -1208,7 +1210,7 @@ export function CartCheckoutPage() {
               </StatePanel>
             ) : (
               <>
-                <FreeShippingBanner subtotal={subtotal} />
+                <FreeShippingBanner />
                 <section>
                   {items.map((item) => (
                     <CartItemCard
@@ -1254,7 +1256,7 @@ export function CartCheckoutPage() {
                     });
                     setAddressError(null);
                   }}
-                  onGiftFormChange={setGiftForm}
+                  onGiftFormChange={handleGiftFormChange}
                   onSelectAddress={(addressId) => {
                     setSelectedAddressId(addressId);
                     setAddressError(null);

@@ -8,7 +8,7 @@ The AMY Shop is a professional PERN stack e-commerce platform for a handmade cus
 - Backend: Node.js, Express, TypeScript
 - Database: PostgreSQL
 - ORM: Prisma
-- Payments: Khalti, eSewa, Cash on Delivery
+- Payments: Cash on Delivery (active); Khalti and eSewa integrations (coming soon)
 - Image storage: Cloudinary
 
 ## Project Structure
@@ -29,7 +29,9 @@ theamyshop/
 
 The backend API includes core modules for authentication, account/profile, addresses, products, categories, cart, checkout, orders, payments, coupons, customizations, gift options, reviews, rewards, referrals, customers, uploads, and admin dashboard analytics.
 
-The frontend foundation and baby-pink UI shells are implemented for the public storefront, product listing/detail, cart/checkout, account/orders, and admin dashboard/product/order/customer pages. Many screens still use mock data until live API wiring is completed in later frontend sprints.
+The public storefront, catalog, product detail gallery, cart/checkout, account/orders, and core admin pages are connected to the backend APIs. Product prices are displayed in NPR, standard shipping is currently server-owned at NPR 0, and Cash on Delivery is the only selectable checkout method.
+
+Khalti/eSewa verification and storefront product-customization persistence are not production-ready yet. Their customer-facing choices are disabled or presented as coming soon; standalone backend placeholder/customization routes remain available for future work.
 
 ## Documentation
 
@@ -46,6 +48,7 @@ npm run client:dev
 npm run client:build
 npm run server:dev
 npm run server:build
+npm run server:test
 ```
 
 ## Safety Notes

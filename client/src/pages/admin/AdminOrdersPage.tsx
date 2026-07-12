@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 import {
   Bell,
   Boxes,
@@ -33,26 +34,29 @@ import type { PaginatedMeta } from "../../types/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDate } from "../../utils/formatDate";
 
-const sidebarGroups = [
-  { label: "", items: [{ label: "Overview", icon: Home, soon: true }] },
+const sidebarGroups: Array<{
+  label: string;
+  items: Array<{ label: string; icon: typeof Home; to?: string; soon?: boolean }>;
+}> = [
+  { label: "", items: [{ label: "Overview", icon: Home, to: "/admin" }] },
   {
     label: "Orders",
     items: [
-      { label: "Orders", icon: ClipboardList, active: true },
+      { label: "Orders", icon: ClipboardList, to: "/admin/orders" },
       { label: "Abandoned Carts", icon: ShoppingCart, soon: true },
     ],
   },
   {
     label: "Customers",
     items: [
-      { label: "Customers", icon: UsersRound, soon: true },
+      { label: "Customers", icon: UsersRound, to: "/admin/customers" },
       { label: "Segments", icon: Tags, soon: true },
     ],
   },
   {
     label: "Products",
     items: [
-      { label: "Products", icon: Boxes, soon: true },
+      { label: "Products", icon: Boxes, to: "/admin/products" },
       { label: "Collections", icon: ClipboardList, soon: true },
       { label: "Gift Boxes", icon: Gift, soon: true },
     ],
@@ -60,9 +64,9 @@ const sidebarGroups = [
   {
     label: "Marketing",
     items: [
-      { label: "Discounts", icon: Tags, soon: true },
+      { label: "Discounts", icon: Tags, to: "/admin/coupons" },
       { label: "Email Campaigns", icon: Mail, soon: true },
-      { label: "Reviews", icon: Star, soon: true },
+      { label: "Reviews", icon: Star, to: "/admin/reviews" },
     ],
   },
   {
@@ -206,23 +210,28 @@ function Sidebar() {
               {group.items.map((item) => {
                 const Icon = item.icon;
 
-                return (
-                  <div
-                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                      item.active
-                        ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100"
-                        : item.soon
-                          ? "cursor-not-allowed text-[#C8A7B1]"
-                          : "text-[#5E5962] hover:bg-white/80"
-                    }`}
-                    key={item.label}
-                    title={item.soon ? "Coming soon" : undefined}
-                  >
+                const content = (
+                  <>
                     <span className="flex items-center gap-3">
                       <Icon className="h-5 w-5" />
                       {item.label}
                     </span>
                     {item.soon ? <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-[#C8A7B1]">Soon</span> : null}
+                  </>
+                );
+
+                return item.to ? (
+                  <NavLink
+                    className={({ isActive }) => `flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition ${isActive ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100" : "text-[#5E5962] hover:bg-white/80"}`}
+                    end={item.to === "/admin"}
+                    key={item.label}
+                    to={item.to}
+                  >
+                    {content}
+                  </NavLink>
+                ) : (
+                  <div className="flex cursor-not-allowed items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold text-[#C8A7B1]" key={item.label} title="Coming soon">
+                    {content}
                   </div>
                 );
               })}

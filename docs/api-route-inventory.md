@@ -121,10 +121,10 @@ Auth headers use `Authorization: Bearer <accessToken>`.
 | --- | --- | --- | --- | --- |
 | GET | `/api/payments/my` | Yes | Any active user | List own payments |
 | GET | `/api/payments/:id` | Yes | Any active user | Get owned payment |
-| POST | `/api/payments/khalti/initiate` | Yes | Any active user | Initiate Khalti payment |
-| POST | `/api/payments/khalti/verify` | Yes | Any active user | Verify Khalti payment placeholder |
-| POST | `/api/payments/esewa/initiate` | Yes | Any active user | Initiate eSewa payment |
-| POST | `/api/payments/esewa/verify` | Yes | Any active user | Verify eSewa payment placeholder |
+| POST | `/api/payments/khalti/initiate` | Yes | Any active user | Khalti integration placeholder; not active in storefront |
+| POST | `/api/payments/khalti/verify` | Yes | Any active user | Khalti verification placeholder; not production-ready |
+| POST | `/api/payments/esewa/initiate` | Yes | Any active user | eSewa integration placeholder; not active in storefront |
+| POST | `/api/payments/esewa/verify` | Yes | Any active user | eSewa verification placeholder; not production-ready |
 | GET | `/api/admin/payments` | Yes | ADMIN, SUPER_ADMIN | List payments |
 | GET | `/api/admin/payments/:id` | Yes | ADMIN, SUPER_ADMIN | Get payment |
 | PATCH | `/api/admin/payments/:id/status` | Yes | ADMIN, SUPER_ADMIN | Update payment status |

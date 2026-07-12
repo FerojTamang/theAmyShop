@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
   { label: "Marketing", icon: Tags, active: true },
   { label: "Coupons", child: true, active: true, to: "/admin/coupons" },
   { label: "Campaigns", child: true, comingSoon: true },
-  { label: "Reviews", icon: Heart, comingSoon: true },
+  { label: "Reviews", icon: Heart, to: "/admin/reviews" },
   { label: "Gift Orders", icon: Gift, comingSoon: true },
   { label: "Analytics", icon: BarChart3, comingSoon: true },
   { label: "Settings", icon: Settings, comingSoon: true },

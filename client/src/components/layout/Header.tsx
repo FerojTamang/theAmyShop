@@ -1,4 +1,5 @@
 import { Gift, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../context/AuthContext";
@@ -15,6 +16,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function Header() {
   const { isAuthenticated, logout, user } = useAuth();
   const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-rose-100/80 bg-[#fff8f9]/88 backdrop-blur-xl">
@@ -82,11 +84,42 @@ export function Header() {
               </Button>
             </Link>
           )}
-          <button className="rounded-full p-2 text-[#6b5550] md:hidden">
+          <button
+            aria-expanded={isMobileMenuOpen}
+            aria-label="Toggle navigation menu"
+            className="rounded-full p-2 text-[#6b5550] md:hidden"
+            onClick={() => setIsMobileMenuOpen((current) => !current)}
+            type="button"
+          >
             <Menu className="h-5 w-5" />
           </button>
         </div>
       </div>
+      {isMobileMenuOpen ? (
+        <nav className="grid gap-1 border-t border-rose-100 bg-white px-4 py-3 md:hidden">
+          <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/">
+            Home
+          </NavLink>
+          <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/products">
+            Products
+          </NavLink>
+          {isAuthenticated ? (
+            <>
+              <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/orders">
+                Orders
+              </NavLink>
+              <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/account">
+                Account
+              </NavLink>
+              {isAdmin ? (
+                <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/admin">
+                  Admin
+                </NavLink>
+              ) : null}
+            </>
+          ) : null}
+        </nav>
+      ) : null}
     </header>
   );
 }

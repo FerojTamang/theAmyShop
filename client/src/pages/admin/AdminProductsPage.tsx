@@ -34,6 +34,7 @@ import {
   type StockType,
 } from "../../services/productApi";
 import { uploadApi } from "../../services/uploadApi";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 type ProductArtType = "box" | "candle" | "mug" | "necklace" | "soap" | "decor" | "journal";
 
@@ -69,68 +70,14 @@ const navItems = [
   { label: "Categories", child: true, comingSoon: true },
   { label: "Tags", child: true, comingSoon: true },
   { label: "Collections", child: true, comingSoon: true },
-  { label: "Orders", icon: ShoppingCart, count: "24", to: "/admin/orders" },
+  { label: "Orders", icon: ShoppingCart, to: "/admin/orders" },
   { label: "Customers", icon: UsersRound, to: "/admin/customers" },
   { label: "Gift Orders", icon: Gift, comingSoon: true },
-  { label: "Reviews", icon: Heart, comingSoon: true },
+  { label: "Reviews", icon: Heart, to: "/admin/reviews" },
   { label: "Marketing", icon: Tags, comingSoon: true },
-  { label: "Discounts", icon: Star, comingSoon: true },
+  { label: "Coupons", icon: Star, to: "/admin/coupons" },
   { label: "Analytics", icon: BarChart3, comingSoon: true },
   { label: "Settings", icon: Settings, comingSoon: true },
-];
-
-const fallbackProducts: PublicProduct[] = [
-  {
-    id: "demo-1",
-    categoryId: "demo-gift-boxes",
-    name: "Relax & Unwind Gift Box",
-    slug: "relax-unwind-gift-box",
-    shortDescription: "Demo fallback product",
-    description: "Fallback product shown only when the API is unavailable.",
-    price: 48,
-    compareAtPrice: 60,
-    stock: 35,
-    stockType: "READY_STOCK",
-    isCustomizable: true,
-    isGiftSupported: true,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    category: {
-      id: "demo-gift-boxes",
-      name: "Gift Boxes",
-      slug: "gift-boxes",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    images: [],
-  },
-  {
-    id: "demo-2",
-    categoryId: "demo-candles",
-    name: "Scented Soy Candle",
-    slug: "scented-soy-candle",
-    shortDescription: "Demo fallback product",
-    description: "Fallback product shown only when the API is unavailable.",
-    price: 18,
-    stock: 6,
-    stockType: "READY_STOCK",
-    isCustomizable: false,
-    isGiftSupported: true,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    category: {
-      id: "demo-candles",
-      name: "Candles",
-      slug: "candles",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    images: [],
-  },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -168,16 +115,6 @@ const emptyForm: ProductFormState = {
   isGiftSupported: true,
   isActive: true,
   images: [],
-};
-
-const formatCurrency = (value: PublicProduct["price"]) => {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
-    return "$0.00";
-  }
-
-  return `$${amount.toFixed(2)}`;
 };
 
 const optionalString = (value: string) => {
@@ -341,9 +278,6 @@ function Sidebar() {
                 {item.comingSoon ? <span className="text-[10px] font-bold text-[#C8A7B1]">Soon</span> : null}
               </span>
               {item.open ? <ChevronDown className="h-4 w-4" /> : null}
-              {item.count ? (
-                <span className="rounded-full bg-[#EC4C84] px-2 py-0.5 text-xs text-white">{item.count}</span>
-              ) : null}
             </>
           );
 
@@ -542,12 +476,10 @@ function StateCard({
 }
 
 function ProductTable({
-  isFallback,
   onArchive,
   onEdit,
   products,
 }: {
-  isFallback: boolean;
   onArchive: (product: PublicProduct) => void;
   onEdit: (product: PublicProduct) => void;
   products: PublicProduct[];
@@ -603,9 +535,8 @@ function ProductTable({
             <button
               aria-label="Edit product"
               className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#EC4C84] bg-[#EC4C84] px-3.5 text-xs font-bold text-white shadow-sm shadow-pink-100 hover:bg-[#D93D75] disabled:border-[#F7D9E2] disabled:bg-[#FFF9FA] disabled:text-[#C8A7B1] disabled:shadow-none disabled:cursor-not-allowed"
-              disabled={isFallback}
               onClick={() => onEdit(product)}
-              title={isFallback ? "Actions disabled for demo data" : "Edit product"}
+              title="Edit product"
               type="button"
             >
               <Edit3 className="h-4 w-4" />
@@ -614,15 +545,13 @@ function ProductTable({
             <button
               aria-label="Archive product"
               className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3.5 text-xs font-bold text-red-600 shadow-sm shadow-pink-50 hover:bg-red-50 disabled:border-[#F7D9E2] disabled:bg-[#FFF9FA] disabled:text-[#C8A7B1] disabled:shadow-none disabled:cursor-not-allowed"
-              disabled={isFallback}
               onClick={() => onArchive(product)}
-              title={isFallback ? "Actions disabled for demo data" : "Archive product"}
+              title="Archive product"
               type="button"
             >
               <Trash2 className="h-4 w-4" />
               Archive
             </button>
-            {isFallback ? <span className="text-[10px] font-bold text-[#C8A7B1]">Demo only</span> : null}
           </span>
         </div>
       ))}
@@ -1286,7 +1215,6 @@ export function AdminProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
   const [form, setForm] = useState<ProductFormState>(emptyForm);
   const [editingProduct, setEditingProduct] = useState<PublicProduct | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -1302,19 +1230,17 @@ export function AdminProductsPage() {
     return [["All", String(products.length)], ...categoryCounts, ["More", ""]];
   }, [categories, products]);
 
-  const displayedProducts = isFallback ? fallbackProducts : products;
+  const displayedProducts = products;
 
   const loadProducts = async () => {
     try {
       setIsLoading(true);
       setLoadError(null);
-      setIsFallback(false);
       const result = await productApi.list({ page: 1, limit: 100 });
       setProducts(result.products);
     } catch (error) {
       setLoadError(normalizeApiError(error).message);
       setProducts([]);
-      setIsFallback(true);
     } finally {
       setIsLoading(false);
     }
@@ -1475,7 +1401,7 @@ export function AdminProductsPage() {
               ) : null}
               {loadError ? (
                 <p className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm shadow-red-100">
-                  {loadError}. {isFallback ? "Showing demo fallback products." : null}
+                  {loadError}
                 </p>
               ) : null}
               {categoryError ? (
@@ -1483,12 +1409,6 @@ export function AdminProductsPage() {
                   Categories could not be loaded: {categoryError}
                 </p>
               ) : null}
-              {isFallback ? (
-                <p className="mt-5 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] px-4 py-3 text-sm font-semibold text-[#EC4C84] shadow-sm shadow-pink-100">
-                  Demo fallback mode is active because the product API failed. Create, edit, and archive actions are disabled for demo rows.
-                </p>
-              ) : null}
-
               <div className="mt-7 flex gap-3 overflow-x-auto rounded-2xl border border-[#F7D9E2] bg-white p-3 shadow-sm shadow-pink-100">
                 {tabs.map(([label, count], index) => (
                   <button
@@ -1540,7 +1460,6 @@ export function AdminProductsPage() {
                   />
                 ) : displayedProducts.length > 0 ? (
                   <ProductTable
-                    isFallback={isFallback}
                     onArchive={handleArchive}
                     onEdit={handleEdit}
                     products={displayedProducts}
@@ -1553,7 +1472,7 @@ export function AdminProductsPage() {
                 )}
               </div>
               <p className="mt-5 text-sm text-[#6F6570]">
-                Showing {displayedProducts.length} products{isFallback ? " in demo fallback mode" : ""}
+                Showing {displayedProducts.length} products
               </p>
 
               <SummaryCards products={displayedProducts} />

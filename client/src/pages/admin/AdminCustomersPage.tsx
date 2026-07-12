@@ -74,9 +74,9 @@ const sidebarGroups: Array<{ label: string; items: SidebarItem[] }> = [
   {
     label: "Marketing",
     items: [
-      { label: "Discounts", icon: Tags, soon: true },
+      { label: "Coupons", icon: Tags, to: "/admin/coupons" },
       { label: "Email Campaigns", icon: Mail, soon: true },
-      { label: "Reviews", icon: Star, soon: true },
+      { label: "Reviews", icon: Star, to: "/admin/reviews" },
     ],
   },
   {

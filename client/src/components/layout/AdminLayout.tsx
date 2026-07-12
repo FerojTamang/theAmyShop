@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { AdminSidebar } from "./AdminSidebar";
+import { AdminMobileNav, AdminSidebar } from "./AdminSidebar";
 import { useAuth } from "../../context/AuthContext";
 
 export function AdminLayout() {
@@ -14,7 +14,12 @@ export function AdminLayout() {
     location.pathname === "/admin/products" ||
     location.pathname === "/admin/reviews"
   ) {
-    return <Outlet />;
+    return (
+      <>
+        <AdminMobileNav />
+        <Outlet />
+      </>
+    );
   }
 
   return (

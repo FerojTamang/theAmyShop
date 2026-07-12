@@ -1,16 +1,14 @@
 import {
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Gift,
-  Headphones,
   Heart,
   Mail,
   Maximize2,
+  Menu,
   Minus,
   PackageCheck,
   RotateCcw,
-  Search,
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
@@ -30,6 +28,9 @@ import { cartApi } from "../../services/cartApi";
 import { orderApi, type CustomerOrder } from "../../services/orderApi";
 import { productApi, type PublicProduct } from "../../services/productApi";
 import { reviewApi, type ProductReview, type ProductReviewListResult } from "../../services/reviewApi";
+import { formatCurrency } from "../../utils/formatCurrency";
+
+type ProductArt = "box" | "necklace" | "candle" | "decor";
 
 type RelatedProduct = {
   title: string;
@@ -37,8 +38,10 @@ type RelatedProduct = {
   price: string;
   oldPrice?: string;
   rating: string;
-  art: "box" | "necklace" | "candle" | "decor";
+  art: ProductArt;
 };
+
+const relatedProducts: RelatedProduct[] = [];
 
 type DetailProduct = {
   id?: string;
@@ -49,7 +52,7 @@ type DetailProduct = {
   price: string;
   oldPrice?: string;
   badge?: string;
-  art: RelatedProduct["art"] | "mug" | "card";
+  art: ProductArt | "mug" | "card";
   images: string[];
   isCustomizable: boolean;
   isGiftSupported: boolean;
@@ -60,41 +63,6 @@ type DetailProduct = {
 
 const serifStyle = {
   fontFamily: "Georgia, 'Times New Roman', serif",
-};
-
-const relatedProducts: RelatedProduct[] = [
-  { title: "Relax & Unwind Gift Box", badge: "Bestseller", price: "$48.00", oldPrice: "$60.00", rating: "4.9", art: "box" },
-  { title: "Personalized Name Necklace", badge: "New", price: "$36.00", oldPrice: "$45.00", rating: "4.8", art: "necklace" },
-  { title: "Scented Soy Candle", price: "$18.00", oldPrice: "$22.00", rating: "4.8", art: "candle" },
-  { title: "Handmade Decor", price: "$28.00", oldPrice: "$35.00", rating: "4.9", art: "decor" },
-];
-
-const fallbackDetailProduct: DetailProduct = {
-  title: "Personalized Gift Box",
-  category: "Gift Boxes",
-  subtitle: "Thoughtful gifts with a handmade heart.",
-  description:
-    "A curated gift box made to celebrate life's special moments. Each item is handpicked, beautifully packed, and personalized just for your loved one.",
-  price: "$48.00",
-  oldPrice: "$60.00",
-  badge: "Bestseller",
-  art: "box",
-  images: [],
-  isCustomizable: true,
-  isGiftSupported: true,
-  material: "Handmade gift assortment",
-  careInstructions: "Keep dry and store with care.",
-  makingTime: "3-5 business days",
-};
-
-const formatPrice = (value: PublicProduct["price"]) => {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
-    return "$0.00";
-  }
-
-  return `$${amount.toFixed(2)}`;
 };
 
 const formatDate = (date: string) => (
@@ -136,8 +104,8 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
       product.category?.name ??
       "Thoughtful gifts with a handmade heart.",
     description: product.description,
-    price: formatPrice(product.price),
-    oldPrice: hasCompareAt ? formatPrice(compareAtPrice) : undefined,
+    price: formatCurrency(product.price),
+    oldPrice: hasCompareAt ? formatCurrency(compareAtPrice) : undefined,
     badge: product.isCustomizable
       ? "Custom orders soon"
       : product.isGiftSupported
@@ -165,7 +133,7 @@ function AnnouncementBar() {
         </span>
         <span className="hidden items-center gap-2 sm:inline-flex">
           <Truck className="h-4 w-4 text-[#EC4C84]" />
-          Free shipping on orders over $75
+          Free standard shipping on every order
         </span>
       </div>
     </div>
@@ -173,6 +141,8 @@ function AnnouncementBar() {
 }
 
 function ProductHeader() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <header className="border-b border-[#F7D9E2] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
@@ -187,30 +157,23 @@ function ProductHeader() {
             <span className="text-xs font-medium text-[#9D8F98]">Handmade custom gifts</span>
           </span>
         </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] lg:flex">
-          {["Home", "Shop", "Collections", "Orders", "About", "Contact"].map((item) => (
-            <Link key={item} to={item === "Home" ? "/" : item === "Shop" ? "/products" : item === "Orders" ? "/orders" : "/"}>
-              {item}
-            </Link>
-          ))}
+        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] md:flex">
+          <Link to="/">Home</Link><Link className="text-[#EC4C84]" to="/products">Shop</Link><Link to="/orders">Orders</Link>
         </nav>
-        <div className="ml-auto hidden h-10 w-52 items-center gap-2 rounded-full border border-[#F7D9E2] bg-white px-4 text-sm text-[#9D8F98] md:flex">
-          <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#9D8F98]" placeholder="Search gifts..." />
-          <Search className="h-4 w-4 text-[#1F1720]" />
-        </div>
-        <Link className="grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/account">
+        <Link className="ml-auto grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/account">
           <UserRound className="h-5 w-5" />
         </Link>
-        <Link className="relative grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/cart">
+        <Link className="grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/cart">
           <ShoppingBag className="h-5 w-5" />
-          <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-[#EC4C84] text-[10px] font-bold text-white">2</span>
         </Link>
+        <button aria-expanded={isMenuOpen} aria-label="Toggle navigation" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7] md:hidden" onClick={() => setIsMenuOpen((value) => !value)} type="button">{isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
       </div>
+      {isMenuOpen ? <nav className="grid gap-1 border-t border-[#F7D9E2] px-4 py-3 text-sm font-semibold md:hidden"><Link className="rounded-lg px-3 py-2" onClick={() => setIsMenuOpen(false)} to="/">Home</Link><Link className="rounded-lg bg-[#FFF5F7] px-3 py-2 text-[#EC4C84]" onClick={() => setIsMenuOpen(false)} to="/products">Shop</Link><Link className="rounded-lg px-3 py-2" onClick={() => setIsMenuOpen(false)} to="/orders">Orders</Link></nav> : null}
     </header>
   );
 }
 
-function ProductVisual({ type = "box", className = "" }: { type?: RelatedProduct["art"] | "mug" | "card"; className?: string }) {
+function ProductVisual({ type = "box", className = "" }: { type?: ProductArt | "mug" | "card"; className?: string }) {
   const label = {
     box: "Best Sister Ever",
     mug: "mama",
@@ -592,7 +555,6 @@ function ProductInfoPanel({
         onQuantityChange={onQuantityChange}
         quantity={quantity}
       />
-      <DeliveryNote />
     </section>
   );
 }
@@ -719,25 +681,12 @@ function ActionButtons({
   );
 }
 
-function DeliveryNote() {
-  return (
-    <div className="mt-5 flex items-center gap-4 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] p-5">
-      <Truck className="h-8 w-8 text-[#EC4C84]" />
-      <p className="text-sm leading-6 text-[#1F1720]">
-        Order in the next <strong>5h 32m</strong> to get it between
-        <br />
-        <strong>May 20 - May 23</strong>
-      </p>
-    </div>
-  );
-}
-
 function BenefitStrip() {
   const benefits: Array<[string, string, typeof Heart]> = [
-    ["Free shipping", "on orders $75+", Truck],
+    ["Free shipping", "on every order", Truck],
     ["Handmade", "with love", Heart],
-    ["Secure payments", "SSL encrypted", ShieldCheck],
-    ["24/7 support", "We're here to help", Headphones],
+    ["Cash on Delivery", "active at checkout", ShieldCheck],
+    ["Order tracking", "from your account", ShoppingBag],
   ];
 
   return (
@@ -778,7 +727,7 @@ function ProductCard({ product }: { product: RelatedProduct }) {
   );
 }
 
-function RelatedProductsSection() {
+export function RelatedProductsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
       <h2 className="mb-7 text-center text-4xl font-semibold text-[#1F1720]" style={serifStyle}>You may also love <span className="text-[#EC4C84]">♡</span></h2>
@@ -1063,7 +1012,7 @@ function ReviewCard({ review }: { review: ProductReview }) {
   );
 }
 
-function NewsletterSection() {
+export function NewsletterSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
       <div className="grid items-center gap-6 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-6 md:grid-cols-[auto_1fr_1.4fr]">
@@ -1123,9 +1072,7 @@ function ProductFooter() {
               <p className="text-xs text-[#9D8F98]">Handmade custom gifts made with love</p>
             </div>
           </div>
-          <div className="mt-5 flex gap-3">
-            {["ig", "fb", "p", "tt"].map((item) => <span className="grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-xs font-bold text-white" key={item}>{item}</span>)}
-          </div>
+          <p className="mt-4 text-xs leading-5 text-[#6F6570]">Free standard shipping and Cash on Delivery are currently active.</p>
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
           {[
@@ -1139,17 +1086,14 @@ function ProductFooter() {
             </div>
           ))}
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-[#1F1720]">Let's keep in touch</h3>
-          <p className="mt-3 text-xs leading-5 text-[#6F6570]">Join our newsletter for updates and sweet surprises.</p>
-          <div className="mt-4 flex rounded-full border border-[#F7D9E2] p-1">
-            <input className="min-w-0 flex-1 px-3 text-xs outline-none placeholder:text-[#9D8F98]" placeholder="Enter your email" />
-            <button className="grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-white" type="button"><ArrowRight className="h-4 w-4" /></button>
-          </div>
-        </div>
+        <nav className="grid content-start gap-3 text-sm font-semibold text-[#6F6570]">
+          <Link to="/products">Shop products</Link>
+          <Link to="/orders">My orders</Link>
+          <Link to="/account">My account</Link>
+        </nav>
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs text-[#9D8F98] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <span>© 2025 The AMY Shop. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} The AMY Shop. All rights reserved.</span>
         <span className="flex gap-6"><span>Privacy Policy</span><span>Terms of Service</span></span>
       </div>
     </footer>
@@ -1227,10 +1171,7 @@ export function ProductDetailPage() {
     };
   }, [slug]);
 
-  const product = useMemo(
-    () => apiProduct ?? fallbackDetailProduct,
-    [apiProduct],
-  );
+  const product = apiProduct;
 
   const loadProductReviews = async (productId: string) => {
     try {
@@ -1311,7 +1252,7 @@ export function ProductDetailPage() {
   }, [apiProduct?.id, isAuthenticated]);
 
   const handleAddToCart = async () => {
-    if (!product.id) {
+    if (!product?.id) {
       setAddToCartStatus("error");
       setAddToCartMessage("Product not available yet.");
       return;
@@ -1386,16 +1327,18 @@ export function ProductDetailPage() {
             description="This product could not be found in the live catalog."
             title="Product not found"
           />
+        ) : error ? (
+          <ProductStatePanel
+            description={error}
+            title="Product details are temporarily unavailable"
+          />
+        ) : !product ? (
+          <ProductStatePanel
+            description="This product is not available in the catalog."
+            title="Product unavailable"
+          />
         ) : (
           <>
-            {error ? (
-              <div className="mx-auto max-w-7xl px-4 pt-7 sm:px-6 lg:px-8">
-                <ProductStatePanel
-                  description={`${error}. Showing a sample product while the live catalog is unavailable.`}
-                  title="Product details are temporarily unavailable"
-                />
-              </div>
-            ) : null}
             <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
               <div className="flex items-center gap-2 text-sm text-[#6F6570]">
                 <Link to="/">Home</Link>
@@ -1424,7 +1367,6 @@ export function ProductDetailPage() {
               </div>
             </div>
             <BenefitStrip />
-            <RelatedProductsSection />
             <ReviewsSection
               eligibleOrders={eligibleReviewOrders}
               isAuthenticated={isAuthenticated}
@@ -1442,7 +1384,6 @@ export function ProductDetailPage() {
               setReviewRating={setReviewRating}
               setSelectedOrderId={setSelectedReviewOrderId}
             />
-            <NewsletterSection />
           </>
         )}
       </main>
