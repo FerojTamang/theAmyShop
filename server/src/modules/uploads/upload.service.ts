@@ -3,7 +3,8 @@ import { cloudinary, isCloudinaryConfigured } from "../../config/cloudinary.js";
 import { ApiError } from "../../utils/ApiError.js";
 import type { UploadedImageResult, UploadFolder } from "./upload.types.js";
 
-const uploadNotConfiguredMessage = "Image upload service is not configured";
+const uploadNotConfiguredMessage =
+  "Cloudinary is not configured. Add real CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET values to server/.env, then restart the backend.";
 
 const uploadBufferToCloudinary = async (
   file: Express.Multer.File,

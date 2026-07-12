@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
@@ -31,6 +31,7 @@ import {
   type PublicProduct,
   type StockType,
 } from "../../services/productApi";
+import { uploadApi } from "../../services/uploadApi";
 
 type ProductArtType = "box" | "candle" | "mug" | "necklace" | "soap" | "decor" | "journal";
 
@@ -760,6 +761,13 @@ function ProductFormPanel({
   onFormChange: (form: ProductFormState) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
+  const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const primaryImage = form.images[0];
+
   const updateForm = (updates: Partial<ProductFormState>) => {
     onFormChange({ ...form, ...updates });
   };
@@ -783,6 +791,66 @@ function ProductFormPanel({
         isPrimary: imageIndex === index,
       })),
     });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (uploadPreviewUrl) {
+        URL.revokeObjectURL(uploadPreviewUrl);
+      }
+    };
+  }, [uploadPreviewUrl]);
+
+  const updateFirstImageFromUpload = (imageUrl: string, publicId: string) => {
+    const [firstImage, ...otherImages] = form.images.length
+      ? form.images
+      : [{ imageUrl: "", publicId: "", isPrimary: true }];
+
+    onFormChange({
+      ...form,
+      images: [
+        {
+          ...firstImage,
+          imageUrl,
+          publicId,
+          isPrimary: true,
+        },
+        ...otherImages.map((image) => ({ ...image, isPrimary: false })),
+      ],
+    });
+  };
+
+  const handleUploadFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setUploadMessage(null);
+    setUploadError(null);
+    setSelectedUploadFile(file);
+
+    if (uploadPreviewUrl) {
+      URL.revokeObjectURL(uploadPreviewUrl);
+    }
+
+    setUploadPreviewUrl(file ? URL.createObjectURL(file) : null);
+  };
+
+  const handleProductImageUpload = async () => {
+    if (!selectedUploadFile) {
+      setUploadError("Choose a JPG, PNG, or WEBP image before uploading.");
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      setUploadMessage(null);
+      setUploadError(null);
+      const uploadedImage = await uploadApi.uploadProductImage(selectedUploadFile);
+      updateFirstImageFromUpload(uploadedImage.imageUrl, uploadedImage.publicId);
+      setUploadMessage("Image uploaded and added to the first product image slot.");
+    } catch (error) {
+      setUploadError(normalizeApiError(error).message);
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   return (
@@ -933,7 +1001,56 @@ function ProductFormPanel({
         </FormSection>
 
         <FormSection title="Product Images">
-          <p className="mb-1 text-sm font-semibold text-[#6F6570]">Manual imageUrl / publicId pairs</p>
+          <div className="mb-4 rounded-2xl border border-[#F7D9E2] bg-[#FFF9FA] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-[#1F1720]">Upload from device</p>
+                <p className="mt-1 text-xs font-semibold text-[#6F6570]">JPG, PNG, or WEBP. Max size is enforced by the backend.</p>
+              </div>
+              <Upload className="h-5 w-5 text-[#EC4C84]" />
+            </div>
+            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#F7D9E2] bg-white px-4 py-5 text-center">
+              <input
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                className="sr-only"
+                onChange={handleUploadFileChange}
+                type="file"
+              />
+              <span className="text-sm font-bold text-[#EC4C84]">Choose product image</span>
+              <span className="mt-1 text-xs font-semibold text-[#9D8F98]">
+                {selectedUploadFile ? selectedUploadFile.name : "No file selected"}
+              </span>
+            </label>
+            {uploadPreviewUrl || primaryImage?.imageUrl ? (
+              <div className="mt-4 overflow-hidden rounded-xl border border-[#F7D9E2] bg-white">
+                <img
+                  alt="Product image preview"
+                  className="h-44 w-full object-cover"
+                  src={uploadPreviewUrl ?? primaryImage?.imageUrl}
+                />
+              </div>
+            ) : null}
+            <button
+              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#EC4C84] px-4 text-sm font-bold text-white shadow-lg shadow-pink-200 disabled:cursor-not-allowed disabled:bg-[#EAB5C6] disabled:shadow-none"
+              disabled={isUploadingImage || !selectedUploadFile}
+              onClick={() => void handleProductImageUpload()}
+              type="button"
+            >
+              <Upload className="h-4 w-4" />
+              {isUploadingImage ? "Uploading..." : "Upload image"}
+            </button>
+            {uploadMessage ? (
+              <p className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                {uploadMessage}
+              </p>
+            ) : null}
+            {uploadError ? (
+              <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                {uploadError}
+              </p>
+            ) : null}
+          </div>
+          <p className="mb-1 text-sm font-semibold text-[#6F6570]">Advanced fallback: manual imageUrl / publicId pairs</p>
           {form.images.map((image, index) => (
             <div className="grid gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] p-3" key={index}>
               <TextField
