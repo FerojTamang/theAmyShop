@@ -9,6 +9,7 @@
     "server:dev": "npm --prefix server run dev",
     "client:build": "npm --prefix client run build",
     "server:build": "npm --prefix server run build",
+    "server:test": "npm --prefix server run test",
     "build": "npm run client:build && npm run server:build",
     "server:prisma:generate": "npm --prefix server run prisma:generate",
     "server:prisma:migrate": "npm --prefix server run prisma:migrate",

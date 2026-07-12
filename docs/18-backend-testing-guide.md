@@ -2,6 +2,32 @@
 
 This is a manual QA guide for PowerShell. It uses placeholders only. Do not paste real secrets into documentation.
 
+## Automated regression tests
+
+Run the focused backend regression suite from the repository root:
+
+```powershell
+npm.cmd run server:test
+```
+
+For watch mode while editing server tests:
+
+```powershell
+npm.cmd --prefix server run test:watch
+```
+
+The automated suite uses Vitest, Supertest, manual Prisma mocks, and in-memory
+Express applications. It does not connect to Supabase or another PostgreSQL
+database, run migrations, or upload to Cloudinary. It covers server-owned checkout
+fees, coupon preview/reservation rejection paths, order status transitions,
+authentication protection and rate limiting, upload validation, and friendly
+database-unavailable responses.
+
+The mocked coupon tests verify the conditional reservation query and rollback-safe
+service paths, but they do not reproduce PostgreSQL row-lock scheduling. Keep the
+manual concurrency checks in this guide until a disposable PostgreSQL integration
+environment is introduced.
+
 Start the API in another terminal:
 
 ```powershell
