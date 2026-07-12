@@ -30,6 +30,8 @@ Do not place real tokens, secrets, database URLs, or payment credentials in docu
 | 403 | Account inactive or role not allowed |
 | 404 | Resource not found |
 | 409 | Duplicate or conflict |
+| 413 | Uploaded image exceeds the maximum size |
+| 429 | Too many requests |
 | 501 | Feature placeholder not implemented |
 | 503 | External service credentials not configured |
 | 503 | Database service temporarily unavailable |
@@ -81,6 +83,9 @@ Body:
 ```
 
 Notes: `identifier` can be phone or email. Inactive/suspended accounts cannot login.
+Login and registration are limited to 5 requests per IP per 15 minutes. The
+refresh-token endpoint is limited to 30 requests per IP per 15 minutes. Exceeding
+a limit returns `429` with `Too many attempts. Please try again later.`
 
 ### GET `/api/auth/me`
 
@@ -632,4 +637,5 @@ Field:
 
 Notes: the endpoint uploads one image per request and can be called repeatedly to
 build a product gallery. Cloudinary credentials must be configured. Otherwise upload
-routes return `503`.
+routes return `503`. Images larger than 5MB return `413`. Unsupported image types
+return `400`; accepted types are JPG, PNG, and WEBP.

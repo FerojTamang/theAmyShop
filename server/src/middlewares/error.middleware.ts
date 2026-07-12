@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from "express";
+import multer from "multer";
 import { config } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
@@ -14,6 +15,22 @@ export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) =>
       success: false,
       statusCode: 503,
       message: DATABASE_UNAVAILABLE_MESSAGE,
+      errors: [],
+    });
+    return;
+  }
+
+  if (error instanceof multer.MulterError) {
+    const isFileTooLarge = error.code === "LIMIT_FILE_SIZE";
+    const statusCode = isFileTooLarge ? 413 : 400;
+    const message = isFileTooLarge
+      ? "Image is too large. Maximum allowed size is 5MB."
+      : "Invalid image upload request.";
+
+    res.status(statusCode).json({
+      success: false,
+      statusCode,
+      message,
       errors: [],
     });
     return;

@@ -79,6 +79,10 @@ Invoke-RestMethod -Method PATCH "$API/api/account/change-password" -Headers @{ A
 } | ConvertTo-Json)
 ```
 
+Auth rate-limit check: send the same login or registration request more than five
+times within 15 minutes from one IP. The next request returns `429` with a friendly
+message. Refresh-token requests have a separate limit of 30 per 15 minutes.
+
 ## Categories
 
 ```powershell
@@ -246,6 +250,20 @@ Invoke-RestMethod -Method POST "$API/api/coupons/validate" -ContentType "applica
 ## Customizations and Uploads
 
 Cloudinary must be configured for upload routes.
+
+Upload validation checks:
+
+```powershell
+# An image larger than 5MB returns 413.
+Invoke-RestMethod -Method POST "$API/api/admin/uploads/product-image" -Headers @{ Authorization = "Bearer $ADMIN_TOKEN" } -Form @{
+  image = Get-Item "path-to-image-over-5mb.jpg"
+}
+
+# A non-JPG/PNG/WEBP file returns 400.
+Invoke-RestMethod -Method POST "$API/api/admin/uploads/product-image" -Headers @{ Authorization = "Bearer $ADMIN_TOKEN" } -Form @{
+  image = Get-Item "path-to-invalid-file.gif"
+}
+```
 
 ```powershell
 Invoke-RestMethod -Method POST "$API/api/customizations" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" } -ContentType "application/json" -Body (@{

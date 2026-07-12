@@ -18,7 +18,12 @@ export const uploadSingleImage = multer({
   },
   fileFilter: (_req, file, callback) => {
     if (!allowedImageMimeTypes.has(file.mimetype)) {
-      callback(new ApiError(400, "Only JPEG, PNG, and WEBP images are allowed"));
+      callback(
+        new ApiError(
+          400,
+          "Invalid image type. Please upload JPG, PNG, or WEBP.",
+        ),
+      );
       return;
     }
 
