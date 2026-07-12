@@ -44,6 +44,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(tokens));
 
+  useEffect(() => {
+    return authStorage.subscribe((nextTokens) => {
+      setTokens(nextTokens);
+
+      if (!nextTokens) {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+  }, []);
+
   const storeSession = useCallback((nextUser: AuthUser, nextTokens: AuthTokens) => {
     authStorage.setTokens(nextTokens);
     setTokens(nextTokens);

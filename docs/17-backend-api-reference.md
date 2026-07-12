@@ -102,6 +102,14 @@ Body:
 
 Returns new auth tokens.
 
+The frontend attempts this refresh once when an eligible authenticated request
+returns `401`, stores both replacement tokens, and retries the original request
+once. Concurrent `401` responses share one refresh request. Login, registration,
+refresh, and logout requests are excluded from automatic retry. If refresh fails,
+the frontend clears its session and protected routes return the user to login.
+Refresh-token revocation and persistent session storage are outside the current
+sprint; logout remains stateless.
+
 ### POST `/api/auth/logout`
 
 Auth: any active user
