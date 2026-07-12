@@ -324,17 +324,23 @@ function ProductVisual({ type, className = "" }: { type: Product["art"] | "promo
 }
 
 function ProductCard({ product }: { product: Product }) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const showProductImage = Boolean(
+    product.imageUrl && failedImageUrl !== product.imageUrl,
+  );
+
   return (
     <Link className="group overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-100" to={`/products/${product.slug}`}>
-      <div className="relative">
-        {product.imageUrl ? (
+      <div className="relative aspect-[1.1/1] overflow-hidden bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF5F7]">
+        {showProductImage ? (
           <img
             alt={product.title}
-            className="aspect-[1.1/1] w-full object-cover"
+            className="h-full w-full object-contain p-3"
+            onError={() => setFailedImageUrl(product.imageUrl ?? null)}
             src={product.imageUrl}
           />
         ) : (
-          <ProductVisual className="aspect-[1.1/1] rounded-none" type={product.art} />
+          <ProductVisual className="h-full w-full rounded-none" type={product.art} />
         )}
         {product.badge ? <span className="absolute left-4 top-4 rounded-full bg-[#FFF5F7] px-3 py-1 text-xs font-bold text-[#EC4C84]">{product.badge}</span> : null}
         <button className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white text-[#EC4C84] shadow-sm" type="button"><Heart className="h-5 w-5" /></button>

@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
   Bell,
   Boxes,
   ChevronDown,
+  Copy,
   Edit3,
+  ExternalLink,
   Filter,
   Gift,
   Heart,
@@ -165,7 +167,7 @@ const emptyForm: ProductFormState = {
   isCustomizable: false,
   isGiftSupported: true,
   isActive: true,
-  images: [{ imageUrl: "", publicId: "", isPrimary: true }],
+  images: [],
 };
 
 const formatCurrency = (value: PublicProduct["price"]) => {
@@ -216,13 +218,15 @@ const getStockState = (product: PublicProduct) => {
 };
 
 const formFromProduct = (product: PublicProduct): ProductFormState => {
+  const primaryIndex = product.images?.findIndex((image) => image.isPrimary) ?? -1;
+  const normalizedPrimaryIndex = primaryIndex >= 0 ? primaryIndex : 0;
   const images = product.images?.length
     ? product.images.map((image, index) => ({
         imageUrl: image.imageUrl,
         publicId: image.publicId,
-        isPrimary: image.isPrimary || index === 0,
+        isPrimary: index === normalizedPrimaryIndex,
       }))
-    : [{ imageUrl: "", publicId: "", isPrimary: true }];
+    : [];
 
   return {
     categoryId: product.categoryId,
@@ -284,7 +288,7 @@ const buildPayload = (form: ProductFormState): ProductPayload => {
     isCustomizable: form.isCustomizable,
     isGiftSupported: form.isGiftSupported,
     isActive: form.isActive,
-    ...(images.length > 0 && { images }),
+    images,
   };
 };
 
@@ -766,21 +770,14 @@ function ProductFormPanel({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const primaryImage = form.images[0];
+  const [manualImageUrl, setManualImageUrl] = useState("");
+  const [manualPublicId, setManualPublicId] = useState("");
+  const [uploadPreviewFailed, setUploadPreviewFailed] = useState(false);
+  const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(() => new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateForm = (updates: Partial<ProductFormState>) => {
     onFormChange({ ...form, ...updates });
-  };
-
-  const updateImage = (
-    index: number,
-    updates: Partial<ProductFormState["images"][number]>,
-  ) => {
-    const nextImages = form.images.map((image, imageIndex) => (
-      imageIndex === index ? { ...image, ...updates } : image
-    ));
-
-    onFormChange({ ...form, images: nextImages });
   };
 
   const setPrimaryImage = (index: number) => {
@@ -793,6 +790,28 @@ function ProductFormPanel({
     });
   };
 
+  const removeImage = (index: number) => {
+    const removedImageWasPrimary = form.images[index]?.isPrimary ?? false;
+    const nextImages = form.images.filter((_, imageIndex) => imageIndex !== index);
+
+    if (removedImageWasPrimary && nextImages.length > 0) {
+      nextImages[0] = { ...nextImages[0], isPrimary: true };
+    }
+
+    onFormChange({ ...form, images: nextImages });
+  };
+
+  const appendImage = (imageUrl: string, publicId: string) => {
+    const isFirstImage = form.images.length === 0;
+    onFormChange({
+      ...form,
+      images: [
+        ...form.images,
+        { imageUrl, publicId, isPrimary: isFirstImage },
+      ],
+    });
+  };
+
   useEffect(() => {
     return () => {
       if (uploadPreviewUrl) {
@@ -801,35 +820,34 @@ function ProductFormPanel({
     };
   }, [uploadPreviewUrl]);
 
-  const updateFirstImageFromUpload = (imageUrl: string, publicId: string) => {
-    const [firstImage, ...otherImages] = form.images.length
-      ? form.images
-      : [{ imageUrl: "", publicId: "", isPrimary: true }];
-
-    onFormChange({
-      ...form,
-      images: [
-        {
-          ...firstImage,
-          imageUrl,
-          publicId,
-          isPrimary: true,
-        },
-        ...otherImages.map((image) => ({ ...image, isPrimary: false })),
-      ],
-    });
-  };
-
   const handleUploadFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     setUploadMessage(null);
     setUploadError(null);
-    setSelectedUploadFile(file);
+    setUploadPreviewFailed(false);
 
     if (uploadPreviewUrl) {
       URL.revokeObjectURL(uploadPreviewUrl);
     }
 
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    if (file && !allowedTypes.has(file.type)) {
+      setSelectedUploadFile(null);
+      setUploadPreviewUrl(null);
+      setUploadError("Choose a JPG, PNG, or WEBP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file && file.size > 5 * 1024 * 1024) {
+      setSelectedUploadFile(null);
+      setUploadPreviewUrl(null);
+      setUploadError("Image must be 5MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedUploadFile(file);
     setUploadPreviewUrl(file ? URL.createObjectURL(file) : null);
   };
 
@@ -844,12 +862,51 @@ function ProductFormPanel({
       setUploadMessage(null);
       setUploadError(null);
       const uploadedImage = await uploadApi.uploadProductImage(selectedUploadFile);
-      updateFirstImageFromUpload(uploadedImage.imageUrl, uploadedImage.publicId);
-      setUploadMessage("Image uploaded and added to the first product image slot.");
+      appendImage(uploadedImage.imageUrl, uploadedImage.publicId);
+      setSelectedUploadFile(null);
+      setUploadPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setUploadMessage("Image uploaded and added to the product gallery.");
     } catch (error) {
       setUploadError(normalizeApiError(error).message);
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const handleAddManualImage = () => {
+    const imageUrl = manualImageUrl.trim();
+    const publicId = manualPublicId.trim();
+
+    if (!imageUrl || !publicId) {
+      setUploadError("Enter both an image URL and public ID.");
+      return;
+    }
+
+    try {
+      new URL(imageUrl);
+    } catch {
+      setUploadError("Enter a valid image URL.");
+      return;
+    }
+
+    appendImage(imageUrl, publicId);
+    setManualImageUrl("");
+    setManualPublicId("");
+    setUploadError(null);
+    setUploadMessage("Manual image added to the product gallery.");
+  };
+
+  const copyImageUrl = async (imageUrl: string) => {
+    try {
+      await navigator.clipboard.writeText(imageUrl);
+      setUploadError(null);
+      setUploadMessage("Image URL copied.");
+    } catch {
+      setUploadMessage(null);
+      setUploadError("Could not copy the image URL. Use View image to copy it manually.");
     }
   };
 
@@ -1005,15 +1062,22 @@ function ProductFormPanel({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-[#1F1720]">Upload from device</p>
-                <p className="mt-1 text-xs font-semibold text-[#6F6570]">JPG, PNG, or WEBP. Max size is enforced by the backend.</p>
+                <p className="mt-1 text-xs font-semibold text-[#6F6570]">Use a clean background and keep the product centered.</p>
               </div>
               <Upload className="h-5 w-5 text-[#EC4C84]" />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-[#F7D9E2] bg-white p-3 text-xs font-semibold text-[#6F6570]">
+              <span>Recommended: 1200 × 1200 px</span>
+              <span>Minimum: 800 × 800 px</span>
+              <span>JPG, PNG, or WEBP</span>
+              <span>Maximum 5 MB</span>
             </div>
             <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#F7D9E2] bg-white px-4 py-5 text-center">
               <input
                 accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                 className="sr-only"
                 onChange={handleUploadFileChange}
+                ref={fileInputRef}
                 type="file"
               />
               <span className="text-sm font-bold text-[#EC4C84]">Choose product image</span>
@@ -1021,13 +1085,20 @@ function ProductFormPanel({
                 {selectedUploadFile ? selectedUploadFile.name : "No file selected"}
               </span>
             </label>
-            {uploadPreviewUrl || primaryImage?.imageUrl ? (
-              <div className="mt-4 overflow-hidden rounded-xl border border-[#F7D9E2] bg-white">
-                <img
-                  alt="Product image preview"
-                  className="h-44 w-full object-cover"
-                  src={uploadPreviewUrl ?? primaryImage?.imageUrl}
-                />
+            {uploadPreviewUrl ? (
+              <div className="mx-auto mt-4 aspect-square w-full max-w-72 overflow-hidden rounded-xl border border-[#F7D9E2] bg-gradient-to-br from-white to-[#FFF5F7]">
+                {uploadPreviewFailed ? (
+                  <div className="grid h-full w-full place-items-center px-4 text-center text-xs font-semibold text-[#9D8F98]">
+                    Image preview is unavailable
+                  </div>
+                ) : (
+                  <img
+                    alt="Selected product image preview"
+                    className="h-full w-full object-contain p-3"
+                    onError={() => setUploadPreviewFailed(true)}
+                    src={uploadPreviewUrl}
+                  />
+                )}
               </div>
             ) : null}
             <button
@@ -1050,42 +1121,103 @@ function ProductFormPanel({
               </p>
             ) : null}
           </div>
-          <p className="mb-1 text-sm font-semibold text-[#6F6570]">Advanced fallback: manual imageUrl / publicId pairs</p>
-          {form.images.map((image, index) => (
-            <div className="grid gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] p-3" key={index}>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {form.images.map((image, index) => (
+              <article className="overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100" key={`${image.publicId}-${index}`}>
+                <div className="relative aspect-square bg-gradient-to-br from-white to-[#FFF5F7]">
+                  {failedImageUrls.has(image.imageUrl) ? (
+                    <div className="grid h-full w-full place-items-center px-3 text-center text-xs font-semibold text-[#9D8F98]">
+                      Image preview is unavailable
+                    </div>
+                  ) : (
+                    <img
+                      alt={`Product gallery image ${index + 1}`}
+                      className="h-full w-full object-contain p-2"
+                      onError={() => setFailedImageUrls((current) => {
+                        const next = new Set(current);
+                        next.add(image.imageUrl);
+                        return next;
+                      })}
+                      src={image.imageUrl}
+                    />
+                  )}
+                  {image.isPrimary ? (
+                    <span className="absolute left-2 top-2 rounded-full bg-[#EC4C84] px-3 py-1 text-[11px] font-bold text-white shadow-sm">
+                      Primary
+                    </span>
+                  ) : null}
+                </div>
+                <div className="grid gap-2 p-3">
+                  {!image.isPrimary ? (
+                    <button
+                      className="h-9 rounded-xl bg-[#FFF5F7] text-xs font-bold text-[#EC4C84]"
+                      onClick={() => setPrimaryImage(index)}
+                      type="button"
+                    >
+                      Set as primary
+                    </button>
+                  ) : null}
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-[#F7D9E2] text-xs font-bold text-[#6F6570]"
+                      href={image.imageUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> View
+                    </a>
+                    <button
+                      className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-[#F7D9E2] text-xs font-bold text-[#6F6570]"
+                      onClick={() => void copyImageUrl(image.imageUrl)}
+                      type="button"
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copy URL
+                    </button>
+                  </div>
+                  <button
+                    className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-red-100 bg-red-50 text-xs font-bold text-red-600"
+                    onClick={() => removeImage(index)}
+                    type="button"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Remove
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+          {form.images.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] px-4 py-5 text-center text-xs font-semibold text-[#9D8F98]">
+              No product images added yet. The first image will become primary automatically.
+            </p>
+          ) : null}
+
+          <details className="rounded-2xl border border-[#F7D9E2] bg-[#FFF9FA] p-4">
+            <summary className="cursor-pointer text-sm font-bold text-[#6F6570]">
+              Advanced manual image URL fallback
+            </summary>
+            <div className="mt-4 grid gap-3">
               <TextField
-                label={`Image URL ${index + 1}`}
-                onChange={(imageUrl) => updateImage(index, { imageUrl })}
+                label="Image URL"
+                onChange={setManualImageUrl}
                 placeholder="https://example.test/image.jpg"
-                value={image.imageUrl}
+                value={manualImageUrl}
               />
               <TextField
                 label="Public ID"
-                onChange={(publicId) => updateImage(index, { publicId })}
+                onChange={setManualPublicId}
                 placeholder="amy-products/example"
-                value={image.publicId}
+                value={manualPublicId}
               />
-              <label className="flex items-center gap-2 text-xs font-bold text-[#6F6570]">
-                <input
-                  checked={image.isPrimary}
-                  className="accent-[#EC4C84]"
-                  onChange={() => setPrimaryImage(index)}
-                  type="radio"
-                />
-                Primary image
-              </label>
+              <button
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#F7D9E2] bg-white px-4 text-sm font-bold text-[#EC4C84]"
+                onClick={handleAddManualImage}
+                type="button"
+              >
+                <Plus className="h-4 w-4" /> Add manual image
+              </button>
             </div>
-          ))}
-          <button
-            className="mt-1 inline-flex h-10 items-center gap-2 rounded-xl border border-[#F7D9E2] px-4 text-sm font-bold text-[#EC4C84]"
-            onClick={() => onFormChange({
-              ...form,
-              images: [...form.images, { imageUrl: "", publicId: "", isPrimary: false }],
-            })}
-            type="button"
-          >
-            <Plus className="h-4 w-4" /> Add Image URL
-          </button>
+          </details>
         </FormSection>
 
         {formError ? (

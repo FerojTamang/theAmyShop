@@ -120,6 +120,10 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     compareAtPrice !== undefined &&
     Number(compareAtPrice) > Number(product.price);
 
+  const orderedImages = [...(product.images ?? [])].sort((left, right) =>
+    Number(right.isPrimary) - Number(left.isPrimary),
+  );
+
   return {
     id: product.id,
     title: product.name,
@@ -139,7 +143,7 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
           ? "Ready to ship"
           : undefined,
     art: inferArt(product),
-    images: product.images?.map((image) => image.imageUrl) ?? [],
+    images: orderedImages.map((image) => image.imageUrl),
     isCustomizable: product.isCustomizable,
     isGiftSupported: product.isGiftSupported,
     material: product.material,
@@ -226,44 +230,94 @@ function ProductVisual({ type = "box", className = "" }: { type?: RelatedProduct
 
 function ProductGallery({ product }: { product: DetailProduct }) {
   const fallbackThumbs: Array<RelatedProduct["art"] | "mug" | "card"> = [product.art, "candle", "mug", "card", "decor"];
-  const images = product.images.slice(0, 5);
+  const images = product.images;
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
+  const selectedImage = images[selectedImageIndex];
+
+  useEffect(() => {
+    setSelectedImageIndex(0);
+    setFailedImages(new Set());
+  }, [product.id, product.title]);
+
+  const markImageFailed = (imageUrl: string) => {
+    setFailedImages((current) => {
+      const next = new Set(current);
+      next.add(imageUrl);
+      return next;
+    });
+  };
+
+  const selectPreviousImage = () => {
+    if (images.length > 1) {
+      setSelectedImageIndex((current) => (current - 1 + images.length) % images.length);
+    }
+  };
+
+  const selectNextImage = () => {
+    if (images.length > 1) {
+      setSelectedImageIndex((current) => (current + 1) % images.length);
+    }
+  };
 
   return (
-    <section>
-      <div className="relative overflow-hidden rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] shadow-sm shadow-pink-100">
+    <section className="mx-auto w-full max-w-[560px]">
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-[#F7D9E2] bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF5F7] shadow-sm shadow-pink-100">
         {product.badge ? (
           <span className="absolute left-5 top-5 z-10 rounded-full border border-[#EC4C84] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#EC4C84]">{product.badge}</span>
         ) : null}
         <button className="absolute right-5 top-5 z-10 grid h-12 w-12 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
           <Heart className="h-6 w-6" />
         </button>
-        <button className="absolute left-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
+        <button
+          aria-label="View previous product image"
+          className="absolute left-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={images.length <= 1}
+          onClick={selectPreviousImage}
+          type="button"
+        >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <button className="absolute right-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
+        <button
+          aria-label="View next product image"
+          className="absolute right-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={images.length <= 1}
+          onClick={selectNextImage}
+          type="button"
+        >
           <ChevronRight className="h-6 w-6" />
         </button>
-        {images[0] ? (
-          <img alt={product.title} className="aspect-square w-full object-cover" src={images[0]} />
+        {selectedImage && !failedImages.has(selectedImage) ? (
+          <img
+            alt={`${product.title} image ${selectedImageIndex + 1}`}
+            className="h-full w-full object-contain p-3 sm:p-5"
+            onError={() => markImageFailed(selectedImage)}
+            src={selectedImage}
+          />
         ) : (
-          <ProductVisual className="aspect-square rounded-none" type={product.art} />
+          <ProductVisual className="h-full w-full rounded-none" type={product.art} />
         )}
       </div>
       <div className="mt-4 grid grid-cols-5 gap-4">
         {(images.length > 0 ? images : fallbackThumbs).map((thumb, index) => (
-          <div
-            className={`relative overflow-hidden rounded-xl border-2 ${index === 0 ? "border-[#EC4C84]" : "border-transparent"}`}
+          <button
+            aria-label={images.length > 0 ? `View product image ${index + 1}` : undefined}
+            className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-gradient-to-br from-white to-[#FFF5F7] ${index === selectedImageIndex ? "border-[#EC4C84]" : "border-[#F7D9E2]"}`}
             key={`${thumb}-${index}`}
+            onClick={() => images.length > 0 && setSelectedImageIndex(index)}
+            type="button"
           >
-            {images.includes(thumb) ? (
-              <img alt={`${product.title} ${index + 1}`} className="aspect-square w-full object-cover" src={thumb} />
+            {images.includes(thumb) && !failedImages.has(thumb) ? (
+              <img
+                alt={`${product.title} thumbnail ${index + 1}`}
+                className="h-full w-full object-contain p-1"
+                onError={() => markImageFailed(thumb)}
+                src={thumb}
+              />
             ) : (
-              <ProductVisual className="aspect-square rounded-none" type={thumb as RelatedProduct["art"] | "mug" | "card"} />
+              <ProductVisual className="h-full w-full rounded-none" type={thumb as RelatedProduct["art"] | "mug" | "card"} />
             )}
-            {index === 4 && product.images.length > 5 ? (
-              <div className="absolute inset-0 grid place-items-center bg-[#1F1720]/45 text-2xl font-bold text-white">+{product.images.length - 5}</div>
-            ) : null}
-          </div>
+          </button>
         ))}
       </div>
     </section>
