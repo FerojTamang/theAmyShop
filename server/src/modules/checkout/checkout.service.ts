@@ -103,7 +103,7 @@ const calculateCouponDiscount = (
   return roundMoney(Math.min(discountAmount, subtotal + shippingFee + giftWrapFee));
 };
 
-const validateCouponForCheckout = async (
+const reserveCouponForCheckout = async (
   tx: CheckoutClient,
   userId: string,
   couponCode: string,
@@ -111,36 +111,59 @@ const validateCouponForCheckout = async (
   shippingFee: number,
   giftWrapFee: number,
 ) => {
-  const coupon = await tx.coupon.findUnique({
-    where: { code: normalizeCouponCode(couponCode) },
+  const normalizedCode = normalizeCouponCode(couponCode);
+  const existingCoupon = await tx.coupon.findUnique({
+    where: { code: normalizedCode },
   });
 
-  if (!coupon) {
+  if (!existingCoupon) {
     throw new ApiError(400, "Coupon does not exist");
   }
 
-  if (!coupon.isActive) {
-    throw new ApiError(400, "Coupon is inactive");
+  const reservationTime = new Date();
+  const reservedCoupons = await tx.coupon.updateManyAndReturn({
+    where: {
+      id: existingCoupon.id,
+      code: normalizedCode,
+      isActive: true,
+      startsAt: { lte: reservationTime },
+      expiresAt: { gte: reservationTime },
+      usageLimit: existingCoupon.usageLimit,
+      ...(existingCoupon.usageLimit !== null && {
+        usedCount: { lt: existingCoupon.usageLimit },
+      }),
+    },
+    data: {
+      usedCount: {
+        increment: 1,
+      },
+    },
+    limit: 1,
+  });
+
+  const coupon = reservedCoupons[0];
+
+  if (!coupon) {
+    throw new ApiError(400, "Coupon is no longer available.");
   }
 
-  const now = new Date();
+  const validationTime = new Date();
 
-  if (coupon.startsAt > now) {
-    throw new ApiError(400, "Coupon has not started yet");
-  }
-
-  if (coupon.expiresAt < now) {
-    throw new ApiError(400, "Coupon has expired");
-  }
-
-  if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
-    throw new ApiError(400, "Coupon usage limit has been reached");
+  if (
+    !coupon.isActive ||
+    coupon.startsAt > validationTime ||
+    coupon.expiresAt < validationTime ||
+    (coupon.usageLimit !== null && coupon.usedCount > coupon.usageLimit)
+  ) {
+    throw new ApiError(400, "Coupon is no longer available.");
   }
 
   if (subtotal < decimalToNumber(coupon.minimumOrderAmount)) {
     throw new ApiError(400, "Minimum order amount is not satisfied");
   }
 
+  // Reserving usage updates and locks the coupon row until this transaction ends,
+  // so this count observes any earlier committed redemption for the same coupon.
   const userRedemptionCount = await tx.couponRedemption.count({
     where: {
       couponId: coupon.id,
@@ -149,7 +172,7 @@ const validateCouponForCheckout = async (
   });
 
   if (userRedemptionCount >= coupon.perUserLimit) {
-    throw new ApiError(400, "Coupon per-user usage limit has been reached");
+    throw new ApiError(400, "Coupon is no longer available.");
   }
 
   return {
@@ -303,7 +326,7 @@ export const createCheckoutOrder = async (
     const giftWrapFee =
       input.gift?.giftWrapRequired === true ? GIFT_WRAP_FEE : 0;
     const couponResult = input.couponCode
-      ? await validateCouponForCheckout(
+      ? await reserveCouponForCheckout(
           tx,
           userId,
           input.couponCode,
@@ -397,15 +420,6 @@ export const createCheckoutOrder = async (
           userId,
           orderId: order.id,
           discountAmount: totals.couponDiscount,
-        },
-      });
-
-      await tx.coupon.update({
-        where: { id: couponResult.coupon.id },
-        data: {
-          usedCount: {
-            increment: 1,
-          },
         },
       });
     }

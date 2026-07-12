@@ -312,6 +312,28 @@ server applies a gift-wrap fee of `50`; otherwise it applies `0`. Client-supplie
 `shippingFee` and `giftWrapFee` fields are ignored. Checkout runs inside a database
 transaction.
 
+Coupon preview is informational and non-reserving. Checkout is the source of truth:
+it recalculates the eligible amount from database product prices and server-owned
+fees, revalidates the coupon, and atomically reserves coupon usage against its
+global `usageLimit` inside the order transaction. While holding that coupon row lock,
+checkout rechecks the customer's `perUserLimit`. A successful preview does not
+guarantee that the coupon will still be available when checkout runs.
+
+If another checkout consumes the remaining availability first, checkout returns
+HTTP `400`:
+
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Coupon is no longer available.",
+  "errors": []
+}
+```
+
+The failed transaction is rolled back. It does not create a partial order or coupon
+redemption, increment coupon usage, decrement stock, or clear the customer's cart.
+
 ## Coupons
 
 Public:
@@ -328,6 +350,12 @@ Validate body:
   "giftWrapFee": 50
 }
 ```
+
+This endpoint provides an estimate only. The submitted amount and fee values are
+not authoritative, do not reserve a redemption, and are not reused by checkout.
+Checkout accepts the `couponCode`, rebuilds all totals from trusted server data, and
+performs the final availability and limit checks during order creation. Legacy or
+tampered client fee values cannot control the persisted discount or total.
 
 Admin:
 
@@ -355,7 +383,9 @@ Create body:
 }
 ```
 
-Notes: delete deactivates the coupon.
+Notes: delete deactivates the coupon. `usageLimit` is the coupon's global redemption
+cap, while `perUserLimit` is the cap for one customer. Both are enforced by checkout
+when coupon usage is reserved, including when checkout requests run concurrently.
 
 ## Customizations
 

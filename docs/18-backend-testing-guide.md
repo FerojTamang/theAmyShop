@@ -202,8 +202,12 @@ $tamperedOrder.data.order | Select-Object shippingFee, giftWrapFee, totalAmount
 ```
 
 The persisted response must show `shippingFee = 0` and `giftWrapFee = 50`.
-Coupon validation is a preview only; checkout recalculates discounts from database
-product prices and server-owned fees.
+Coupon validation is an informational, non-reserving preview only. Checkout remains
+the source of truth: it recalculates discounts from database product prices and
+server-owned fees, revalidates availability, and atomically reserves coupon usage
+against the global limit inside the order transaction. It then rechecks the customer's
+per-user usage while holding the coupon row lock. Manipulated preview totals and
+legacy checkout fee fields must never control the persisted discount or final total.
 
 ## Payments
 
@@ -245,6 +249,7 @@ $coupon = Invoke-RestMethod -Method POST "$API/api/admin/coupons" -Headers @{ Au
   discountType = "PERCENTAGE_DISCOUNT"
   discountValue = 10
   minimumOrderAmount = 100
+  usageLimit = 1
   perUserLimit = 1
   startsAt = "2026-01-01T00:00:00.000Z"
   expiresAt = "2026-12-31T23:59:59.000Z"
@@ -258,6 +263,42 @@ Invoke-RestMethod -Method POST "$API/api/coupons/validate" -ContentType "applica
   giftWrapFee = 50
 } | ConvertTo-Json)
 ```
+
+The validation request above does not consume or reserve the coupon. As a
+source-of-truth check, repeat validation with deliberately inflated `orderAmount`,
+`shippingFee`, or `giftWrapFee` values, then submit checkout using only the coupon
+code and normal checkout fields. The created order's discount and total must be
+based on the database cart prices and server-owned fees. If an older client also
+sends legacy checkout fee fields, those fields must still be ignored.
+
+Coupon concurrency checks require non-empty carts, valid addresses, and enough
+product stock so stock exhaustion does not hide the coupon result:
+
+1. For the global limit, create a fresh coupon with `usageLimit = 1`, prepare two
+   different customer accounts, and send both checkout requests with that coupon as
+   close together as possible from separate terminals or API clients.
+2. Exactly one request should succeed. The competing request should return HTTP
+   `400` with `Coupon is no longer available.` The coupon's persisted `usedCount`
+   and redemption count must remain `1`.
+3. For the per-user limit, create a separate coupon with a comfortably higher
+   global limit and `perUserLimit = 1`. Prepare one customer's cart, then issue two
+   simultaneous checkout requests for that customer and coupon.
+4. At most one request should create an order and redemption. The other should
+   return the same friendly HTTP `400` response, and that customer's redemption
+   count must not exceed `1`.
+5. If the second same-user request starts only after the first has committed, it can
+   return `Cart is empty` instead; that means the requests did not overlap at the
+   coupon reservation point. Use a coordinated start or rerun the test.
+6. For each rejected request, verify there is no partial order or redemption and no
+   extra coupon usage increment or stock decrement. In the two-user global-limit
+   case, the rejected customer's cart must remain intact. In the same-user case,
+   the successful checkout legitimately clears the shared cart, so use persisted
+   order/redemption/usage/stock counts to verify that the rejected transaction added
+   no side effects. Use the admin endpoints and database inspection where needed.
+
+Because simultaneous timing varies by machine and database connection pool, repeat
+each concurrency case several times with a newly created coupon. Checkout, rather
+than a preceding successful preview, is always authoritative.
 
 ## Customizations and Uploads
 
