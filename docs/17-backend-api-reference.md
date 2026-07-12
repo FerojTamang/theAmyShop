@@ -234,12 +234,18 @@ Create body:
       "imageUrl": "https://example.test/image.jpg",
       "publicId": "fake-public-id",
       "isPrimary": true
+    },
+    {
+      "imageUrl": "https://example.test/image-detail.jpg",
+      "publicId": "fake-detail-public-id",
+      "isPrimary": false
     }
   ]
 }
 ```
 
-Notes: delete deactivates the product.
+Notes: product create and update accept multiple images. At most one image may have
+`isPrimary: true`. Delete deactivates the product.
 
 ## Cart
 
@@ -613,4 +619,6 @@ Field:
 
 - `image`: image file
 
-Notes: Cloudinary credentials must be configured. Otherwise upload routes return `503`.
+Notes: the endpoint uploads one image per request and can be called repeatedly to
+build a product gallery. Cloudinary credentials must be configured. Otherwise upload
+routes return `503`.

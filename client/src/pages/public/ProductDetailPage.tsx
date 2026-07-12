@@ -8,8 +8,10 @@ import {
   Headphones,
   Heart,
   Mail,
+  Maximize2,
   Minus,
   PackageCheck,
+  RotateCcw,
   Search,
   ShieldCheck,
   ShoppingBag,
@@ -18,8 +20,11 @@ import {
   Truck,
   UserRound,
   Plus,
+  X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { normalizeApiError } from "../../lib/apiError";
@@ -233,12 +238,57 @@ function ProductGallery({ product }: { product: DetailProduct }) {
   const images = product.images;
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set());
+  const [isHoverCapable, setIsHoverCapable] = useState(false);
+  const [isHoveringImage, setIsHoveringImage] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
   const selectedImage = images[selectedImageIndex];
 
   useEffect(() => {
     setSelectedImageIndex(0);
     setFailedImages(new Set());
+    setIsHoveringImage(false);
+    setIsLightboxOpen(false);
+    setLightboxZoom(1);
   }, [product.id, product.title]);
+
+  useEffect(() => {
+    const hoverMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const updateHoverCapability = () => setIsHoverCapable(hoverMedia.matches);
+
+    updateHoverCapability();
+    hoverMedia.addEventListener("change", updateHoverCapability);
+
+    return () => hoverMedia.removeEventListener("change", updateHoverCapability);
+  }, []);
+
+  useEffect(() => {
+    if (!isLightboxOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsLightboxOpen(false);
+      } else if (event.key === "ArrowLeft" && images.length > 1) {
+        setSelectedImageIndex((current) => (current - 1 + images.length) % images.length);
+        setLightboxZoom(1);
+      } else if (event.key === "ArrowRight" && images.length > 1) {
+        setSelectedImageIndex((current) => (current + 1) % images.length);
+        setLightboxZoom(1);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [images.length, isLightboxOpen]);
 
   const markImageFailed = (imageUrl: string) => {
     setFailedImages((current) => {
@@ -251,13 +301,39 @@ function ProductGallery({ product }: { product: DetailProduct }) {
   const selectPreviousImage = () => {
     if (images.length > 1) {
       setSelectedImageIndex((current) => (current - 1 + images.length) % images.length);
+      setLightboxZoom(1);
     }
   };
 
   const selectNextImage = () => {
     if (images.length > 1) {
       setSelectedImageIndex((current) => (current + 1) % images.length);
+      setLightboxZoom(1);
     }
+  };
+
+  const handleImageMouseMove = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!isHoverCapable) {
+      return;
+    }
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    setZoomOrigin({
+      x: ((event.clientX - bounds.left) / bounds.width) * 100,
+      y: ((event.clientY - bounds.top) / bounds.height) * 100,
+    });
+  };
+
+  const openLightbox = () => {
+    if (selectedImage && !failedImages.has(selectedImage)) {
+      setLightboxZoom(1);
+      setIsLightboxOpen(true);
+    }
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    setLightboxZoom(1);
   };
 
   return (
@@ -266,37 +342,67 @@ function ProductGallery({ product }: { product: DetailProduct }) {
         {product.badge ? (
           <span className="absolute left-5 top-5 z-10 rounded-full border border-[#EC4C84] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#EC4C84]">{product.badge}</span>
         ) : null}
-        <button className="absolute right-5 top-5 z-10 grid h-12 w-12 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm">
+        <button
+          className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm"
+          onClick={(event) => event.stopPropagation()}
+          type="button"
+        >
           <Heart className="h-6 w-6" />
         </button>
         <button
           aria-label="View previous product image"
-          className="absolute left-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute left-5 top-1/2 z-20 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
           disabled={images.length <= 1}
-          onClick={selectPreviousImage}
+          onClick={(event) => {
+            event.stopPropagation();
+            selectPreviousImage();
+          }}
           type="button"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
         <button
           aria-label="View next product image"
-          className="absolute right-5 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute right-5 top-1/2 z-20 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white text-[#1F1720] shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
           disabled={images.length <= 1}
-          onClick={selectNextImage}
+          onClick={(event) => {
+            event.stopPropagation();
+            selectNextImage();
+          }}
           type="button"
         >
           <ChevronRight className="h-6 w-6" />
         </button>
         {selectedImage && !failedImages.has(selectedImage) ? (
-          <img
-            alt={`${product.title} image ${selectedImageIndex + 1}`}
-            className="h-full w-full object-contain p-3 sm:p-5"
-            onError={() => markImageFailed(selectedImage)}
-            src={selectedImage}
-          />
+          <button
+            aria-label={`Open larger view of ${product.title}`}
+            className="absolute inset-0 cursor-zoom-in overflow-hidden"
+            onClick={openLightbox}
+            onMouseEnter={() => isHoverCapable && setIsHoveringImage(true)}
+            onMouseLeave={() => setIsHoveringImage(false)}
+            onMouseMove={handleImageMouseMove}
+            type="button"
+          >
+            <img
+              alt={`${product.title} image ${selectedImageIndex + 1}`}
+              className="h-full w-full object-contain p-3 transition-transform duration-200 ease-out sm:p-5"
+              onError={() => markImageFailed(selectedImage)}
+              src={selectedImage}
+              style={{
+                transform: isHoverCapable && isHoveringImage ? "scale(1.9)" : "scale(1)",
+                transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+              }}
+            />
+          </button>
         ) : (
           <ProductVisual className="h-full w-full rounded-none" type={product.art} />
         )}
+        {selectedImage && !failedImages.has(selectedImage) ? (
+          <span className="pointer-events-none absolute bottom-4 left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#F7D9E2] bg-white/90 px-3 py-2 text-[11px] font-bold text-[#6F6570] shadow-sm backdrop-blur">
+            <Maximize2 className="h-3.5 w-3.5 text-[#EC4C84]" />
+            {isHoverCapable ? "Hover to zoom · Click to view larger" : "Tap to view larger"}
+          </span>
+        ) : null}
       </div>
       <div className="mt-4 grid grid-cols-5 gap-4">
         {(images.length > 0 ? images : fallbackThumbs).map((thumb, index) => (
@@ -304,7 +410,13 @@ function ProductGallery({ product }: { product: DetailProduct }) {
             aria-label={images.length > 0 ? `View product image ${index + 1}` : undefined}
             className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-gradient-to-br from-white to-[#FFF5F7] ${index === selectedImageIndex ? "border-[#EC4C84]" : "border-[#F7D9E2]"}`}
             key={`${thumb}-${index}`}
-            onClick={() => images.length > 0 && setSelectedImageIndex(index)}
+            onClick={() => {
+              if (images.length > 0) {
+                setSelectedImageIndex(index);
+                setIsHoveringImage(false);
+                setLightboxZoom(1);
+              }
+            }}
             type="button"
           >
             {images.includes(thumb) && !failedImages.has(thumb) ? (
@@ -320,6 +432,99 @@ function ProductGallery({ product }: { product: DetailProduct }) {
           </button>
         ))}
       </div>
+      {isLightboxOpen && selectedImage ? (
+        <div
+          aria-label={`${product.title} image viewer`}
+          aria-modal="true"
+          className="fixed inset-0 z-[100] bg-[#1F1720]/85 p-3 backdrop-blur-md sm:p-6"
+          onClick={closeLightbox}
+          role="dialog"
+        >
+          <div
+            className="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF5F7] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F7D9E2] bg-white/90 px-3 py-3 sm:px-5">
+              <div>
+                <p className="text-sm font-bold text-[#1F1720]">{product.title}</p>
+                <p className="text-xs font-semibold text-[#9D8F98]">
+                  Image {selectedImageIndex + 1} of {images.length} · {lightboxZoom.toFixed(1)}x
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  aria-label="Zoom out"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#6F6570] disabled:opacity-40"
+                  disabled={lightboxZoom <= 1}
+                  onClick={() => setLightboxZoom((current) => Math.max(1, current - 0.5))}
+                  type="button"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <button
+                  aria-label="Reset zoom"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#6F6570] disabled:opacity-40"
+                  disabled={lightboxZoom === 1}
+                  onClick={() => setLightboxZoom(1)}
+                  type="button"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+                <button
+                  aria-label="Zoom in"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#6F6570] disabled:opacity-40"
+                  disabled={lightboxZoom >= 3}
+                  onClick={() => setLightboxZoom((current) => Math.min(3, current + 0.5))}
+                  type="button"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+                <button
+                  aria-label="Close image viewer"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-[#EC4C84] text-white shadow-sm"
+                  onClick={closeLightbox}
+                  type="button"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="relative min-h-0 flex-1 overflow-hidden bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF5F7]">
+              <button
+                aria-label="View previous image"
+                className="absolute left-2 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-[#1F1720] shadow-lg disabled:opacity-40 sm:left-5 sm:h-12 sm:w-12"
+                disabled={images.length <= 1}
+                onClick={selectPreviousImage}
+                type="button"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <div className="flex h-full w-full items-center justify-center overflow-hidden p-12 sm:p-16">
+                {failedImages.has(selectedImage) ? (
+                  <ProductVisual className="h-full w-full max-w-3xl" type={product.art} />
+                ) : (
+                  <img
+                    alt={`${product.title} enlarged image ${selectedImageIndex + 1}`}
+                    className="h-full w-full object-contain transition-transform duration-200 ease-out"
+                    onError={() => markImageFailed(selectedImage)}
+                    src={selectedImage}
+                    style={{ transform: `scale(${lightboxZoom})` }}
+                  />
+                )}
+              </div>
+              <button
+                aria-label="View next image"
+                className="absolute right-2 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/95 text-[#1F1720] shadow-lg disabled:opacity-40 sm:right-5 sm:h-12 sm:w-12"
+                disabled={images.length <= 1}
+                onClick={selectNextImage}
+                type="button"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
