@@ -32,6 +32,20 @@ Do not place real tokens, secrets, database URLs, or payment credentials in docu
 | 409 | Duplicate or conflict |
 | 501 | Feature placeholder not implemented |
 | 503 | External service credentials not configured |
+| 503 | Database service temporarily unavailable |
+
+## Health
+
+### GET `/api/health`
+
+Checks API process health without querying the database.
+
+### GET `/api/health/db`
+
+Checks database connectivity. A successful response includes `database: "available"`.
+If PostgreSQL is unreachable, it returns `503` with `database: "unavailable"` and
+`message: "Database connection failed"` in the response data. Technical connection
+details are logged only on the server.
 
 ## Auth
 

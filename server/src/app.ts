@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import { prisma } from "./config/database.js";
 import { config } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
@@ -54,6 +55,11 @@ import {
   uploadRoutes,
 } from "./modules/uploads/upload.routes.js";
 import { ApiResponse } from "./utils/ApiResponse.js";
+import { asyncHandler } from "./utils/asyncHandler.js";
+import {
+  DATABASE_UNAVAILABLE_MESSAGE,
+  isDatabaseUnavailableError,
+} from "./utils/databaseError.js";
 
 export const app = express();
 
@@ -77,6 +83,34 @@ app.get("/api/health", (_req, res) => {
     }),
   );
 });
+
+app.get(
+  "/api/health/db",
+  asyncHandler(async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+
+      res.status(200).json(
+        new ApiResponse(200, "Database connection is healthy", {
+          database: "available",
+          message: "Database connection successful",
+        }),
+      );
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error;
+      }
+
+      console.error("Database health check failed", error);
+      res.status(503).json(
+        new ApiResponse(503, DATABASE_UNAVAILABLE_MESSAGE, {
+          database: "unavailable",
+          message: "Database connection failed",
+        }),
+      );
+    }
+  }),
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);

@@ -12,9 +12,20 @@ export function normalizeApiError(error: unknown): ApiErrorShape {
       | { message?: string; statusCode?: number; errors?: unknown[] }
       | undefined;
 
+    const statusCode = responseData?.statusCode ?? error.response?.status;
+
+    if (statusCode === 503) {
+      return {
+        message:
+          "Service is temporarily unavailable. Please try again in a few minutes.",
+        statusCode,
+        errors: responseData?.errors,
+      };
+    }
+
     return {
       message: responseData?.message ?? error.message ?? "Request failed",
-      statusCode: responseData?.statusCode ?? error.response?.status,
+      statusCode,
       errors: responseData?.errors,
     };
   }

@@ -9,6 +9,7 @@ Auth headers use `Authorization: Bearer <accessToken>`.
 | Method | Path | Auth | Role | Purpose |
 | --- | --- | --- | --- | --- |
 | GET | `/api/health` | No | Public | Check API health |
+| GET | `/api/health/db` | No | Public | Check database connectivity |
 
 ## Auth
 

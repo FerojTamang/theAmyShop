@@ -22,6 +22,16 @@ $ADMIN_TOKEN = "paste-admin-access-token"
 Invoke-RestMethod -Method GET "$API/api/health"
 ```
 
+Database connectivity:
+
+```powershell
+Invoke-RestMethod -Method GET "$API/api/health/db"
+```
+
+The basic health route remains available without a database query. If PostgreSQL is
+paused or unreachable, the database health route returns `503` with a friendly
+`database: "unavailable"` status.
+
 ## Auth
 
 Register:
