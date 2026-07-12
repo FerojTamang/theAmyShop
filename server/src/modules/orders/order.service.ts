@@ -1,10 +1,40 @@
-import type { Prisma } from "../../../generated/prisma/client.js";
+import {
+  OrderStatus,
+  type Prisma,
+} from "../../../generated/prisma/client.js";
 import { prisma } from "../../config/database.js";
 import { ApiError } from "../../utils/ApiError.js";
 import type {
   OrderQueryInput,
   UpdateOrderStatusInput,
 } from "./order.validation.js";
+
+const allowedOrderStatusTransitions: Record<
+  OrderStatus,
+  readonly OrderStatus[]
+> = {
+  [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
+  [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
+  [OrderStatus.PROCESSING]: [
+    OrderStatus.IN_PRODUCTION,
+    OrderStatus.CANCELLED,
+  ],
+  [OrderStatus.IN_PRODUCTION]: [
+    OrderStatus.READY_TO_SHIP,
+    OrderStatus.CANCELLED,
+  ],
+  [OrderStatus.READY_TO_SHIP]: [OrderStatus.SHIPPED],
+  [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
+  [OrderStatus.DELIVERED]: [OrderStatus.RETURNED],
+  [OrderStatus.CANCELLED]: [],
+  [OrderStatus.RETURNED]: [],
+};
+
+const invalidStatusTransitionMessage = (
+  currentStatus: OrderStatus,
+  nextStatus: OrderStatus,
+): string =>
+  `Invalid order status transition from ${currentStatus} to ${nextStatus}.`;
 
 const orderInclude = {
   user: {
@@ -186,12 +216,55 @@ export const updateAdminOrderStatus = async (
       });
     }
 
-    await tx.order.update({
-      where: { id: orderId },
+    if (
+      !allowedOrderStatusTransitions[existingOrder.orderStatus].includes(
+        input.orderStatus,
+      )
+    ) {
+      throw new ApiError(
+        400,
+        invalidStatusTransitionMessage(
+          existingOrder.orderStatus,
+          input.orderStatus,
+        ),
+      );
+    }
+
+    const updateResult = await tx.order.updateMany({
+      where: {
+        id: orderId,
+        orderStatus: existingOrder.orderStatus,
+      },
       data: {
         orderStatus: input.orderStatus,
       },
     });
+
+    if (updateResult.count !== 1) {
+      const currentOrder = await tx.order.findUnique({
+        where: { id: orderId },
+        select: { orderStatus: true },
+      });
+
+      if (!currentOrder) {
+        throw new ApiError(404, "Order not found");
+      }
+
+      if (currentOrder.orderStatus === input.orderStatus) {
+        return tx.order.findUniqueOrThrow({
+          where: { id: orderId },
+          include: orderInclude,
+        });
+      }
+
+      throw new ApiError(
+        400,
+        invalidStatusTransitionMessage(
+          currentOrder.orderStatus,
+          input.orderStatus,
+        ),
+      );
+    }
 
     await tx.orderStatusHistory.create({
       data: {

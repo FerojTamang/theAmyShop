@@ -172,6 +172,12 @@ Invoke-RestMethod -Method PATCH "$API/api/admin/orders/$ORDER_ID/status" -Header
   orderStatus = "CONFIRMED"
   note = "QA confirmed"
 } | ConvertTo-Json)
+
+# Invalid backward transition: CONFIRMED to PENDING returns 400.
+Invoke-RestMethod -Method PATCH "$API/api/admin/orders/$ORDER_ID/status" -Headers @{ Authorization = "Bearer $ADMIN_TOKEN" } -ContentType "application/json" -Body (@{
+  orderStatus = "PENDING"
+  note = "QA invalid transition"
+} | ConvertTo-Json)
 ```
 
 Checkout fees are server-owned: standard shipping is `0`, and gift wrapping is
@@ -287,10 +293,21 @@ Invoke-RestMethod -Method GET "$API/api/admin/gift-options" -Headers @{ Authoriz
 Review creation requires a delivered order containing the product.
 
 ```powershell
-Invoke-RestMethod -Method PATCH "$API/api/admin/orders/$ORDER_ID/status" -Headers @{ Authorization = "Bearer $ADMIN_TOKEN" } -ContentType "application/json" -Body (@{
-  orderStatus = "DELIVERED"
-  note = "QA delivered"
-} | ConvertTo-Json)
+$deliveryStatuses = @(
+  "CONFIRMED",
+  "PROCESSING",
+  "IN_PRODUCTION",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "DELIVERED"
+)
+
+foreach ($status in $deliveryStatuses) {
+  Invoke-RestMethod -Method PATCH "$API/api/admin/orders/$ORDER_ID/status" -Headers @{ Authorization = "Bearer $ADMIN_TOKEN" } -ContentType "application/json" -Body (@{
+    orderStatus = $status
+    note = "QA moved order to $status"
+  } | ConvertTo-Json)
+}
 
 $review = Invoke-RestMethod -Method POST "$API/api/reviews" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" } -ContentType "application/json" -Body (@{
   productId = $PRODUCT_ID

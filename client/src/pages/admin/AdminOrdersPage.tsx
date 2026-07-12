@@ -75,16 +75,24 @@ const sidebarGroups = [
   },
 ];
 
-const supportedStatuses: OrderStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "PROCESSING",
-  "IN_PRODUCTION",
-  "READY_TO_SHIP",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-  "RETURNED",
+const allowedStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["IN_PRODUCTION", "CANCELLED"],
+  IN_PRODUCTION: ["READY_TO_SHIP", "CANCELLED"],
+  READY_TO_SHIP: ["SHIPPED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: ["RETURNED"],
+  CANCELLED: [],
+  RETURNED: [],
+};
+
+const getAllowedNextStatuses = (status: string): readonly OrderStatus[] =>
+  allowedStatusTransitions[status as OrderStatus] ?? [];
+
+const getSelectableStatuses = (status: string): OrderStatus[] => [
+  status as OrderStatus,
+  ...getAllowedNextStatuses(status),
 ];
 
 const tabs: Array<[string, OrderStatus | "ALL"]> = [
@@ -492,11 +500,14 @@ function OrdersTable({
             <span onClick={(event) => event.stopPropagation()}>
               <select
                 className="h-10 w-full rounded-xl border border-[#F7D9E2] bg-white px-3 text-xs font-bold text-[#6F6570] outline-none"
-                disabled={isUpdating === order.id}
+                disabled={
+                  isUpdating === order.id ||
+                  getAllowedNextStatuses(order.orderStatus).length === 0
+                }
                 onChange={(event) => onStatusChange(order, event.target.value as OrderStatus)}
                 value={order.orderStatus}
               >
-                {supportedStatuses.map((status) => (
+                {getSelectableStatuses(order.orderStatus).map((status) => (
                   <option key={status} value={status}>{displayStatus(status)}</option>
                 ))}
               </select>

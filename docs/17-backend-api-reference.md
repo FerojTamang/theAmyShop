@@ -437,7 +437,25 @@ Status body:
 }
 ```
 
-Notes: admin status changes create order status history.
+Notes: admin status changes create order status history. Sending the current status
+again is idempotent and does not create another history entry.
+
+Allowed transitions:
+
+| Current status | Allowed next statuses |
+| --- | --- |
+| `PENDING` | `CONFIRMED`, `CANCELLED` |
+| `CONFIRMED` | `PROCESSING`, `CANCELLED` |
+| `PROCESSING` | `IN_PRODUCTION`, `CANCELLED` |
+| `IN_PRODUCTION` | `READY_TO_SHIP`, `CANCELLED` |
+| `READY_TO_SHIP` | `SHIPPED` |
+| `SHIPPED` | `DELIVERED` |
+| `DELIVERED` | `RETURNED` |
+| `CANCELLED` | None (terminal) |
+| `RETURNED` | None (terminal) |
+
+Invalid transitions return HTTP `400` with:
+`Invalid order status transition from CURRENT_STATUS to NEXT_STATUS.`
 
 ## Payments
 
