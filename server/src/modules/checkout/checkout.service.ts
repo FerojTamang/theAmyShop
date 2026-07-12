@@ -18,6 +18,9 @@ import type { CheckoutInput } from "./checkout.validation.js";
 
 type CheckoutClient = Prisma.TransactionClient;
 
+const STANDARD_SHIPPING_FEE = 0;
+const GIFT_WRAP_FEE = 50;
+
 const orderInclude = {
   address: true,
   items: {
@@ -296,9 +299,9 @@ export const createCheckoutOrder = async (
       });
     }
 
-    const shippingFee = input.shippingFee;
+    const shippingFee = STANDARD_SHIPPING_FEE;
     const giftWrapFee =
-      input.gift?.giftWrapRequired === true ? input.gift.giftWrapFee : 0;
+      input.gift?.giftWrapRequired === true ? GIFT_WRAP_FEE : 0;
     const couponResult = input.couponCode
       ? await validateCouponForCheckout(
           tx,

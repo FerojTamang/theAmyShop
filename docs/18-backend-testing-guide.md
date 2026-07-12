@@ -152,13 +152,11 @@ Invoke-RestMethod -Method POST "$API/api/cart/items" -Headers @{ Authorization =
 $order = Invoke-RestMethod -Method POST "$API/api/checkout" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" } -ContentType "application/json" -Body (@{
   addressId = $ADDRESS_ID
   paymentMethod = "CASH_ON_DELIVERY"
-  shippingFee = 100
   gift = @{
     receiverName = "QA Receiver"
     senderName = "QA Sender"
     giftMessage = "QA gift message"
     giftWrapRequired = $true
-    giftWrapFee = 50
   }
 } | ConvertTo-Json -Depth 5)
 $ORDER_ID = $order.data.order.id
@@ -171,6 +169,31 @@ Invoke-RestMethod -Method PATCH "$API/api/admin/orders/$ORDER_ID/status" -Header
   note = "QA confirmed"
 } | ConvertTo-Json)
 ```
+
+Checkout fees are server-owned: standard shipping is `0`, and gift wrapping is
+`50` when `giftWrapRequired` is true. To verify legacy-field tampering is ignored,
+refill the cart and send obsolete fee fields manually:
+
+```powershell
+$tamperedOrder = Invoke-RestMethod -Method POST "$API/api/checkout" -Headers @{ Authorization = "Bearer $CUSTOMER_TOKEN" } -ContentType "application/json" -Body (@{
+  addressId = $ADDRESS_ID
+  paymentMethod = "CASH_ON_DELIVERY"
+  shippingFee = 999
+  gift = @{
+    receiverName = "QA Receiver"
+    senderName = "QA Sender"
+    giftMessage = "QA gift message"
+    giftWrapRequired = $true
+    giftWrapFee = 0
+  }
+} | ConvertTo-Json -Depth 5)
+
+$tamperedOrder.data.order | Select-Object shippingFee, giftWrapFee, totalAmount
+```
+
+The persisted response must show `shippingFee = 0` and `giftWrapFee = 50`.
+Coupon validation is a preview only; checkout recalculates discounts from database
+product prices and server-owned fees.
 
 ## Payments
 

@@ -283,18 +283,21 @@ Body:
   "addressId": "address-id",
   "paymentMethod": "CASH_ON_DELIVERY",
   "couponCode": "WELCOME10",
-  "shippingFee": 100,
   "gift": {
     "receiverName": "Receiver",
     "senderName": "Sender",
     "giftMessage": "Happy birthday",
-    "giftWrapRequired": true,
-    "giftWrapFee": 50
+    "giftWrapRequired": true
   }
 }
 ```
 
-Notes: only COD checkout is currently accepted. Product prices, coupon discounts, gift fees, shipping, and totals are calculated on backend. Checkout runs inside a database transaction.
+Notes: only COD checkout is currently accepted. Product prices, coupon discounts,
+gift fees, shipping, and totals are calculated on the backend. The current
+server-owned standard shipping fee is `0`. When `giftWrapRequired` is `true`, the
+server applies a gift-wrap fee of `50`; otherwise it applies `0`. Client-supplied
+`shippingFee` and `giftWrapFee` fields are ignored. Checkout runs inside a database
+transaction.
 
 ## Coupons
 

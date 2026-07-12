@@ -6,14 +6,12 @@ export type CheckoutGiftPayload = {
   senderName?: string;
   giftMessage?: string;
   giftWrapRequired?: boolean;
-  giftWrapFee?: number;
 };
 
 export type CheckoutPayload = {
   addressId: string;
   paymentMethod: "CASH_ON_DELIVERY";
   couponCode?: string;
-  shippingFee?: number;
   gift?: CheckoutGiftPayload;
 };
 

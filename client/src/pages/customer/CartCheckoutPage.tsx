@@ -632,7 +632,13 @@ function OrderSummaryCard({
   const subtotal = asNumber(summary?.subtotal);
   const giftFee = giftForm.enabled && giftForm.giftWrapRequired ? giftWrapFee : 0;
   const hasValidCoupon = Boolean(couponValidation?.valid && !isCouponStale);
-  const displayTotal = hasValidCoupon ? couponValidation?.finalAmount ?? subtotal + shippingFee + giftFee : subtotal + shippingFee + giftFee;
+  const estimatedDiscount = hasValidCoupon
+    ? couponValidation?.discountAmount ?? 0
+    : 0;
+  const displayTotal = Math.max(
+    subtotal + shippingFee + giftFee - estimatedDiscount,
+    0,
+  );
 
   return (
     <Card>
@@ -979,7 +985,7 @@ export function CartCheckoutPage() {
       const result = await couponApi.validate({
         code,
         giftWrapFee: giftFee,
-        orderAmount: subtotal + giftFee,
+        orderAmount: subtotal,
         shippingFee,
       });
       setCouponValidation(result);
@@ -1113,7 +1119,6 @@ export function CartCheckoutPage() {
       const payload: CheckoutPayload = {
         addressId,
         paymentMethod: "CASH_ON_DELIVERY",
-        shippingFee,
         ...(hasValidCoupon && { couponCode: normalizedCouponCode }),
         ...(giftForm.enabled && {
           gift: {
@@ -1121,7 +1126,6 @@ export function CartCheckoutPage() {
             senderName: giftForm.senderName.trim(),
             giftMessage: giftForm.giftMessage.trim(),
             giftWrapRequired: giftForm.giftWrapRequired,
-            giftWrapFee: giftForm.giftWrapRequired ? giftWrapFee : 0,
           },
         }),
       };
@@ -1177,7 +1181,7 @@ export function CartCheckoutPage() {
         {createdOrder ? (
           <div className="mt-5 flex flex-col gap-3 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-semibold text-[#6F6570]">
-              Your Cash on Delivery order is pending. Order number: <span className="text-[#EC4C84]">{createdOrder.orderNumber}</span>
+              Your Cash on Delivery order is pending. Order number: <span className="text-[#EC4C84]">{createdOrder.orderNumber}</span>. Confirmed total: <span className="text-[#1F1720]">{formatCurrency(createdOrder.totalAmount)}</span>
             </p>
             <button
               className="rounded-xl bg-[#EC4C84] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-200"

@@ -1,8 +1,6 @@
 import { PaymentMethod } from "../../../generated/prisma/client.js";
 import { z } from "zod";
 
-const moneySchema = z.coerce.number().finite().min(0);
-
 const requiredTextSchema = (fieldName: string) =>
   z.string().trim().min(1, `${fieldName} is required`);
 
@@ -15,16 +13,6 @@ const giftSchema = z
       "Gift message is too long",
     ),
     giftWrapRequired: z.boolean().default(false),
-    giftWrapFee: moneySchema.default(0),
-  })
-  .superRefine((value, context) => {
-    if (!value.giftWrapRequired && value.giftWrapFee > 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["giftWrapFee"],
-        message: "Gift wrap fee requires giftWrapRequired to be true",
-      });
-    }
   });
 
 export const checkoutSchema = z.object({
@@ -39,7 +27,6 @@ export const checkoutSchema = z.object({
     .max(50, "Coupon code is too long")
     .transform((value) => value.toUpperCase())
     .optional(),
-  shippingFee: moneySchema.default(0),
   gift: giftSchema.optional(),
 });
 
