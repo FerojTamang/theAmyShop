@@ -30,6 +30,28 @@ const parsePort = (value: string | undefined): number => {
   return 5000;
 };
 
+const DEVELOPMENT_CORS_ORIGINS =
+  "http://localhost:5173,http://127.0.0.1:5173";
+
+const parseCorsOrigins = (value: string): string[] => {
+  const origins = value
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (origins.length === 0) {
+    throw new Error("CORS_ORIGIN must include at least one allowed origin");
+  }
+
+  return origins;
+};
+
+const corsOriginValue = requireInProduction(
+  process.env.CORS_ORIGIN,
+  "CORS_ORIGIN",
+  DEVELOPMENT_CORS_ORIGINS,
+);
+
 export const config = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: parsePort(process.env.PORT),
@@ -39,10 +61,7 @@ export const config = {
     "postgresql://postgres:postgres@localhost:5432/the_amy_shop?schema=public",
   ),
   FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:5173",
-  CORS_ORIGIN:
-    process.env.CORS_ORIGIN ??
-    process.env.FRONTEND_URL ??
-    "http://localhost:5173",
+  CORS_ORIGINS: parseCorsOrigins(corsOriginValue),
   JWT_ACCESS_SECRET: requireInProduction(
     process.env.JWT_ACCESS_SECRET,
     "JWT_ACCESS_SECRET",

@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { app } from "../../src/app.js";
 import { errorMiddleware } from "../../src/middlewares/error.middleware.js";
 import { uploadSingleImage } from "../../src/middlewares/upload.middleware.js";
 import { DATABASE_UNAVAILABLE_MESSAGE } from "../../src/utils/databaseError.js";
@@ -116,5 +117,37 @@ describe("upload and database error normalization", () => {
       "Database connection error",
       databaseError,
     );
+  });
+});
+
+describe("CORS origin allowlist", () => {
+  it.each([
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ])("allows the trusted development origin %s", async (origin) => {
+    const response = await request(app).get("/api/health").set("Origin", origin);
+
+    expect(response.status).toBe(200);
+    expect(response.headers["access-control-allow-origin"]).toBe(origin);
+    expect(response.headers["access-control-allow-credentials"]).toBe("true");
+  });
+
+  it("does not approve a non-allowlisted origin", async () => {
+    const response = await request(app)
+      .get("/api/health")
+      .set("Origin", "http://untrusted.example.test");
+
+    expect(response.status).toBe(200);
+    expect(response.headers).not.toHaveProperty("access-control-allow-origin");
+  });
+
+  it("allows requests without an Origin header", async () => {
+    const response = await request(app).get("/api/health");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      success: true,
+      statusCode: 200,
+    });
   });
 });
