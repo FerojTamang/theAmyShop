@@ -55,18 +55,43 @@ describe("upload and database error normalization", () => {
 
   it("normalizes database outages without exposing technical connection details", async () => {
     const testApp = express();
-    const technicalMessage =
-      "getaddrinfo ENOTFOUND secret-db.internal tenant/user secret-tenant not found";
-    const databaseError = Object.assign(new Error(technicalMessage), {
+    const fakeDatabaseUrl =
+      "postgresql://secret-tenant:secret-password@secret-db.internal:5432/postgres";
+    const socketError = Object.assign(
+      new Error(
+        "getaddrinfo ENOTFOUND secret-db.internal: tenant or user secret-tenant not found",
+      ),
+      {
+        code: "ENOTFOUND",
+        connectionString: fakeDatabaseUrl,
+      },
+    );
+    const adapterError = Object.assign(new Error("Failed to connect"), {
       name: "DriverAdapterError",
-      code: "ENOTFOUND",
+      cause: {
+        adapterName: "PrismaPgAdapter",
+        error: socketError,
+      },
+    });
+    const databaseError = new Error("Prisma query failed", {
+      cause: adapterError,
+    });
+    Object.defineProperty(databaseError, "originalError", {
+      configurable: true,
+      enumerable: false,
+      value: {
+        message: "Can't reach database server at secret-db.internal",
+        stack: `DriverAdapterError: PrismaPgAdapter ${fakeDatabaseUrl}`,
+      },
     });
 
     testApp.get("/database-error", (_req, _res, next) => {
       next(databaseError);
     });
     testApp.use(errorMiddleware);
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     const response = await request(testApp).get("/database-error");
 
@@ -81,7 +106,15 @@ describe("upload and database error normalization", () => {
     const responseText = JSON.stringify(response.body);
     expect(responseText).not.toContain("secret-db.internal");
     expect(responseText).not.toContain("secret-tenant");
+    expect(responseText).not.toContain("stack");
+    expect(responseText).not.toContain("PrismaPgAdapter");
     expect(responseText).not.toContain("DriverAdapterError");
+    expect(responseText).not.toContain(fakeDatabaseUrl);
+    expect(responseText).not.toContain("postgresql://");
     expect(response.body).not.toHaveProperty("stack");
+    expect(consoleError).toHaveBeenCalledWith(
+      "Database connection error",
+      databaseError,
+    );
   });
 });

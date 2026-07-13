@@ -55,8 +55,36 @@ Invoke-RestMethod -Method GET "$API/api/health/db"
 ```
 
 The basic health route remains available without a database query. If PostgreSQL is
-paused or unreachable, the database health route returns `503` with a friendly
-`database: "unavailable"` status.
+paused or unreachable, the database health route returns exactly this safe `503`
+response in development and production:
+
+```json
+{
+  "success": false,
+  "statusCode": 503,
+  "message": "Database service is temporarily unavailable. Please try again in a few minutes.",
+  "errors": []
+}
+```
+
+Technical database, hostname, tenant/user, connection-string, adapter, and stack
+details are logged only by the backend and must not appear in the HTTP response.
+
+To retest with an isolated fake database URL without editing `.env`, start the API
+from the repository root in a dedicated PowerShell process:
+
+```powershell
+powershell.exe -NoProfile -Command '$env:DATABASE_URL="postgresql://fake_user:fake_password@database-does-not-exist.invalid:5432/postgres"; npm.cmd run server:dev'
+```
+
+While that process is running, call the database health route from another terminal:
+
+```powershell
+Invoke-WebRequest -SkipHttpErrorCheck -Method GET "http://localhost:5000/api/health/db" | Select-Object StatusCode, Content
+```
+
+Stop the dedicated server process after the check. The environment override exists
+only in that child process.
 
 ## Auth
 
