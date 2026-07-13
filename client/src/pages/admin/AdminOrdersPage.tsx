@@ -1,27 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
 import {
-  Bell,
-  Boxes,
-  ChevronDown,
   ClipboardList,
   CreditCard,
   EllipsisVertical,
   Filter,
   Gift,
   Heart,
-  Home,
-  Mail,
   Printer,
   Search,
-  Settings,
   ShoppingBag,
-  ShoppingCart,
-  Star,
-  Tags,
   TrendingUp,
   Upload,
-  UsersRound,
   X,
 } from "lucide-react";
 import { normalizeApiError } from "../../lib/apiError";
@@ -33,51 +22,6 @@ import {
 import type { PaginatedMeta } from "../../types/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDate } from "../../utils/formatDate";
-
-const sidebarGroups: Array<{
-  label: string;
-  items: Array<{ label: string; icon: typeof Home; to?: string; soon?: boolean }>;
-}> = [
-  { label: "", items: [{ label: "Overview", icon: Home, to: "/admin" }] },
-  {
-    label: "Orders",
-    items: [
-      { label: "Orders", icon: ClipboardList, to: "/admin/orders" },
-      { label: "Abandoned Carts", icon: ShoppingCart, soon: true },
-    ],
-  },
-  {
-    label: "Customers",
-    items: [
-      { label: "Customers", icon: UsersRound, to: "/admin/customers" },
-      { label: "Segments", icon: Tags, soon: true },
-    ],
-  },
-  {
-    label: "Products",
-    items: [
-      { label: "Products", icon: Boxes, to: "/admin/products" },
-      { label: "Collections", icon: ClipboardList, soon: true },
-      { label: "Gift Boxes", icon: Gift, soon: true },
-    ],
-  },
-  {
-    label: "Marketing",
-    items: [
-      { label: "Discounts", icon: Tags, to: "/admin/coupons" },
-      { label: "Email Campaigns", icon: Mail, soon: true },
-      { label: "Reviews", icon: Star, to: "/admin/reviews" },
-    ],
-  },
-  {
-    label: "Store",
-    items: [
-      { label: "Settings", icon: Settings, soon: true },
-      { label: "Users", icon: UsersRound, soon: true },
-      { label: "Notifications", icon: Bell, soon: true },
-    ],
-  },
-];
 
 const allowedStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   PENDING: ["CONFIRMED", "CANCELLED"],
@@ -184,97 +128,6 @@ function Badge({ displayLabel, label }: { displayLabel?: string; label: string }
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${statusStyles[label] ?? "bg-[#FDECEF] text-[#EC4C84] ring-[#F7D9E2]"}`}>
       {displayLabel ?? displayStatus(label)}
     </span>
-  );
-}
-
-function Sidebar() {
-  return (
-    <aside className="hidden min-h-screen w-[22rem] shrink-0 border-r border-[#F7D9E2] bg-[#FFF5F7] px-5 py-6 xl:block">
-      <div className="mb-8 flex items-center gap-4">
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-          <Gift className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
-            The AMY Shop
-          </h1>
-          <p className="text-sm font-medium text-[#6F6570]">Admin</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6">
-        {sidebarGroups.map((group) => (
-          <div key={group.label || "overview"}>
-            {group.label ? <p className="mb-2 px-2 text-xs font-bold uppercase tracking-[0.22em] text-[#EC4C84]">{group.label}</p> : null}
-            <div className="grid gap-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-
-                const content = (
-                  <>
-                    <span className="flex items-center gap-3">
-                      <Icon className="h-5 w-5" />
-                      {item.label}
-                    </span>
-                    {item.soon ? <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-[#C8A7B1]">Soon</span> : null}
-                  </>
-                );
-
-                return item.to ? (
-                  <NavLink
-                    className={({ isActive }) => `flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition ${isActive ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100" : "text-[#5E5962] hover:bg-white/80"}`}
-                    end={item.to === "/admin"}
-                    key={item.label}
-                    to={item.to}
-                  >
-                    {content}
-                  </NavLink>
-                ) : (
-                  <div className="flex cursor-not-allowed items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold text-[#C8A7B1]" key={item.label} title="Coming soon">
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-14 rounded-2xl border border-[#F7D9E2] bg-white/70 p-5">
-        <p className="text-sm font-semibold text-[#6F6570]">Store Plan</p>
-        <p className="mt-2 text-lg font-bold text-[#1F1720]">Premium</p>
-        <button className="mt-5 w-full cursor-not-allowed rounded-xl bg-[#FDECEF] px-4 py-3 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-          Upgrade Soon
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-function TopHeader() {
-  return (
-    <header className="sticky top-0 z-20 border-b border-[#F7D9E2] bg-white/95 px-4 py-4 backdrop-blur lg:px-8">
-      <div className="flex items-center justify-between gap-4">
-        <div className="mx-auto hidden h-11 w-full max-w-xl items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4 shadow-sm lg:flex">
-          <Search className="h-5 w-5 text-[#9D8F98]" />
-          <input className="min-w-0 flex-1 cursor-not-allowed text-sm outline-none placeholder:text-[#C8A7B1]" disabled placeholder="Search coming soon" />
-          <span className="rounded-lg bg-[#FFF5F7] px-2 py-1 text-xs font-bold text-[#C8A7B1]">Soon</span>
-        </div>
-        <div className="ml-auto flex items-center gap-4">
-          <button className="relative grid h-11 w-11 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#6F6570]" type="button">
-            <Bell className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-[#FDECEF] text-sm font-bold text-[#EC4C84]">AA</span>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-[#1F1720]">Amy Admin</p>
-              <p className="text-xs text-[#6F6570]">Administrator</p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-[#6F6570]" />
-          </div>
-        </div>
-      </div>
-    </header>
   );
 }
 
@@ -439,7 +292,7 @@ function OrderDetailPanel({
             {order.statusHistory?.length ? order.statusHistory.map((history) => (
               <div className="border-b border-[#F7D9E2]/70 py-3 text-sm last:border-b-0" key={history.id}>
                 <p className="font-bold text-[#1F1720]">{displayStatus(history.newStatus)}</p>
-                <p className="mt-1 text-xs text-[#6F6570]">{formatDate(history.createdAt)} · {history.changedBy?.fullName ?? "System"}</p>
+                <p className="mt-1 text-xs text-[#6F6570]">{formatDate(history.createdAt)} Â· {history.changedBy?.fullName ?? "System"}</p>
                 {history.note ? <p className="mt-1 text-xs text-[#9D8F98]">{history.note}</p> : null}
               </div>
             )) : <p className="text-sm text-[#6F6570]">Not provided.</p>}
@@ -629,10 +482,8 @@ export function AdminOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#1F1720] xl:flex">
-      <Sidebar />
+    <div className="min-w-0 bg-white text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <TopHeader />
         <div className="grid min-h-[calc(100vh-4.8rem)] xl:grid-cols-[minmax(0,1fr)_27rem]">
           <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-6xl">

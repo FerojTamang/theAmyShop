@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
 import {
-  BarChart3,
   Bell,
   Boxes,
   ChevronDown,
@@ -10,19 +8,11 @@ import {
   ExternalLink,
   Filter,
   Gift,
-  Heart,
-  Home,
-  Menu,
   PackageCheck,
   Plus,
   Search,
-  Settings,
-  ShoppingCart,
-  Star,
-  Tags,
   Trash2,
   Upload,
-  UsersRound,
   X,
 } from "lucide-react";
 import { normalizeApiError } from "../../lib/apiError";
@@ -61,24 +51,6 @@ type ProductFormState = {
     isPrimary: boolean;
   }>;
 };
-
-const navItems = [
-  { label: "Dashboard", icon: Home, to: "/admin" },
-  { label: "Products", icon: Gift, active: true, open: true, to: "/admin/products" },
-  { label: "All Products", child: true, active: true },
-  { label: "Add New Product", child: true, comingSoon: true },
-  { label: "Categories", child: true, comingSoon: true },
-  { label: "Tags", child: true, comingSoon: true },
-  { label: "Collections", child: true, comingSoon: true },
-  { label: "Orders", icon: ShoppingCart, to: "/admin/orders" },
-  { label: "Customers", icon: UsersRound, to: "/admin/customers" },
-  { label: "Gift Orders", icon: Gift, comingSoon: true },
-  { label: "Reviews", icon: Heart, to: "/admin/reviews" },
-  { label: "Marketing", icon: Tags, comingSoon: true },
-  { label: "Coupons", icon: Star, to: "/admin/coupons" },
-  { label: "Analytics", icon: BarChart3, comingSoon: true },
-  { label: "Settings", icon: Settings, comingSoon: true },
-];
 
 const categoryColors: Record<string, string> = {
   "Gift Boxes": "bg-pink-100 text-pink-700",
@@ -229,150 +201,6 @@ const buildPayload = (form: ProductFormState): ProductPayload => {
   };
 };
 
-function Sidebar() {
-  return (
-    <aside className="hidden min-h-screen w-[21rem] shrink-0 border-r border-[#F7D9E2] bg-[#FFF5F7] px-5 py-6 xl:block">
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-            <Gift className="h-6 w-6" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
-              The AMY Shop
-            </h1>
-            <p className="text-sm font-medium text-[#6F6570]">Admin</p>
-          </div>
-        </div>
-        <Menu className="h-5 w-5 text-[#6F6570]" />
-      </div>
-
-      <nav className="grid gap-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-
-          if (item.child) {
-            return (
-              <div
-                className={`ml-12 rounded-xl px-4 py-3 text-sm font-bold ${
-                  item.active
-                    ? "bg-[#FDECEF] text-[#EC4C84] ring-1 ring-[#F7D9E2]"
-                    : item.comingSoon
-                      ? "cursor-not-allowed text-[#C8A7B1]"
-                      : "text-[#6F6570] hover:bg-white/70"
-                }`}
-                key={item.label}
-                title={item.comingSoon ? "Coming soon" : undefined}
-              >
-                {item.label}
-                {item.comingSoon ? <span className="ml-2 text-[10px] font-bold text-[#C8A7B1]">Soon</span> : null}
-              </div>
-            );
-          }
-
-          const content = (
-            <>
-              <span className="flex items-center gap-3">
-                {Icon ? <Icon className="h-5 w-5" /> : null}
-                {item.label}
-                {item.comingSoon ? <span className="text-[10px] font-bold text-[#C8A7B1]">Soon</span> : null}
-              </span>
-              {item.open ? <ChevronDown className="h-4 w-4" /> : null}
-            </>
-          );
-
-          if (item.to && !item.comingSoon) {
-            return (
-              <NavLink
-                className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold ${
-                  item.active
-                    ? "bg-[#FDECEF] text-[#EC4C84]"
-                    : "text-[#5E5962] hover:bg-white/80"
-                }`}
-                end={item.to === "/admin"}
-                key={item.label}
-                to={item.to}
-              >
-                {content}
-              </NavLink>
-            );
-          }
-
-          return (
-            <div
-              className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold ${
-                item.active
-                  ? "bg-[#FDECEF] text-[#EC4C84]"
-                  : item.comingSoon
-                    ? "cursor-not-allowed text-[#C8A7B1]"
-                    : "text-[#5E5962] hover:bg-white/80"
-              }`}
-              key={item.label}
-              title={item.comingSoon ? "Coming soon" : undefined}
-            >
-              {content}
-            </div>
-          );
-        })}
-      </nav>
-
-      <div className="mt-16 rounded-2xl border border-[#F7D9E2] bg-white/72 p-5 text-center shadow-sm shadow-pink-100">
-        <div className="mx-auto grid h-20 w-20 place-items-center rounded-2xl bg-[#FDECEF] text-[#EC4C84]">
-          <Gift className="h-10 w-10" />
-        </div>
-        <h2 className="mt-4 text-lg font-bold text-[#1F1720]">Make every gift extra special</h2>
-        <p className="mt-3 text-sm leading-6 text-[#6F6570]">
-          Create memorable experiences with thoughtful gifts.
-        </p>
-        <button
-          className="mt-5 w-full cursor-not-allowed rounded-xl bg-[#FDECEF] px-4 py-3 text-sm font-bold text-[#C8A7B1]"
-          disabled
-          title="Coming soon"
-          type="button"
-        >
-          View Store Soon
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-function TopHeader() {
-  return (
-    <header className="sticky top-0 z-20 border-b border-[#F7D9E2] bg-white/95 px-4 py-4 backdrop-blur lg:px-8">
-      <div className="flex items-center justify-between gap-4">
-        <div className="hidden h-11 w-full max-w-lg items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4 shadow-sm lg:flex">
-          <Search className="h-5 w-5 text-[#9D8F98]" />
-          <input
-            className="min-w-0 flex-1 cursor-not-allowed text-sm outline-none placeholder:text-[#C8A7B1]"
-            disabled
-            placeholder="Search coming soon"
-            title="Coming soon"
-          />
-          <span className="rounded-lg bg-[#FFF5F7] px-2 py-1 text-xs font-bold text-[#6F6570]">Ctrl K</span>
-        </div>
-        <div className="ml-auto flex items-center gap-5">
-          <Gift className="h-6 w-6 text-[#EC4C84]" />
-          <button className="relative text-[#EC4C84]">
-            <Bell className="h-6 w-6" />
-            <span className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-[#EC4C84] text-[10px] font-bold text-white">
-              6
-            </span>
-          </button>
-          <div className="flex items-center gap-3 border-l border-[#F7D9E2] pl-5">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-[#FDECEF] text-sm font-bold text-[#EC4C84]">SJ</span>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-[#1F1720]">Sarah J.</p>
-              <p className="text-xs text-[#6F6570]">Admin</p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-[#6F6570]" />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function FilterControl({ label }: { label: string }) {
   return (
     <button
@@ -387,7 +215,6 @@ function FilterControl({ label }: { label: string }) {
     </button>
   );
 }
-
 function Toggle({
   enabled = true,
   onClick,
@@ -996,8 +823,8 @@ function ProductFormPanel({
               <Upload className="h-5 w-5 text-[#EC4C84]" />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-[#F7D9E2] bg-white p-3 text-xs font-semibold text-[#6F6570]">
-              <span>Recommended: 1200 × 1200 px</span>
-              <span>Minimum: 800 × 800 px</span>
+              <span>Recommended: 1200 Ã— 1200 px</span>
+              <span>Minimum: 800 Ã— 800 px</span>
               <span>JPG, PNG, or WEBP</span>
               <span>Maximum 5 MB</span>
             </div>
@@ -1363,10 +1190,8 @@ export function AdminProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#1F1720] xl:flex">
-      <Sidebar />
+    <div className="min-w-0 bg-white text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <TopHeader />
         <div className="grid min-h-[calc(100vh-4.8rem)] xl:grid-cols-[minmax(0,1fr)_29rem]">
           <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-6xl">

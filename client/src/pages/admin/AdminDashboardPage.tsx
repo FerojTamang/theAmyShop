@@ -9,8 +9,6 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
-import { AdminSidebar } from "../../components/layout/AdminSidebar";
-import { useAuth } from "../../context/AuthContext";
 import { normalizeApiError } from "../../lib/apiError";
 import {
   adminApi,
@@ -71,7 +69,6 @@ const formatDate = (value: string) =>
 const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
 
 export function AdminDashboardPage() {
-  const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -123,23 +120,7 @@ export function AdminDashboardPage() {
     data?.reviews.statuses.find((item) => item.status === "PENDING")?.count ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#FFFCFD] text-[#1F1720] xl:flex">
-      <AdminSidebar />
-      <div className="min-w-0 flex-1">
-        <header className="border-b border-[#F7D9E2] bg-white px-4 py-4 sm:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#EC4C84]">Admin</p>
-              <p className="font-semibold text-[#5E5962]">Store overview</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold">{user?.fullName || "Administrator"}</p>
-              <p className="text-xs text-[#6F6570]">{user?.role === "SUPER_ADMIN" ? "Super admin" : "Administrator"}</p>
-            </div>
-          </div>
-        </header>
-
-        <main className="px-4 py-8 sm:px-8">
+    <section className="px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-7xl">
             <div>
               <h1 className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
@@ -283,11 +264,6 @@ export function AdminDashboardPage() {
               <Card className="mt-8 flex items-center gap-3 text-[#6F6570]"><AlertTriangle className="h-5 w-5" />Dashboard data is unavailable.</Card>
             )}
           </div>
-        </main>
-        <footer className="border-t border-[#F7D9E2] px-4 py-6 text-center text-sm text-[#6F6570]">
-          © {new Date().getFullYear()} The AMY Shop
-        </footer>
-      </div>
-    </div>
+    </section>
   );
 }

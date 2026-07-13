@@ -1,22 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import type { LucideIcon } from "lucide-react";
 import {
-  BarChart3,
   ChevronDown,
-  Gift,
   Heart,
-  Home,
   Plus,
   Search,
-  Settings,
-  ShoppingCart,
   Star,
   Tags,
   Trash2,
-  UsersRound,
   X,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
 import { normalizeApiError } from "../../lib/apiError";
 import {
   couponApi,
@@ -25,15 +17,6 @@ import {
   type CouponPayload,
 } from "../../services/couponApi";
 import type { PaginatedMeta } from "../../types/api";
-
-type NavItem = {
-  active?: boolean;
-  child?: boolean;
-  comingSoon?: boolean;
-  icon?: LucideIcon;
-  label: string;
-  to?: string;
-};
 
 type CouponFormState = {
   code: string;
@@ -71,20 +54,6 @@ const emptyForm: CouponFormState = {
   expiresAt: "",
   isActive: true,
 };
-
-const navItems: NavItem[] = [
-  { label: "Dashboard", icon: Home, to: "/admin" },
-  { label: "Products", icon: Gift, to: "/admin/products" },
-  { label: "Orders", icon: ShoppingCart, to: "/admin/orders" },
-  { label: "Customers", icon: UsersRound, to: "/admin/customers" },
-  { label: "Marketing", icon: Tags, active: true },
-  { label: "Coupons", child: true, active: true, to: "/admin/coupons" },
-  { label: "Campaigns", child: true, comingSoon: true },
-  { label: "Reviews", icon: Heart, to: "/admin/reviews" },
-  { label: "Gift Orders", icon: Gift, comingSoon: true },
-  { label: "Analytics", icon: BarChart3, comingSoon: true },
-  { label: "Settings", icon: Settings, comingSoon: true },
-];
 
 const statusStyles: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700 ring-emerald-200",
@@ -253,68 +222,6 @@ function Badge({ label }: { label: string }) {
     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1 ${statusStyles[label] ?? "bg-[#FDECEF] text-[#EC4C84] ring-[#F7D9E2]"}`}>
       {label}
     </span>
-  );
-}
-
-function Sidebar() {
-  return (
-    <aside className="hidden min-h-screen w-[22rem] shrink-0 border-r border-[#F7D9E2] bg-[#FFF5F7] px-5 py-6 xl:block">
-      <div className="mb-8 flex items-center gap-4">
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-          <Gift className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
-            The AMY Shop
-          </h1>
-          <p className="text-sm font-medium text-[#6F6570]">Admin</p>
-        </div>
-      </div>
-      <nav className="grid gap-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const content = (
-            <>
-              <span className={`flex items-center gap-3 ${item.child ? "pl-8" : ""}`}>
-                {Icon ? <Icon className="h-5 w-5" /> : <span className="h-2 w-2 rounded-full bg-current" />}
-                {item.label}
-              </span>
-              {item.comingSoon ? (
-                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C8A7B1]">
-                  Soon
-                </span>
-              ) : null}
-            </>
-          );
-
-          if (item.to && !item.comingSoon) {
-            return (
-              <NavLink
-                className={({ isActive }) => `flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                  isActive || item.active ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100" : "text-[#5E5962] hover:bg-white/80"
-                }`}
-                end={item.to === "/admin"}
-                key={item.label}
-                to={item.to}
-              >
-                {content}
-              </NavLink>
-            );
-          }
-
-          return (
-            <div
-              className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold ${
-                item.active ? "bg-[#FDECEF] text-[#EC4C84]" : "cursor-not-allowed text-[#B8A5AD]"
-              }`}
-              key={item.label}
-            >
-              {content}
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
   );
 }
 
@@ -664,8 +571,7 @@ export function AdminCouponsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#1F1720] xl:flex">
-      <Sidebar />
+    <div className="min-w-0 bg-white text-[#1F1720]">
       <div className="min-w-0 flex-1">
         <div className="grid min-h-screen xl:grid-cols-[minmax(0,1fr)_30rem]">
           <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">

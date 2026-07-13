@@ -1,21 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
 import {
-  BarChart3,
-  Boxes,
   ClipboardList,
-  Gift,
   Heart,
-  Home,
-  Mail,
   Search,
-  Settings,
   Star,
-  Tags,
-  UsersRound,
   X,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
 import { normalizeApiError } from "../../lib/apiError";
 import {
   reviewApi,
@@ -23,14 +13,6 @@ import {
   type ReviewStatus,
 } from "../../services/reviewApi";
 import type { PaginatedMeta } from "../../types/api";
-
-type SidebarItem = {
-  active?: boolean;
-  icon: LucideIcon;
-  label: string;
-  soon?: boolean;
-  to?: string;
-};
 
 const reviewStatuses: Array<ReviewStatus | "ALL"> = [
   "ALL",
@@ -41,37 +23,6 @@ const reviewStatuses: Array<ReviewStatus | "ALL"> = [
 ];
 
 const statusOptions: ReviewStatus[] = ["PENDING", "APPROVED", "HIDDEN", "DELETED"];
-
-const sidebarGroups: Array<{ label: string; items: SidebarItem[] }> = [
-  { label: "", items: [{ label: "Overview", icon: Home, to: "/admin" }] },
-  { label: "Orders", items: [{ label: "Orders", icon: ClipboardList, to: "/admin/orders" }] },
-  {
-    label: "Products",
-    items: [
-      { label: "Products", icon: Boxes, to: "/admin/products" },
-      { label: "Gift Orders", icon: Gift, soon: true },
-    ],
-  },
-  {
-    label: "Customers",
-    items: [{ label: "Customers", icon: UsersRound, to: "/admin/customers" }],
-  },
-  {
-    label: "Marketing",
-    items: [
-      { label: "Coupons", icon: Tags, to: "/admin/coupons" },
-      { label: "Reviews", icon: Star, active: true, to: "/admin/reviews" },
-      { label: "Email Campaigns", icon: Mail, soon: true },
-    ],
-  },
-  {
-    label: "Store",
-    items: [
-      { label: "Analytics", icon: BarChart3, soon: true },
-      { label: "Settings", icon: Settings, soon: true },
-    ],
-  },
-];
 
 const statusStyles: Record<ReviewStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700 ring-amber-200",
@@ -109,71 +60,6 @@ const getApiErrorMessage = (error: unknown) => {
 
   return normalized.message;
 };
-
-function Sidebar() {
-  return (
-    <aside className="hidden min-h-screen w-[22rem] shrink-0 border-r border-[#F7D9E2] bg-[#FFF5F7] px-5 py-6 xl:block">
-      <div className="mb-8 flex items-center gap-4">
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-          <Gift className="h-7 w-7" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
-            The AMY Shop
-          </h1>
-          <p className="text-sm font-medium text-[#6F6570]">Admin</p>
-        </div>
-      </div>
-      <div className="grid gap-6">
-        {sidebarGroups.map((group) => (
-          <div key={group.label || "overview"}>
-            {group.label ? (
-              <p className="mb-2 px-2 text-xs font-bold uppercase tracking-[0.22em] text-[#EC4C84]">
-                {group.label}
-              </p>
-            ) : null}
-            <div className="grid gap-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const baseClass = "flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition";
-
-                if (item.soon || !item.to) {
-                  return (
-                    <div className={`${baseClass} cursor-not-allowed text-[#B8A5AD]`} key={item.label}>
-                      <span className="flex items-center gap-3">
-                        <Icon className="h-5 w-5" />
-                        {item.label}
-                      </span>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C8A7B1]">Soon</span>
-                    </div>
-                  );
-                }
-
-                return (
-                  <NavLink
-                    className={({ isActive }) => `${baseClass} ${
-                      isActive || item.active
-                        ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100"
-                        : "text-[#5E5962] hover:bg-white/80"
-                    }`}
-                    end={item.to === "/admin"}
-                    key={item.label}
-                    to={item.to}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Icon className="h-5 w-5" />
-                      {item.label}
-                    </span>
-                  </NavLink>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </aside>
-  );
-}
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -473,8 +359,7 @@ export function AdminReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#1F1720] xl:flex">
-      <Sidebar />
+    <div className="min-w-0 bg-white text-[#1F1720]">
       <div className="min-w-0 flex-1">
         <div className="grid min-h-screen xl:grid-cols-[minmax(0,1fr)_29rem]">
           <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
