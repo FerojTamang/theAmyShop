@@ -1,14 +1,4 @@
-import {
-  ArrowRight,
-  Gift,
-  Heart,
-  Menu,
-  PackageCheck,
-  ShoppingBag,
-  Truck,
-  UserRound,
-  X,
-} from "lucide-react";
+import { ArrowRight, Gift, PackageCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { normalizeApiError } from "../../lib/apiError";
@@ -20,65 +10,70 @@ const serifStyle = { fontFamily: '"Playfair Display", Georgia, "Times New Roman"
 const getPrimaryImage = (product: PublicProduct) =>
   product.images?.find((image) => image.isPrimary)?.imageUrl ?? product.images?.[0]?.imageUrl;
 
-function AnnouncementBar() {
-  return (
-    <div className="border-b border-[#F7D9E2] bg-[#FFF5F7]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-[#6F6570] sm:px-6 lg:px-8">
-        <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4 text-[#EC4C84]" /> Handmade with love.</span>
-        <span className="hidden items-center gap-2 sm:inline-flex"><Truck className="h-4 w-4 text-[#EC4C84]" /> Free standard shipping on every order.</span>
-      </div>
-    </div>
-  );
-}
+function HeroSection({ product }: { product?: PublicProduct }) {
+  const imageUrl = product ? getPrimaryImage(product) : undefined;
+  const [imageFailed, setImageFailed] = useState(false);
 
-function HomeHeader() {
-  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   return (
-    <header className="border-b border-[#F7D9E2]/70 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link className="flex min-w-0 items-center gap-3" to="/">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EC4C84] text-white"><Gift className="h-6 w-6" /></span>
-          <span className="min-w-0"><span className="block truncate text-xl font-semibold" style={serifStyle}>The AMY Shop</span><span className="hidden text-xs text-[#9D8F98] sm:block">Handmade gifts</span></span>
-        </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] md:flex">
-          <Link className="text-[#EC4C84]" to="/">Home</Link><Link to="/products">Shop</Link><Link to="/orders">Orders</Link>
-        </nav>
-        <div className="ml-auto flex items-center gap-1">
-          <Link aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7]" to="/account"><UserRound className="h-5 w-5" /></Link>
-          <Link aria-label="Cart" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7]" to="/cart"><ShoppingBag className="h-5 w-5" /></Link>
-          <button aria-expanded={open} aria-label="Toggle navigation" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7] md:hidden" onClick={() => setOpen((value) => !value)} type="button">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
-        </div>
-      </div>
-      {open ? <nav className="grid gap-1 border-t border-[#F7D9E2] px-4 py-3 text-sm font-semibold md:hidden"><Link className="rounded-lg bg-[#FFF5F7] px-3 py-2 text-[#EC4C84]" onClick={() => setOpen(false)} to="/">Home</Link><Link className="rounded-lg px-3 py-2 hover:bg-[#FFF5F7]" onClick={() => setOpen(false)} to="/products">Shop</Link><Link className="rounded-lg px-3 py-2 hover:bg-[#FFF5F7]" onClick={() => setOpen(false)} to="/orders">Orders</Link></nav> : null}
-    </header>
-  );
-}
-
-function HeroSection() {
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="grid overflow-hidden rounded-[1.8rem] border border-[#F7D9E2] bg-gradient-to-br from-white via-[#FFF5F7] to-[#FFF1F4] shadow-[0_24px_80px_rgba(236,76,132,0.12)] lg:grid-cols-[1fr_0.85fr]">
-        <div className="flex flex-col justify-center px-6 py-14 sm:px-10 lg:px-14">
-          <span className="w-fit rounded-full border border-[#F7D9E2] bg-[#FDECEF] px-4 py-2 text-xs font-semibold text-[#EC4C84]">Handmade gifts</span>
-          <h1 className="mt-6 max-w-xl text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl" style={serifStyle}>Thoughtful gifts with a handmade heart.</h1>
-          <p className="mt-6 max-w-xl leading-7 text-[#6F6570]">Browse the live The AMY Shop catalog for meaningful creations made to celebrate special moments.</p>
-          <Link className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white shadow-lg shadow-pink-200 hover:bg-[#D93D73]" to="/products">Shop available gifts <ArrowRight className="h-4 w-4" /></Link>
-          <div className="mt-9 flex flex-wrap gap-4 text-sm font-semibold text-[#6F6570]">
-            <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4 text-[#EC4C84]" /> Handmade with care</span>
+    <section className="mx-auto max-w-7xl px-4 pb-10 pt-7 sm:px-6 sm:pt-10 lg:px-8">
+      <div className="grid overflow-hidden rounded-[2rem] border border-[#F7D9E2] bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF0F4] shadow-[0_28px_90px_rgba(143,64,88,0.13)] lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="flex flex-col justify-center px-6 py-14 sm:px-10 sm:py-16 lg:px-14 lg:py-20">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#F7D9E2] bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#EC4C84] shadow-sm shadow-pink-100">
+            <Sparkles className="h-3.5 w-3.5" /> Gifts for meaningful moments
+          </span>
+          <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[1.02] tracking-tight text-[#1F1720] sm:text-6xl" style={serifStyle}>
+            Thoughtful gifts, chosen with heart.
+          </h1>
+          <p className="mt-6 max-w-xl text-base leading-7 text-[#6F6570] sm:text-lg">
+            Discover The AMY Shop’s currently available gifts for birthdays, celebrations, and everyday moments worth remembering.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <Link className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white shadow-lg shadow-pink-200 transition hover:-translate-y-0.5 hover:bg-[#D93D73]" to="/products">
+              Shop gifts <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a className="inline-flex min-h-12 items-center rounded-full px-4 text-sm font-bold text-[#6F6570] hover:bg-white hover:text-[#EC4C84]" href="#featured-gifts">
+              Explore the collection
+            </a>
+          </div>
+          <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[#6F6570]">
             <span className="inline-flex items-center gap-2"><PackageCheck className="h-4 w-4 text-[#EC4C84]" /> Gift-ready experience</span>
-            <span className="inline-flex items-center gap-2"><Truck className="h-4 w-4 text-[#EC4C84]" /> Free standard shipping</span>
+            <span className="inline-flex items-center gap-2"><Gift className="h-4 w-4 text-[#EC4C84]" /> Live catalog selections</span>
           </div>
         </div>
-        <div className="relative grid min-h-[24rem] place-items-center overflow-hidden bg-[radial-gradient(circle_at_20%_75%,rgba(236,76,132,0.22),transparent_14rem),linear-gradient(135deg,#fff,#ffe3eb)] p-8 lg:min-h-[34rem]">
-          <div className="absolute -right-10 top-8 h-44 w-44 rounded-full bg-[#F7B8C8]/35 blur-2xl" />
-          <div className="relative w-full max-w-md rotate-2 rounded-[1.5rem] border border-[#eebbc8] bg-[#efb3bf] p-5 shadow-[0_30px_90px_rgba(143,64,88,0.22)]">
-            <div className="aspect-square rounded-xl bg-gradient-to-br from-[#FFF7F9] via-white to-[#FFF0DA] p-7">
-              <div className="grid h-full place-items-center rounded-2xl border border-white bg-white/65 text-center shadow-sm backdrop-blur">
-                <div><Gift className="mx-auto h-16 w-16 text-[#EC4C84]" /><p className="mt-5 text-3xl text-[#EC4C84]" style={serifStyle}>made with love</p></div>
+
+        <div className="relative grid min-h-[25rem] place-items-center overflow-hidden bg-[radial-gradient(circle_at_20%_80%,rgba(236,76,132,0.24),transparent_15rem),linear-gradient(145deg,#fff6f8,#ffe4ec)] p-7 sm:p-10 lg:min-h-[38rem]">
+          <div className="absolute -right-16 top-8 h-56 w-56 rounded-full bg-[#F7B8C8]/40 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 h-60 w-60 rounded-full bg-white/80 blur-3xl" />
+          {product && imageUrl && !imageFailed ? (
+            <Link className="group relative w-full max-w-md" to={`/products/${product.slug}`}>
+              <div className="rotate-2 overflow-hidden rounded-[1.75rem] border border-white/90 bg-white p-5 shadow-[0_32px_90px_rgba(143,64,88,0.22)] transition duration-300 group-hover:rotate-0">
+                <div className="aspect-square overflow-hidden rounded-[1.25rem] bg-gradient-to-br from-[#FFF9FA] to-white">
+                  <img alt={product.name} className="h-full w-full object-contain p-5" onError={() => setImageFailed(true)} src={imageUrl} />
+                </div>
+                <div className="flex items-end justify-between gap-4 px-2 pb-1 pt-5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#EC4C84]">Featured gift</p>
+                    <p className="mt-1 truncate text-lg font-bold text-[#1F1720]">{product.name}</p>
+                  </div>
+                  <p className="shrink-0 font-bold text-[#1F1720]">{formatCurrency(product.price)}</p>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="relative grid aspect-square w-full max-w-md place-items-center rounded-[1.75rem] border border-white bg-white/80 text-center shadow-[0_32px_90px_rgba(143,64,88,0.18)] backdrop-blur">
+              <div>
+                <span className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
+                  <Gift className="h-11 w-11" />
+                </span>
+                <p className="mt-6 text-3xl font-semibold text-[#1F1720]" style={serifStyle}>A gift chosen for them</p>
+                <p className="mt-2 text-sm text-[#6F6570]">Browse the latest available collection.</p>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
@@ -90,22 +85,71 @@ function ProductCard({ product }: { product: PublicProduct }) {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <Link className="overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-lg" to={`/products/${product.slug}`}>
-      <div className="aspect-square bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF0F3]">
-        {imageUrl && !imageFailed ? <img alt={product.name} className="h-full w-full object-contain p-3" onError={() => setImageFailed(true)} src={imageUrl} /> : <div className="grid h-full place-items-center text-center text-[#EC4C84]"><div><Gift className="mx-auto h-9 w-9" /><p className="mt-2 text-sm font-semibold">Image coming soon</p></div></div>}
+    <Link className="group overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-lg" to={`/products/${product.slug}`}>
+      <div className="aspect-square overflow-hidden bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF0F3]">
+        {imageUrl && !imageFailed ? (
+          <img alt={product.name} className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.03]" onError={() => setImageFailed(true)} src={imageUrl} />
+        ) : (
+          <div className="grid h-full place-items-center text-center text-[#EC4C84]"><div><Gift className="mx-auto h-9 w-9" /><p className="mt-2 text-sm font-semibold">Image coming soon</p></div></div>
+        )}
       </div>
-      <div className="p-5"><p className="text-xs font-bold uppercase tracking-wide text-[#EC4C84]">{product.category?.name || "Handmade gift"}</p><h3 className="mt-2 font-bold">{product.name}</h3><p className="mt-3 font-bold">{formatCurrency(product.price)}</p></div>
+      <div className="p-5">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#EC4C84]">{product.category?.name || "Gift"}</p>
+        <h3 className="mt-2 line-clamp-2 font-bold text-[#1F1720]">{product.name}</h3>
+        <p className="mt-3 font-bold text-[#1F1720]">{formatCurrency(product.price)}</p>
+      </div>
     </Link>
   );
 }
 
-function FeaturedProducts() {
+function FeaturedProducts({ error, loading, products }: { error: string; loading: boolean; products: PublicProduct[] }) {
+  return (
+    <section className="mx-auto max-w-7xl scroll-mt-32 px-4 py-14 sm:px-6 lg:px-8" id="featured-gifts">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#EC4C84]">From the live catalog</p>
+          <h2 className="mt-2 text-4xl font-semibold text-[#1F1720]" style={serifStyle}>Gifts available now</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6F6570]">A closer look at items currently available from The AMY Shop.</p>
+        </div>
+        <Link className="hidden items-center gap-2 text-sm font-bold text-[#EC4C84] sm:inline-flex" to="/products">Shop all <ArrowRight className="h-4 w-4" /></Link>
+      </div>
+      {loading ? (
+        <div className="mt-8 rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-10 text-center text-[#6F6570]">Loading available gifts...</div>
+      ) : error ? (
+        <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">{error}</div>
+      ) : products.length === 0 ? (
+        <div className="mt-8 rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-10 text-center"><Gift className="mx-auto h-9 w-9 text-[#EC4C84]" /><p className="mt-3 font-bold">No gifts are available yet.</p><p className="mt-1 text-sm text-[#6F6570]">Please check back after the catalog is updated.</p></div>
+      ) : (
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.slice(0, 4).map((product) => <ProductCard key={product.id} product={product} />)}</div>
+      )}
+    </section>
+  );
+}
+
+function PersonalTouchNotice() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-5 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] px-6 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#EC4C84]">A personal touch is on the way.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6F6570]">More personalization options are being prepared. For now, explore the gifts currently available in our shop.</p>
+        </div>
+        <Link className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-[#EC4C84] bg-white px-5 py-2.5 text-sm font-bold text-[#EC4C84] sm:self-auto" to="/products">
+          Browse gifts <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+export function HomePage() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
+
     productApi.list({ page: 1, limit: 5 }).then((result) => {
       if (active) setProducts(result.products);
     }).catch((loadError) => {
@@ -113,29 +157,17 @@ function FeaturedProducts() {
     }).finally(() => {
       if (active) setLoading(false);
     });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#EC4C84]">Live catalog</p><h2 className="mt-2 text-4xl font-semibold" style={serifStyle}>Available gifts</h2></div><Link className="hidden items-center gap-2 text-sm font-bold text-[#EC4C84] sm:inline-flex" to="/products">View all <ArrowRight className="h-4 w-4" /></Link></div>
-      {loading ? <div className="mt-8 rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-10 text-center text-[#6F6570]">Loading products...</div> : error ? <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-sm text-red-700">{error}</div> : products.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-10 text-center"><Gift className="mx-auto h-9 w-9 text-[#EC4C84]" /><p className="mt-3 font-bold">No products are available yet.</p><p className="mt-1 text-sm text-[#6F6570]">Please check back after the catalog is updated.</p></div> : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div>}
-    </section>
+    <div className="bg-[#FFFDFB] text-[#1F1720]">
+      <HeroSection product={products[0]} />
+      <FeaturedProducts error={error} loading={loading} products={products} />
+      <PersonalTouchNotice />
+    </div>
   );
-}
-
-function CustomOrdersNotice() {
-  return (
-    <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-      <div className="rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-8 text-center sm:p-10"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#EC4C84]">Custom orders</p><h2 className="mt-3 text-3xl font-semibold" style={serifStyle}>Personalized ordering is coming soon.</h2><p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#6F6570]">The storefront does not currently save customization selections. For custom gift requests, contact us after placing your order.</p><Link className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#EC4C84] px-6 py-3 text-sm font-bold text-white" to="/products">Browse available products <ArrowRight className="h-4 w-4" /></Link></div>
-    </section>
-  );
-}
-
-function HomeFooter() {
-  return <footer className="border-t border-[#F7D9E2] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-7 text-sm text-[#6F6570] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><span className="inline-flex items-center gap-2 font-bold text-[#1F1720]"><Gift className="h-5 w-5 text-[#EC4C84]" /> The AMY Shop</span><nav className="flex gap-5"><Link to="/products">Shop</Link><Link to="/orders">Orders</Link><Link to="/account">Account</Link></nav><span>© {new Date().getFullYear()} The AMY Shop</span></div></footer>;
-}
-
-export function HomePage() {
-  return <div className="min-h-screen bg-[#FFFDFB] text-[#1F1720]"><AnnouncementBar /><HomeHeader /><HeroSection /><FeaturedProducts /><CustomOrdersNotice /><HomeFooter /></div>;
 }

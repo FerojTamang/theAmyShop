@@ -5,7 +5,6 @@ import {
   Heart,
   Mail,
   Maximize2,
-  Menu,
   Minus,
   PackageCheck,
   RotateCcw,
@@ -14,7 +13,6 @@ import {
   ShoppingCart,
   Star,
   Truck,
-  UserRound,
   Plus,
   X,
   ZoomIn,
@@ -107,7 +105,7 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     price: formatCurrency(product.price),
     oldPrice: hasCompareAt ? formatCurrency(compareAtPrice) : undefined,
     badge: product.isCustomizable
-      ? "Custom orders soon"
+      ? "Personal touch planned"
       : product.isGiftSupported
         ? "Gift ready"
         : product.stockType === "READY_STOCK"
@@ -122,56 +120,6 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     makingTime: product.makingTime,
   };
 };
-
-function AnnouncementBar() {
-  return (
-    <div className="border-b border-[#F7D9E2] bg-[#FFF5F7]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-[#6F6570] sm:px-6 lg:px-8">
-        <span className="inline-flex items-center gap-2">
-          <Heart className="h-4 w-4 text-[#EC4C84]" />
-          Handmade with love. Made just for you.
-        </span>
-        <span className="hidden items-center gap-2 sm:inline-flex">
-          <Truck className="h-4 w-4 text-[#EC4C84]" />
-          Free standard shipping on every order
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function ProductHeader() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  return (
-    <header className="border-b border-[#F7D9E2] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <Link className="flex min-w-fit items-center gap-3" to="/">
-          <span className="grid h-13 w-13 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-            <Gift className="h-7 w-7" />
-          </span>
-          <span>
-            <span className="block text-2xl font-semibold text-[#1F1720]" style={serifStyle}>
-              The AMY Shop
-            </span>
-            <span className="text-xs font-medium text-[#9D8F98]">Handmade custom gifts</span>
-          </span>
-        </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] md:flex">
-          <Link to="/">Home</Link><Link className="text-[#EC4C84]" to="/products">Shop</Link><Link to="/orders">Orders</Link>
-        </nav>
-        <Link className="ml-auto grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/account">
-          <UserRound className="h-5 w-5" />
-        </Link>
-        <Link className="grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/cart">
-          <ShoppingBag className="h-5 w-5" />
-        </Link>
-        <button aria-expanded={isMenuOpen} aria-label="Toggle navigation" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7] md:hidden" onClick={() => setIsMenuOpen((value) => !value)} type="button">{isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
-      </div>
-      {isMenuOpen ? <nav className="grid gap-1 border-t border-[#F7D9E2] px-4 py-3 text-sm font-semibold md:hidden"><Link className="rounded-lg px-3 py-2" onClick={() => setIsMenuOpen(false)} to="/">Home</Link><Link className="rounded-lg bg-[#FFF5F7] px-3 py-2 text-[#EC4C84]" onClick={() => setIsMenuOpen(false)} to="/products">Shop</Link><Link className="rounded-lg px-3 py-2" onClick={() => setIsMenuOpen(false)} to="/orders">Orders</Link></nav> : null}
-    </header>
-  );
-}
 
 function ProductVisual({ type = "box", className = "" }: { type?: ProductArt | "mug" | "card"; className?: string }) {
   const label = {
@@ -361,7 +309,7 @@ function ProductGallery({ product }: { product: DetailProduct }) {
         {selectedImage && !failedImages.has(selectedImage) ? (
           <span className="pointer-events-none absolute bottom-4 left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#F7D9E2] bg-white/90 px-3 py-2 text-[11px] font-bold text-[#6F6570] shadow-sm backdrop-blur">
             <Maximize2 className="h-3.5 w-3.5 text-[#EC4C84]" />
-            {isHoverCapable ? "Hover to zoom · Click to view larger" : "Tap to view larger"}
+            {isHoverCapable ? "Hover to zoom Â· Click to view larger" : "Tap to view larger"}
           </span>
         ) : null}
       </div>
@@ -409,7 +357,7 @@ function ProductGallery({ product }: { product: DetailProduct }) {
               <div>
                 <p className="text-sm font-bold text-[#1F1720]">{product.title}</p>
                 <p className="text-xs font-semibold text-[#9D8F98]">
-                  Image {selectedImageIndex + 1} of {images.length} · {lightboxZoom.toFixed(1)}x
+                  Image {selectedImageIndex + 1} of {images.length} Â· {lightboxZoom.toFixed(1)}x
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -585,7 +533,7 @@ function CustomizationNotice() {
         Custom orders coming soon
       </p>
       <p className="mt-2 text-sm leading-6 text-[#6F6570]">
-        Custom orders are coming soon. For custom gift requests, contact us after placing your order.
+        More personalization options are being prepared. This gift is currently available with the options shown here.
       </p>
     </section>
   );
@@ -730,7 +678,7 @@ function ProductCard({ product }: { product: RelatedProduct }) {
 export function RelatedProductsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-      <h2 className="mb-7 text-center text-4xl font-semibold text-[#1F1720]" style={serifStyle}>You may also love <span className="text-[#EC4C84]">♡</span></h2>
+      <h2 className="mb-7 text-center text-4xl font-semibold text-[#1F1720]" style={serifStyle}>You may also love <span className="text-[#EC4C84]">â™¡</span></h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {relatedProducts.map((product) => <ProductCard key={product.title} product={product} />)}
       </div>
@@ -1060,46 +1008,6 @@ function ProductStatePanel({
   );
 }
 
-function ProductFooter() {
-  return (
-    <footer className="bg-white">
-      <div className="mx-auto grid max-w-7xl gap-8 border-t border-[#F7D9E2] px-4 py-8 sm:px-6 md:grid-cols-[1.2fr_2fr_1fr] lg:px-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#EC4C84] text-white"><Gift className="h-5 w-5" /></span>
-            <div>
-              <p className="text-xl font-semibold text-[#1F1720]" style={serifStyle}>The AMY Shop</p>
-              <p className="text-xs text-[#9D8F98]">Handmade custom gifts made with love</p>
-            </div>
-          </div>
-          <p className="mt-4 text-xs leading-5 text-[#6F6570]">Free standard shipping and Cash on Delivery are currently active.</p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {[
-            ["Shop", "All Products", "Gift Boxes", "Candles", "Mugs", "Necklaces", "Decor"],
-            ["Customer Care", "Contact Us", "Shipping & Returns", "FAQ", "Track Your Order", "Gift Cards"],
-            ["About", "Our Story", "Handmade Process", "Reviews", "Blog", "Wholesale"],
-          ].map(([title, ...links]) => (
-            <div key={title}>
-              <h3 className="text-sm font-bold text-[#1F1720]">{title}</h3>
-              <div className="mt-3 grid gap-1 text-xs text-[#6F6570]">{links.map((link) => <span key={link}>{link}</span>)}</div>
-            </div>
-          ))}
-        </div>
-        <nav className="grid content-start gap-3 text-sm font-semibold text-[#6F6570]">
-          <Link to="/products">Shop products</Link>
-          <Link to="/orders">My orders</Link>
-          <Link to="/account">My account</Link>
-        </nav>
-      </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs text-[#9D8F98] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <span>© {new Date().getFullYear()} The AMY Shop. All rights reserved.</span>
-        <span className="flex gap-6"><span>Privacy Policy</span><span>Terms of Service</span></span>
-      </div>
-    </footer>
-  );
-}
-
 export function ProductDetailPage() {
   const { slug } = useParams();
   const location = useLocation();
@@ -1314,8 +1222,6 @@ export function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
-      <AnnouncementBar />
-      <ProductHeader />
       <main>
         {isLoading ? (
           <ProductStatePanel
@@ -1387,7 +1293,6 @@ export function ProductDetailPage() {
           </>
         )}
       </main>
-      <ProductFooter />
     </div>
   );
 }

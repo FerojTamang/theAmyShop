@@ -216,7 +216,7 @@ export function OrdersPage() {
         ) : null}
 
         {isLoading ? (
-          <StatePanel description="Loading your real order history from the backend." title="Loading orders" />
+          <StatePanel description="Loading your order history." title="Loading orders" />
         ) : orders.length === 0 ? (
           <StatePanel description="Checkout with Cash on Delivery to see your first real order here." title="No orders yet" />
         ) : filteredOrders.length === 0 ? (

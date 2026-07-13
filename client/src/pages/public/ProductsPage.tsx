@@ -2,13 +2,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Gift,
-  Heart,
-  Menu,
   Search,
-  ShoppingBag,
-  Truck,
-  UserRound,
-  X,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -25,49 +19,6 @@ const getPrimaryImage = (product: PublicProduct) =>
   product.images?.find((image) => image.isPrimary)?.imageUrl ??
   product.images?.[0]?.imageUrl;
 
-function AnnouncementBar() {
-  return (
-    <div className="border-b border-[#F7D9E2] bg-[#FFF5F7]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-[#6F6570] sm:px-6 lg:px-8">
-        <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4 text-[#EC4C84]" /> Handmade with love.</span>
-        <span className="hidden items-center gap-2 sm:inline-flex"><Truck className="h-4 w-4 text-[#EC4C84]" /> Free standard shipping on every order.</span>
-      </div>
-    </div>
-  );
-}
-
-function ProductsHeader() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <header className="border-b border-[#F7D9E2] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link className="flex min-w-0 items-center gap-3" to="/">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EC4C84] text-white"><Gift className="h-6 w-6" /></span>
-          <span className="min-w-0"><span className="block truncate text-xl font-semibold" style={serifStyle}>The AMY Shop</span><span className="hidden text-xs text-[#9D8F98] sm:block">Handmade gifts</span></span>
-        </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] md:flex">
-          <Link to="/">Home</Link><Link className="text-[#EC4C84]" to="/products">Shop</Link><Link to="/orders">Orders</Link>
-        </nav>
-        <div className="ml-auto flex items-center gap-1">
-          <Link aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7]" to="/account"><UserRound className="h-5 w-5" /></Link>
-          <Link aria-label="Cart" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7]" to="/cart"><ShoppingBag className="h-5 w-5" /></Link>
-          <button aria-expanded={open} aria-label="Toggle navigation" className="grid h-10 w-10 place-items-center rounded-full hover:bg-[#FFF5F7] md:hidden" onClick={() => setOpen((value) => !value)} type="button">
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-      {open ? (
-        <nav className="grid gap-1 border-t border-[#F7D9E2] px-4 py-3 text-sm font-semibold md:hidden">
-          <Link className="rounded-lg px-3 py-2 hover:bg-[#FFF5F7]" onClick={() => setOpen(false)} to="/">Home</Link>
-          <Link className="rounded-lg bg-[#FFF5F7] px-3 py-2 text-[#EC4C84]" onClick={() => setOpen(false)} to="/products">Shop</Link>
-          <Link className="rounded-lg px-3 py-2 hover:bg-[#FFF5F7]" onClick={() => setOpen(false)} to="/orders">Orders</Link>
-        </nav>
-      ) : null}
-    </header>
-  );
-}
-
 function ProductCard({ product }: { product: PublicProduct }) {
   const imageUrl = getPrimaryImage(product);
   const [imageFailed, setImageFailed] = useState(false);
@@ -82,7 +33,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
         ) : (
           <div className="grid h-full place-items-center p-8 text-center text-[#EC4C84]"><div><Gift className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-semibold">Image coming soon</p></div></div>
         )}
-        {product.isCustomizable ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#EC4C84] shadow-sm">Custom orders soon</span> : null}
+        {product.isCustomizable ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#EC4C84] shadow-sm">Personal touch planned</span> : null}
       </div>
       <div className="p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-[#EC4C84]">{product.category?.name ?? "Handmade gift"}</p>
@@ -161,8 +112,6 @@ export function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
-      <AnnouncementBar />
-      <ProductsHeader />
       <main className="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#EC4C84]">Shop</p>
@@ -204,7 +153,7 @@ export function ProductsPage() {
           <nav aria-label="Product pages" className="mt-10 flex flex-wrap justify-center gap-2">
             <button aria-label="Previous page" className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} type="button"><ChevronLeft className="h-4 w-4" /></button>
             {pageNumbers.map((pageNumber, index) => (
-              <span className="contents" key={pageNumber}>{index > 0 && pageNumber - pageNumbers[index - 1] > 1 ? <span className="grid h-10 place-items-center px-1">…</span> : null}<button aria-current={pageNumber === page ? "page" : undefined} className={`grid h-10 min-w-10 place-items-center rounded-full border px-3 text-sm font-bold ${pageNumber === page ? "border-[#EC4C84] bg-[#EC4C84] text-white" : "border-[#F7D9E2] bg-white"}`} onClick={() => setPage(pageNumber)} type="button">{pageNumber}</button></span>
+              <span className="contents" key={pageNumber}>{index > 0 && pageNumber - pageNumbers[index - 1] > 1 ? <span className="grid h-10 place-items-center px-1">â€¦</span> : null}<button aria-current={pageNumber === page ? "page" : undefined} className={`grid h-10 min-w-10 place-items-center rounded-full border px-3 text-sm font-bold ${pageNumber === page ? "border-[#EC4C84] bg-[#EC4C84] text-white" : "border-[#F7D9E2] bg-white"}`} onClick={() => setPage(pageNumber)} type="button">{pageNumber}</button></span>
             ))}
             <button aria-label="Next page" className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] disabled:opacity-40" disabled={page >= meta.totalPages} onClick={() => setPage((value) => Math.min(meta.totalPages, value + 1))} type="button"><ChevronRight className="h-4 w-4" /></button>
           </nav>

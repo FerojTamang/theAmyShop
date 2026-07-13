@@ -1,125 +1,131 @@
-import { Gift, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import { Gift, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Button } from "../ui/Button";
 import { useAuth } from "../../context/AuthContext";
 import { classNames } from "../../lib/classNames";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   classNames(
-    "rounded-full px-3 py-2 text-sm font-semibold transition",
+    "rounded-full px-4 py-2 text-sm font-semibold transition",
     isActive
-      ? "bg-[#ffe5ed] text-[#9d3f5b] shadow-sm shadow-rose-100"
-      : "text-[#6b5550] hover:bg-rose-50 hover:text-[#9d3f5b]",
+      ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100"
+      : "text-[#6F6570] hover:bg-[#FFF5F7] hover:text-[#EC4C84]",
   );
 
 export function Header() {
   const { isAuthenticated, logout, user } = useAuth();
   const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const closeMenu = () => setIsMobileMenuOpen(false);
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    try {
+      setIsSigningOut(true);
+      await logout();
+    } finally {
+      setIsSigningOut(false);
+      closeMenu();
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-rose-100/80 bg-[#fff8f9]/88 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link className="flex items-center gap-3" to="/">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#f69ab2] to-[#d85f83] text-white shadow-lg shadow-rose-300/40">
-            <Gift className="h-5 w-5" />
-          </span>
-          <span>
-            <span className="block text-base font-bold tracking-wide text-[#332522]">
-              The AMY Shop
-            </span>
-            <span className="hidden text-xs font-medium text-[#8a706a] sm:block">
-              Handmade custom gifts
-            </span>
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-1 md:flex">
-          <NavLink className={navLinkClass} to="/">
-            Home
-          </NavLink>
-          <NavLink className={navLinkClass} to="/products">
-            Products
-          </NavLink>
-          {isAuthenticated ? (
-            <>
-              <NavLink className={navLinkClass} to="/orders">
-                Orders
-              </NavLink>
-              <NavLink className={navLinkClass} to="/account">
-                Account
-              </NavLink>
-              {isAdmin ? (
-                <NavLink className={navLinkClass} to="/admin">
-                  Admin
-                </NavLink>
-              ) : null}
-            </>
-          ) : null}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <Link
-            className="hidden rounded-full p-2 text-[#6b5550] transition hover:bg-rose-50 hover:text-[#9d3f5b] lg:inline-flex"
-            to="/products"
-          >
-            <Search className="h-5 w-5" />
-          </Link>
-          <Link
-            className="hidden rounded-full p-2 text-[#6b5550] transition hover:bg-rose-50 hover:text-[#9d3f5b] sm:inline-flex"
-            to="/cart"
-          >
-            <ShoppingBag className="h-5 w-5" />
-          </Link>
-          {isAuthenticated ? (
-            <Button onClick={() => void logout()} variant="secondary">
-              Sign out
-            </Button>
-          ) : (
-            <Link to="/login">
-              <Button variant="secondary">
-                <UserRound className="h-4 w-4" />
-                Sign in
-              </Button>
-            </Link>
-          )}
-          <button
-            aria-expanded={isMobileMenuOpen}
-            aria-label="Toggle navigation menu"
-            className="rounded-full p-2 text-[#6b5550] md:hidden"
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-            type="button"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+    <>
+      <div className="border-b border-[#F7D9E2] bg-[#FFF5F7]">
+        <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-2 text-center text-xs font-semibold tracking-wide text-[#6F6570] sm:px-6 lg:px-8">
+          Thoughtful gifts for meaningful moments.
         </div>
       </div>
-      {isMobileMenuOpen ? (
-        <nav className="grid gap-1 border-t border-rose-100 bg-white px-4 py-3 md:hidden">
-          <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/">
-            Home
-          </NavLink>
-          <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/products">
-            Products
-          </NavLink>
-          {isAuthenticated ? (
-            <>
-              <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/orders">
-                Orders
-              </NavLink>
-              <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/account">
-                Account
-              </NavLink>
-              {isAdmin ? (
-                <NavLink className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)} to="/admin">
-                  Admin
-                </NavLink>
-              ) : null}
-            </>
-          ) : null}
-        </nav>
-      ) : null}
-    </header>
+      <header className="sticky top-0 z-40 border-b border-[#F7D9E2]/80 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <Link className="flex min-w-0 items-center gap-3" to="/">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
+              <Gift className="h-6 w-6" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
+                The AMY Shop
+              </span>
+              <span className="hidden text-xs font-medium text-[#9D8F98] sm:block">Handmade gifts</span>
+            </span>
+          </Link>
+
+          <nav className="hidden flex-1 items-center justify-center gap-1 md:flex" aria-label="Store navigation">
+            <NavLink className={navLinkClass} end to="/">Home</NavLink>
+            <NavLink className={navLinkClass} to="/products">Shop</NavLink>
+            {isAuthenticated ? (
+              <>
+                <NavLink className={navLinkClass} to="/orders">My Orders</NavLink>
+                <NavLink className={navLinkClass} to="/account">My Account</NavLink>
+                {isAdmin ? <NavLink className={navLinkClass} to="/admin">Admin</NavLink> : null}
+              </>
+            ) : null}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            <Link
+              aria-label="Cart"
+              className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[#6F6570] transition hover:bg-[#FFF5F7] hover:text-[#EC4C84]"
+              to="/cart"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <span className="hidden lg:inline">Cart</span>
+            </Link>
+            {isAuthenticated ? (
+              <button
+                className="hidden rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-2 text-sm font-semibold text-[#6F6570] transition hover:border-[#EC4C84] hover:text-[#EC4C84] disabled:opacity-60 sm:inline-flex"
+                disabled={isSigningOut}
+                onClick={() => void handleSignOut()}
+                type="button"
+              >
+                {isSigningOut ? "Signing out..." : "Sign out"}
+              </button>
+            ) : (
+              <Link className="hidden sm:block" to="/login">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-2 text-sm font-semibold text-[#6F6570] transition hover:border-[#EC4C84] hover:text-[#EC4C84]">
+                  <UserRound className="h-4 w-4" /> Sign in
+                </span>
+              </Link>
+            )}
+            <button
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Toggle navigation menu"
+              className="grid h-10 w-10 place-items-center rounded-full text-[#6F6570] hover:bg-[#FFF5F7] md:hidden"
+              onClick={() => setIsMobileMenuOpen((current) => !current)}
+              type="button"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {isMobileMenuOpen ? (
+          <nav className="grid gap-1 border-t border-[#F7D9E2] bg-white px-4 py-4 md:hidden" aria-label="Mobile store navigation">
+            <NavLink className={navLinkClass} end onClick={closeMenu} to="/">Home</NavLink>
+            <NavLink className={navLinkClass} onClick={closeMenu} to="/products">Shop</NavLink>
+            <NavLink className={navLinkClass} onClick={closeMenu} to="/cart">Cart</NavLink>
+            {isAuthenticated ? (
+              <>
+                <NavLink className={navLinkClass} onClick={closeMenu} to="/orders">My Orders</NavLink>
+                <NavLink className={navLinkClass} onClick={closeMenu} to="/account">My Account</NavLink>
+                {isAdmin ? <NavLink className={navLinkClass} onClick={closeMenu} to="/admin">Admin</NavLink> : null}
+                <button
+                  className="rounded-full px-4 py-2 text-left text-sm font-semibold text-[#6F6570] hover:bg-[#FFF5F7] hover:text-[#EC4C84] disabled:opacity-60"
+                  disabled={isSigningOut}
+                  onClick={() => void handleSignOut()}
+                  type="button"
+                >
+                  {isSigningOut ? "Signing out..." : "Sign out"}
+                </button>
+              </>
+            ) : (
+              <NavLink className={navLinkClass} onClick={closeMenu} to="/login">Sign in</NavLink>
+            )}
+          </nav>
+        ) : null}
+      </header>
+    </>
   );
 }

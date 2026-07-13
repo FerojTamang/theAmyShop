@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   Check,
   ChevronRight,
   Gift,
@@ -8,12 +7,9 @@ import {
   Mail,
   Minus,
   PackageCheck,
-  Search,
   ShieldCheck,
-  ShoppingBag,
   Trash2,
   Truck,
-  UserRound,
   Plus,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -99,63 +95,6 @@ const inferArtLabel = (item: CartItem) => {
   if (text.includes("necklace") || text.includes("jewelry")) return "A";
   return "gift";
 };
-
-function AnnouncementBar() {
-  return (
-    <div className="border-b border-[#F7D9E2] bg-[#FFF5F7]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-[#6F6570] sm:px-6 lg:px-8">
-        <span className="inline-flex items-center gap-2">
-          <Heart className="h-4 w-4 text-[#EC4C84]" />
-          Handmade with love. Made just for you.
-        </span>
-        <span className="hidden items-center gap-2 sm:inline-flex">
-          <Truck className="h-4 w-4 text-[#EC4C84]" />
-          Free standard shipping on every order
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function CheckoutHeader({ totalItems }: { totalItems: number }) {
-  return (
-    <header className="border-b border-[#F7D9E2] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <Link className="flex min-w-fit items-center gap-3" to="/">
-          <span className="grid h-13 w-13 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-            <Gift className="h-7 w-7" />
-          </span>
-          <span>
-            <span className="block text-2xl font-semibold text-[#1F1720]" style={serifStyle}>
-              The AMY Shop
-            </span>
-            <span className="text-xs font-medium text-[#9D8F98]">Handmade custom gifts</span>
-          </span>
-        </Link>
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-semibold text-[#6F6570] lg:flex">
-          {["Home", "Shop", "Collections", "Orders", "About", "Contact"].map((item) => (
-            <Link key={item} to={item === "Home" ? "/" : item === "Shop" ? "/products" : item === "Orders" ? "/orders" : "/"}>
-              {item}
-            </Link>
-          ))}
-        </nav>
-        <div className="ml-auto hidden h-10 w-52 items-center gap-2 rounded-full border border-[#F7D9E2] bg-white px-4 text-sm text-[#9D8F98] md:flex">
-          <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#9D8F98]" disabled placeholder="Search coming soon" />
-          <Search className="h-4 w-4 text-[#1F1720]" />
-        </div>
-        <Link className="grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/account">
-          <UserRound className="h-5 w-5" />
-        </Link>
-        <Link className="relative grid h-10 w-10 place-items-center rounded-full text-[#1F1720] hover:bg-[#FFF5F7]" to="/cart">
-          <ShoppingBag className="h-5 w-5" />
-          <span className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-[#EC4C84] text-[10px] font-bold text-white">
-            {totalItems}
-          </span>
-        </Link>
-      </div>
-    </header>
-  );
-}
 
 function ProductImage({ item }: { item: CartItem }) {
   const imageUrl = getProductImage(item);
@@ -354,7 +293,7 @@ function CouponRewardsBox({
           </p>
         ) : null}
         {!couponError && !couponValidation ? (
-          <p className="mt-3 text-xs text-[#9D8F98]">Apply a coupon to preview the backend discount before checkout.</p>
+          <p className="mt-3 text-xs text-[#9D8F98]">Apply a coupon to preview your discount before checkout.</p>
         ) : null}
       </div>
     </section>
@@ -519,7 +458,7 @@ function CheckoutSteps({
         <RadioRow disabled label="Khalti" value="Coming soon" />
         <RadioRow disabled label="eSewa" value="Coming soon" />
         <p className="mt-3 text-xs text-[#9D8F98]">
-          Checkout currently accepts Cash on Delivery only. Online payments are not selectable because backend provider verification is not production-ready yet.
+          Online payments are currently unavailable. Please choose Cash on Delivery to continue.
         </p>
       </Step>
       <Step title="Gift details" number="4">
@@ -719,7 +658,7 @@ function TrustCard() {
     <Card className="bg-[#FFF5F7]">
       <h2 className="text-xl font-bold text-[#1F1720]">Shop with confidence</h2>
       <div className="mt-5 grid gap-3 text-sm text-[#6F6570]">
-        {["Backend-validated checkout", "Secure customer session", "Cash on Delivery available", "Made with premium materials"].map((item) => (
+        {["Order totals confirmed at checkout", "Secure account checkout", "Cash on Delivery available", "Gift-ready experience"].map((item) => (
           <p className="flex items-center gap-3" key={item}>
             <Check className="h-4 w-4 text-[#EC4C84]" />
             {item}
@@ -732,7 +671,7 @@ function TrustCard() {
 
 function FeatureStrip() {
   const features: Array<[string, string, typeof Heart]> = [
-    ["Secure checkout", "Backend validated order", ShieldCheck],
+    ["Secure checkout", "Order details confirmed", ShieldCheck],
     ["Handmade with love", "Every gift is made to order", Heart],
     ["24/7 support", "We're here to help", Headphones],
     ["Hassle-free returns", "Love it or return it", PackageCheck],
@@ -775,50 +714,6 @@ function NewsletterSection() {
         </div>
       </div>
     </section>
-  );
-}
-
-function CheckoutFooter() {
-  return (
-    <footer className="bg-white">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1.2fr_2fr_1fr] lg:px-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#EC4C84] text-white"><Gift className="h-5 w-5" /></span>
-            <div>
-              <p className="text-xl font-semibold text-[#1F1720]" style={serifStyle}>The AMY Shop</p>
-              <p className="text-xs text-[#9D8F98]">Handmade custom gifts made with love</p>
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {[
-            ["Shop", "All Products", "Gift Boxes", "Candles", "Mugs", "Necklaces", "Sale"],
-            ["Customer Care", "Contact Us", "Shipping & Returns", "FAQ", "Track Your Order", "Gift Cards"],
-            ["About", "Our Story", "Handmade Process", "Reviews", "Blog", "Wholesale"],
-          ].map(([title, ...links]) => (
-            <div key={title}>
-              <h3 className="text-sm font-bold text-[#1F1720]">{title}</h3>
-              <div className="mt-3 grid gap-1 text-xs text-[#6F6570]">
-                {links.map((link) => <span key={link}>{link}</span>)}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-[#1F1720]">Let's keep in touch</h3>
-          <p className="mt-3 text-xs leading-5 text-[#6F6570]">Join our newsletter for updates and sweet surprises!</p>
-          <div className="mt-4 flex rounded-full border border-[#F7D9E2] p-1">
-            <input className="min-w-0 flex-1 px-3 text-xs outline-none placeholder:text-[#9D8F98]" placeholder="Enter your email" />
-            <button className="grid h-8 w-8 place-items-center rounded-full bg-[#EC4C84] text-white" type="button"><ArrowRight className="h-4 w-4" /></button>
-          </div>
-        </div>
-      </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-[#F7D9E2] px-4 py-5 text-xs text-[#9D8F98] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <span>(c) 2025 The AMY Shop. All rights reserved.</span>
-        <span className="flex gap-6"><span>Privacy Policy</span><span>Terms of Service</span></span>
-      </div>
-    </footer>
   );
 }
 
@@ -1158,8 +1053,6 @@ export function CartCheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#1F1720]">
-      <AnnouncementBar />
-      <CheckoutHeader totalItems={cart?.summary.totalItems ?? 0} />
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 text-sm text-[#6F6570]">
           <Link to="/">Home</Link>
@@ -1199,11 +1092,11 @@ export function CartCheckoutPage() {
           <div className="grid content-start gap-5">
             {isLoading ? (
               <StatePanel title="Loading cart">
-                We are loading your cart from the backend.
+                We are loading the gifts in your cart.
               </StatePanel>
             ) : items.length === 0 ? (
               <StatePanel title="Your cart is empty">
-                Add a real catalog product to your cart before checkout.
+                Add an available gift to your cart before checkout.
                 <Link className="mt-5 inline-flex h-11 items-center rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white shadow-lg shadow-pink-200" to="/products">
                   Continue shopping
                 </Link>
@@ -1226,8 +1119,8 @@ export function CartCheckoutPage() {
                   <div className="flex items-center gap-4">
                     <Gift className="h-7 w-7 text-[#EC4C84]" />
                     <div>
-                      <p className="font-semibold text-[#1F1720]">Backend cart actions</p>
-                      <p className="text-sm text-[#6F6570]">Clear cart uses the real DELETE /api/cart endpoint.</p>
+                      <p className="font-semibold text-[#1F1720]">Clear your cart</p>
+                      <p className="text-sm text-[#6F6570]">Remove every item and start a fresh selection.</p>
                     </div>
                   </div>
                   <button className="rounded-xl border border-[#F7D9E2] px-5 py-3 text-sm font-bold text-[#EC4C84]" onClick={() => void handleClearCart()} type="button">
@@ -1286,7 +1179,6 @@ export function CartCheckoutPage() {
       </main>
       <FeatureStrip />
       <NewsletterSection />
-      <CheckoutFooter />
     </div>
   );
 }

@@ -1,49 +1,35 @@
-import { Gift, Heart, Mail, Sparkles } from "lucide-react";
+import { Gift, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
-    <footer className="border-t border-rose-100/80 bg-gradient-to-b from-white/70 to-[#fff0f4]">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm text-[#6b5550] sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#ffe0e9] text-[#b94767]">
+    <footer className="border-t border-[#F7D9E2] bg-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between lg:px-8">
+        <div className="max-w-md">
+          <Link className="inline-flex items-center gap-3" to="/">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
               <Gift className="h-5 w-5" />
             </span>
-            <div>
-              <p className="font-bold text-[#332522]">The AMY Shop</p>
-              <p className="text-xs">Handmade custom gifts</p>
-            </div>
-          </div>
-          <p className="mt-4 max-w-md leading-6">
-            Personalized keepsakes, gift boxes, candles, mugs, and handmade decor
-            prepared with a soft, thoughtful touch.
+            <span>
+              <span className="block text-lg font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>The AMY Shop</span>
+              <span className="text-xs text-[#9D8F98]">Thoughtful gifts, softly wrapped</span>
+            </span>
+          </Link>
+          <p className="mt-4 text-sm leading-6 text-[#6F6570]">
+            Browse currently available gifts chosen to make meaningful moments feel a little more special.
           </p>
         </div>
-        <div>
-          <p className="font-semibold text-[#332522]">Shop moments</p>
-          <div className="mt-3 grid gap-2">
-            <span>Birthday surprises</span>
-            <span>Custom keepsakes</span>
-            <span>Gift-ready packaging</span>
-          </div>
-        </div>
-        <div>
-          <p className="font-semibold text-[#332522]">Made with care</p>
-          <div className="mt-3 grid gap-2">
-            <span className="inline-flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#d85f83]" /> Personalized details
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Heart className="h-4 w-4 text-[#d85f83]" /> Warm gift experience
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Mail className="h-4 w-4 text-[#d85f83]" /> Thoughtful support
-            </span>
-          </div>
-        </div>
+        <nav className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm font-semibold text-[#6F6570] sm:grid-cols-4" aria-label="Footer navigation">
+          <Link className="hover:text-[#EC4C84]" to="/products">Shop</Link>
+          <Link className="hover:text-[#EC4C84]" to="/orders">My Orders</Link>
+          <Link className="hover:text-[#EC4C84]" to="/account">My Account</Link>
+          <Link className="hover:text-[#EC4C84]" to="/cart">Cart</Link>
+        </nav>
       </div>
-      <div className="border-t border-rose-100/80 px-4 py-4 text-center text-xs text-[#8a706a]">
-        (c) {new Date().getFullYear()} The AMY Shop. Thoughtful gifts, softly wrapped.
+      <div className="border-t border-[#F7D9E2] bg-[#FFF9FA] px-4 py-4 text-center text-xs text-[#8B7D86]">
+        <span className="inline-flex items-center gap-1.5">
+          © {new Date().getFullYear()} The AMY Shop <Heart className="h-3.5 w-3.5 text-[#EC4C84]" />
+        </span>
       </div>
     </footer>
   );

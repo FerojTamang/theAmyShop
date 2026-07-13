@@ -171,7 +171,7 @@ export function AccountPage() {
   const accountCards = useMemo<Array<[string, string, typeof Heart]>>(
     () => [
       ["Saved addresses", `${addresses.length} saved delivery ${addresses.length === 1 ? "address" : "addresses"}.`, MapPin],
-      ["Orders", `${profile?.profile?.totalOrders ?? 0} backend-tracked orders.`, Sparkles],
+      ["Orders", `${profile?.profile?.totalOrders ?? 0} orders placed.`, Sparkles],
       ["Total spent", formatCurrency(profile?.profile?.totalSpent ?? 0), Gift],
     ],
     [addresses.length, profile?.profile?.totalOrders, profile?.profile?.totalSpent],
@@ -337,7 +337,7 @@ export function AccountPage() {
           My AMY Shop
         </h1>
         <p className="mt-3 max-w-2xl text-[#6F6570]">
-          Manage your profile and saved delivery addresses with real account data from the backend.
+          Manage your profile and saved delivery addresses in one place.
         </p>
       </div>
 
@@ -353,7 +353,7 @@ export function AccountPage() {
             </div>
             <div>
               <h2 className="font-bold text-[#1F1720]">Profile details</h2>
-              <p className="text-sm text-[#6F6570]">Only backend-supported fields can be updated here.</p>
+              <p className="text-sm text-[#6F6570]">Update the profile details currently available for your account.</p>
             </div>
           </div>
           <form className="grid gap-4" onSubmit={handleProfileSubmit}>
@@ -414,7 +414,7 @@ export function AccountPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-bold text-[#1F1720]">Saved addresses</h2>
-            <p className="mt-1 text-sm text-[#6F6570]">Create, edit, or delete addresses through the backend address API.</p>
+            <p className="mt-1 text-sm text-[#6F6570]">Create, edit, or remove your saved delivery addresses.</p>
           </div>
           <button
             className="rounded-xl bg-[#EC4C84] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-200"
