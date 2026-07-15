@@ -29,7 +29,7 @@ type AuthContextValue = {
   tokens: AuthTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (input: LoginInput) => Promise<void>;
+  login: (input: LoginInput) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   refreshMe: () => Promise<void>;
@@ -88,6 +88,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     async (input: LoginInput) => {
       const result = await authApi.login(input);
       storeSession(result.user, result.tokens);
+      return result.user;
     },
     [storeSession],
   );

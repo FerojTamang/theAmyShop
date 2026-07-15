@@ -2,10 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   ClipboardList,
   CreditCard,
-  EllipsisVertical,
   Gift,
   Heart,
-  Printer,
   ShoppingBag,
   TrendingUp,
   X,
@@ -138,12 +136,12 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#F7D9E2] bg-white p-5 shadow-sm shadow-pink-100">
+    <div className="rounded-[1.5rem] border border-white/90 bg-gradient-to-br from-white via-white to-[#FFF5F7] p-5 shadow-[0_14px_35px_rgba(115,72,86,0.08)] ring-1 ring-[#F7D9E2]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-[#6F6570]">{label}</p>
           <p className="mt-2 text-2xl font-bold text-[#1F1720]">{value}</p>
-          <p className="mt-1 text-xs font-bold text-[#39B86D]">Live API</p>
+          <p className="mt-1 text-xs font-semibold text-[#9D8F98]">Current view</p>
         </div>
         <span className="grid h-13 w-13 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
           <Icon className="h-6 w-6" />
@@ -197,7 +195,7 @@ function OrderDetailPanel({
   const order = detailOrder ?? selectedOrder;
 
   return (
-    <aside className="border-l border-[#F7D9E2] bg-[#FFF5F7] px-6 py-8 xl:w-[27rem] xl:shrink-0">
+    <aside className="border-t border-[#F7D9E2] bg-gradient-to-b from-[#FFF9FA] to-[#FFF4E8] px-5 py-7 shadow-[0_-10px_30px_rgba(115,72,86,0.05)] sm:px-6 2xl:w-[25rem] 2xl:shrink-0 2xl:border-l 2xl:border-t-0 2xl:shadow-[-12px_0_35px_rgba(115,72,86,0.06)]">
       {order ? (
         <>
           <div className="flex items-start justify-between gap-4">
@@ -211,13 +209,9 @@ function OrderDetailPanel({
               </div>
               <p className="mt-3 text-sm text-[#6F6570]">{formatDate(order.createdAt)}</p>
             </div>
-            <button onClick={onClose} type="button">
+            <button aria-label="Close order details" className="grid h-10 w-10 place-items-center rounded-xl border border-[#F7D9E2] bg-white text-[#6F6570] transition hover:text-[#EC4C84] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84]" onClick={onClose} type="button">
               <X className="h-5 w-5 text-[#6F6570]" />
             </button>
-          </div>
-          <div className="mt-5 flex justify-end gap-3 text-[#C8A7B1]">
-            <Printer className="h-5 w-5" />
-            <EllipsisVertical className="h-5 w-5" />
           </div>
           {isLoading ? (
             <PanelCard title="Loading details">
@@ -295,9 +289,7 @@ function OrderDetailPanel({
             )) : <p className="text-sm text-[#6F6570]">Not provided.</p>}
           </PanelCard>
         </>
-      ) : (
-        <StatePanel description="Select an order row to view real admin order details." title="No order selected" />
-      )}
+      ) : null}
     </aside>
   );
 }
@@ -318,7 +310,7 @@ function OrdersTable({
   selectedOrderId: string | null;
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100">
+    <div className="overflow-x-auto rounded-[1.5rem] border border-[#F7D9E2] bg-white shadow-[0_16px_40px_rgba(115,72,86,0.08)]">
       <div className="grid min-w-[82rem] grid-cols-[8rem_1.3fr_8rem_9rem_10rem_8rem_7rem_9rem_10rem] border-b border-[#F7D9E2] px-4 py-3 text-xs font-bold text-[#6F6570]">
         <span>Order</span>
         <span>Customer</span>
@@ -479,11 +471,11 @@ export function AdminOrdersPage() {
   };
 
   return (
-    <div className="min-w-0 bg-white text-[#1F1720]">
+    <div className="min-w-0 text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <div className="grid min-h-[calc(100vh-4.8rem)] xl:grid-cols-[minmax(0,1fr)_27rem]">
-          <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl">
+        <div className={selectedOrder ? "grid 2xl:grid-cols-[minmax(0,1fr)_25rem]" : "grid"}>
+          <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[100rem]">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
@@ -511,11 +503,11 @@ export function AdminOrdersPage() {
                 <StatCard icon={ClipboardList} label="Pending Orders" value={String(pendingCount)} />
               </div>
 
-              <div className="mt-7 flex gap-3 overflow-x-auto pb-1">
+              <div className="mt-7 flex flex-wrap gap-2 rounded-[1.5rem] border border-white/90 bg-white/70 p-3 shadow-sm shadow-pink-100 ring-1 ring-[#F7D9E2]">
                 {tabs.map(([label, status]) => (
                   <button
-                    className={`shrink-0 rounded-xl px-5 py-3 text-sm font-bold ${
-                      activeStatus === status ? "bg-[#FDECEF] text-[#EC4C84]" : "text-[#6F6570] hover:bg-[#FFF5F7]"
+                    className={`rounded-xl px-4 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] ${
+                      activeStatus === status ? "bg-[#EC4C84] text-white shadow-md shadow-pink-200" : "bg-white text-[#6F6570] hover:bg-[#FFF5F7] hover:text-[#EC4C84]"
                     }`}
                     key={status}
                     onClick={() => setActiveStatus(status)}
@@ -525,6 +517,12 @@ export function AdminOrdersPage() {
                   </button>
                 ))}
               </div>
+
+              {!selectedOrder && !isLoading && filteredOrders.length > 0 ? (
+                <p className="mt-4 rounded-2xl border border-dashed border-[#F7D9E2] bg-white/60 px-4 py-3 text-sm font-medium text-[#6F6570]">
+                  Select an order row to view its customer, items, delivery, and status details.
+                </p>
+              ) : null}
 
               <div className="mt-4">
                   {isLoading ? (
@@ -544,15 +542,17 @@ export function AdminOrdersPage() {
               </div>
             </div>
           </main>
-          <OrderDetailPanel
-            detailOrder={detailOrder}
-            isLoading={isDetailLoading}
-            onClose={() => {
-              setSelectedOrder(null);
-              setDetailOrder(null);
-            }}
-            selectedOrder={selectedOrder}
-          />
+          {selectedOrder ? (
+            <OrderDetailPanel
+              detailOrder={detailOrder}
+              isLoading={isDetailLoading}
+              onClose={() => {
+                setSelectedOrder(null);
+                setDetailOrder(null);
+              }}
+              selectedOrder={selectedOrder}
+            />
+          ) : null}
         </div>
       </div>
     </div>

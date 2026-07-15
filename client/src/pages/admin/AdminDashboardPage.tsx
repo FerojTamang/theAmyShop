@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowRight,
   Gift,
   Package,
+  Plus,
   ShoppingBag,
   Star,
+  Store,
   UsersRound,
   WalletCards,
 } from "lucide-react";
@@ -30,7 +33,7 @@ type DashboardData = {
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl border border-[#F7D9E2] bg-white p-5 shadow-sm shadow-pink-100 ${className}`}>
+    <section className={`rounded-[1.5rem] border border-white/90 bg-white/90 p-5 shadow-[0_14px_36px_rgba(115,72,86,0.08)] ring-1 ring-[#F7D9E2] backdrop-blur ${className}`}>
       {children}
     </section>
   );
@@ -48,9 +51,10 @@ function StatCard({
   detail: string;
 }) {
   return (
-    <Card>
-      <div className="flex items-center gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
+    <Card className="relative overflow-hidden bg-gradient-to-br from-white via-white to-[#FFF1F5]">
+      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#FDECEF] blur-2xl" />
+      <div className="relative flex items-center gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FDECEF] text-[#EC4C84] shadow-inner shadow-white">
           <Icon className="h-6 w-6" />
         </span>
         <div>
@@ -121,12 +125,25 @@ export function AdminDashboardPage() {
 
   return (
     <section className="px-4 py-8 sm:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div>
+          <div className="mx-auto max-w-[100rem]">
+            <div className="rounded-[2rem] border border-white/90 bg-gradient-to-r from-white via-[#FFF9FA] to-[#FFF0DA] p-6 shadow-[0_18px_45px_rgba(115,72,86,0.08)] ring-1 ring-[#F7D9E2] sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#EC4C84]">Store overview</p>
               <h1 className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
-                Dashboard
+                Your store command center
               </h1>
-              <p className="mt-2 text-[#6F6570]">Live store data.</p>
+              <p className="mt-2 max-w-2xl text-[#6F6570]">Monitor orders, products, customers, and reviews using current store data.</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {([
+                  ["Add product", "/admin/products", Plus],
+                  ["View orders", "/admin/orders", ShoppingBag],
+                  ["Moderate reviews", "/admin/reviews", Star],
+                  ["View store", "/", Store],
+                ] as const).map(([label, to, Icon]) => (
+                  <Link className="inline-flex items-center gap-2 rounded-xl border border-[#F7D9E2] bg-white px-4 py-2.5 text-sm font-bold text-[#6F6570] shadow-sm transition hover:border-[#EC4C84] hover:text-[#EC4C84] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84]" key={label} to={to}>
+                    <Icon className="h-4 w-4" />{label}<ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {loading ? (

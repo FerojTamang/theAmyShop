@@ -1164,11 +1164,11 @@ export function AdminProductsPage() {
   };
 
   return (
-    <div className="min-w-0 bg-white text-[#1F1720]">
+    <div className="min-w-0 text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <div className="grid min-h-[calc(100vh-4.8rem)] xl:grid-cols-[minmax(0,1fr)_29rem]">
-          <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl">
+        <div className="grid xl:grid-cols-[minmax(0,1fr)_29rem]">
+          <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[100rem]">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-[#1F1720]">Products</h1>

@@ -355,11 +355,11 @@ export function AdminReviewsPage() {
   };
 
   return (
-    <div className="min-w-0 bg-white text-[#1F1720]">
+    <div className="min-w-0 text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <div className="grid min-h-screen xl:grid-cols-[minmax(0,1fr)_29rem]">
-          <main className="min-w-0 bg-white px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl">
+        <div className="grid xl:grid-cols-[minmax(0,1fr)_29rem]">
+          <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[100rem]">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
