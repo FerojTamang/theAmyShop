@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -14,22 +14,37 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmissionInProgress = useRef(false);
 
-  const redirectTo =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
-    "/account";
+  const requestedPath =
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+  const customerRedirectPaths = new Set(["/account", "/cart", "/checkout", "/orders"]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmissionInProgress.current) return;
+
+    isSubmissionInProgress.current = true;
     setError(null);
     setIsSubmitting(true);
 
     try {
-      await login({ identifier, password });
-      navigate(redirectTo, { replace: true });
+      const authenticatedUser = await login({ identifier, password });
+      const isAdmin = authenticatedUser.role === "ADMIN" || authenticatedUser.role === "SUPER_ADMIN";
+      const redirectTo = isAdmin
+        ? "/admin"
+        : requestedPath && customerRedirectPaths.has(requestedPath)
+          ? requestedPath
+          : "/";
+
+      navigate(redirectTo, {
+        replace: true,
+        state: { successMessage: "Login successful." },
+      });
     } catch (apiError) {
       setError(normalizeApiError(apiError).message);
     } finally {
+      isSubmissionInProgress.current = false;
       setIsSubmitting(false);
     }
   };

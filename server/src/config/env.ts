@@ -30,6 +30,16 @@ const parsePort = (value: string | undefined): number => {
   return 5000;
 };
 
+const parsePositiveInteger = (value: string | undefined, fallback: number): number => {
+  const parsedValue = Number(value);
+
+  if (Number.isInteger(parsedValue) && parsedValue > 0) {
+    return parsedValue;
+  }
+
+  return fallback;
+};
+
 const DEVELOPMENT_CORS_ORIGINS =
   "http://localhost:5173,http://127.0.0.1:5173";
 
@@ -55,6 +65,14 @@ const corsOriginValue = requireInProduction(
 export const config = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: parsePort(process.env.PORT),
+  AUTH_LOGIN_RATE_LIMIT_WINDOW_MINUTES: parsePositiveInteger(
+    process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW_MINUTES,
+    5,
+  ),
+  AUTH_LOGIN_RATE_LIMIT_MAX: parsePositiveInteger(
+    process.env.AUTH_LOGIN_RATE_LIMIT_MAX,
+    isProduction ? 10 : 20,
+  ),
   DATABASE_URL: requireInProduction(
     process.env.DATABASE_URL,
     "DATABASE_URL",

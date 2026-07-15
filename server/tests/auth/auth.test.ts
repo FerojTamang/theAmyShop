@@ -8,6 +8,7 @@ vi.mock("../../src/config/database.js", async () => {
 
 import { AccountStatus, UserRole } from "../../generated/prisma/client.js";
 import { app } from "../../src/app.js";
+import { config } from "../../src/config/env.js";
 import { loginRateLimiter } from "../../src/middlewares/rateLimit.middleware.js";
 import { loginUser } from "../../src/modules/auth/auth.service.js";
 import { hashPassword } from "../../src/utils/hashPassword.js";
@@ -60,8 +61,8 @@ describe("authentication protection and abuse handling", () => {
     });
   });
 
-  it("returns 429 on the sixth login attempt from one IP", async () => {
-    for (let attempt = 1; attempt <= 5; attempt += 1) {
+  it("returns 429 after the configured number of failed login attempts from one IP", async () => {
+    for (let attempt = 1; attempt <= config.AUTH_LOGIN_RATE_LIMIT_MAX; attempt += 1) {
       const response = await request(app).post("/api/auth/login").send({});
       expect(response.status).toBe(400);
     }
@@ -76,5 +77,39 @@ describe("authentication protection and abuse handling", () => {
       errors: [],
     });
     expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not count successful logins against the login quota", async () => {
+    const passwordHash = await hashPassword("correct-password");
+    prismaMock.user.findFirst.mockResolvedValue({
+      id: "user-1",
+      fullName: "QA Customer",
+      email: "qa@example.test",
+      phone: "9800000001",
+      passwordHash,
+      role: UserRole.CUSTOMER,
+      status: AccountStatus.ACTIVE,
+      emailVerified: false,
+      phoneVerified: false,
+      createdAt: new Date("2025-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2025-01-01T00:00:00.000Z"),
+    });
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await request(app).post("/api/auth/login").send({
+        identifier: "9800000001",
+        password: "correct-password",
+      });
+
+      expect(response.status).toBe(200);
+    }
+
+    for (let attempt = 0; attempt < config.AUTH_LOGIN_RATE_LIMIT_MAX; attempt += 1) {
+      const response = await request(app).post("/api/auth/login").send({});
+      expect(response.status).toBe(400);
+    }
+
+    const limitedResponse = await request(app).post("/api/auth/login").send({});
+    expect(limitedResponse.status).toBe(429);
   });
 });

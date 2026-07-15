@@ -83,9 +83,12 @@ Body:
 ```
 
 Notes: `identifier` can be phone or email. Inactive/suspended accounts cannot login.
-Login and registration are limited to 5 requests per IP per 15 minutes. The
-refresh-token endpoint is limited to 30 requests per IP per 15 minutes. Exceeding
-a limit returns `429` with `Too many attempts. Please try again later.`
+Failed login requests are limited per IP over a configurable 5-minute window.
+The fallback is 20 attempts in development/test and 10 attempts in production;
+successful logins do not consume this quota. Registration remains limited to 5
+requests per IP per 15 minutes, and the refresh-token endpoint remains limited to
+30 requests per IP per 15 minutes. Exceeding a limit returns `429` with
+`Too many attempts. Please try again later.`
 
 ### GET `/api/auth/me`
 

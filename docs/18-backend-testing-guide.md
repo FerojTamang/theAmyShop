@@ -133,9 +133,11 @@ Invoke-RestMethod -Method PATCH "$API/api/account/change-password" -Headers @{ A
 } | ConvertTo-Json)
 ```
 
-Auth rate-limit check: send the same login or registration request more than five
-times within 15 minutes from one IP. The next request returns `429` with a friendly
-message. Refresh-token requests have a separate limit of 30 per 15 minutes.
+Auth rate-limit check: failed login requests use the configured 5-minute window
+and default to 20 attempts in development/test or 10 in production. Successful
+logins do not consume the login quota. Registration remains limited to 5 requests
+per 15 minutes, and refresh-token requests remain limited to 30 per 15 minutes.
+The first request beyond a limit returns `429` with a friendly message.
 
 ## Categories
 
