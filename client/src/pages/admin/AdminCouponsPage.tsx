@@ -273,7 +273,7 @@ function CouponForm({
           <h2 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
             {editingCoupon ? "Edit Coupon" : "Create Coupon"}
           </h2>
-          <p className="mt-2 text-sm text-[#6F6570]">Use backend-supported coupon fields only.</p>
+          <p className="mt-2 text-sm text-[#6F6570]">Use the available coupon fields below.</p>
         </div>
         {editingCoupon ? (
           <button onClick={onCancelEdit} type="button">

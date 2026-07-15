@@ -126,7 +126,7 @@ export function AdminDashboardPage() {
               <h1 className="text-3xl font-semibold sm:text-4xl" style={{ fontFamily: "Georgia, serif" }}>
                 Dashboard
               </h1>
-              <p className="mt-2 text-[#6F6570]">Live data from The AMY Shop backend.</p>
+              <p className="mt-2 text-[#6F6570]">Live store data.</p>
             </div>
 
             {loading ? (

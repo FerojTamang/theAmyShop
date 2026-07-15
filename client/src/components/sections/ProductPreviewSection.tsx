@@ -38,7 +38,7 @@ export function ProductPreviewSection() {
             </Button>
           </Link>
         }
-        description="These cards are visual placeholders for the live catalog, keeping the storefront polished while Sprint 19 product flows wait their turn."
+        description="Explore thoughtful handmade gifts for meaningful moments."
         eyebrow="Best-selling gift ideas"
         title="Pretty, personal, and ready to become someone's favorite."
       />

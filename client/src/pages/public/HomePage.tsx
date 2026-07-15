@@ -83,15 +83,17 @@ function HeroSection({ product }: { product?: PublicProduct }) {
 function ProductCard({ product }: { product: PublicProduct }) {
   const imageUrl = getPrimaryImage(product);
   const [imageFailed, setImageFailed] = useState(false);
+  const isAvailable = product.stock > 0 && product.stockType !== "OUT_OF_STOCK" && product.isActive;
 
   return (
     <Link className="group overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-lg" to={`/products/${product.slug}`}>
-      <div className="aspect-square overflow-hidden bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF0F3]">
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-white via-[#FFF9FA] to-[#FFF0F3]">
         {imageUrl && !imageFailed ? (
           <img alt={product.name} className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.03]" onError={() => setImageFailed(true)} src={imageUrl} />
         ) : (
-          <div className="grid h-full place-items-center text-center text-[#EC4C84]"><div><Gift className="mx-auto h-9 w-9" /><p className="mt-2 text-sm font-semibold">Image coming soon</p></div></div>
+          <div className="grid h-full place-items-center text-center text-[#EC4C84]"><div><Gift className="mx-auto h-9 w-9" /><p className="mt-2 text-sm font-semibold">No image available</p></div></div>
         )}
+        {!isAvailable ? <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#9D4867] shadow-sm">Out of stock</span> : null}
       </div>
       <div className="p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-[#EC4C84]">{product.category?.name || "Gift"}</p>

@@ -1144,7 +1144,7 @@ export function AdminProductsPage() {
 
   const handleArchive = async (product: PublicProduct) => {
     const confirmed = window.confirm(
-      `Archive "${product.name}"? This uses the backend delete endpoint and deactivates the product.`,
+      `Archive "${product.name}"? This product will no longer appear in the store.`,
     );
 
     if (!confirmed) {

@@ -24,6 +24,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
   const [imageFailed, setImageFailed] = useState(false);
   const compareAt = Number(product.compareAtPrice);
   const hasCompareAt = Number.isFinite(compareAt) && compareAt > Number(product.price);
+  const isAvailable = product.stock > 0 && product.stockType !== "OUT_OF_STOCK" && product.isActive;
 
   return (
     <Link className="group overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100 transition hover:-translate-y-1 hover:shadow-lg" to={`/products/${product.slug}`}>
@@ -34,6 +35,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
           <div className="grid h-full place-items-center p-8 text-center text-[#EC4C84]"><div><Gift className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-semibold">No image available</p></div></div>
         )}
         {product.isCustomizable ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#EC4C84] shadow-sm">Personal touch planned</span> : null}
+        {!isAvailable ? <span className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#9D4867] shadow-sm">Out of stock</span> : null}
       </div>
       <div className="p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-[#EC4C84]">{product.category?.name ?? "Handmade gift"}</p>

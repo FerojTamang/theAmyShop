@@ -53,6 +53,9 @@ type DetailProduct = {
   images: string[];
   isCustomizable: boolean;
   isGiftSupported: boolean;
+  isActive: boolean;
+  stock: number;
+  stockType?: PublicProduct["stockType"];
   material?: string | null;
   careInstructions?: string | null;
   makingTime?: string | null;
@@ -114,11 +117,21 @@ const mapApiProduct = (product: PublicProduct): DetailProduct => {
     images: orderedImages.map((image) => image.imageUrl),
     isCustomizable: product.isCustomizable,
     isGiftSupported: product.isGiftSupported,
+    isActive: product.isActive,
+    stock: product.stock,
+    stockType: product.stockType,
     material: product.material,
     careInstructions: product.careInstructions,
     makingTime: product.makingTime,
   };
 };
+
+const isProductAvailable = (product: DetailProduct | null): product is DetailProduct => Boolean(
+  product &&
+  product.isActive &&
+  product.stock > 0 &&
+  product.stockType !== "OUT_OF_STOCK"
+);
 
 function ProductVisual({ type = "box", className = "" }: { type?: ProductArt | "mug" | "card"; className?: string }) {
   const label = {
@@ -497,7 +510,7 @@ function ProductInfoPanel({
       <ActionButtons
         addToCartMessage={addToCartMessage}
         addToCartStatus={addToCartStatus}
-        canAddToCart={Boolean(product.id)}
+        canAddToCart={Boolean(product.id) && isProductAvailable(product)}
         onAddToCart={onAddToCart}
         onQuantityChange={onQuantityChange}
         quantity={quantity}
@@ -599,7 +612,7 @@ function ActionButtons({
           type="button"
         >
           <ShoppingCart className="h-5 w-5" />
-          {isAdding ? "Adding..." : canAddToCart ? "Add to cart" : "Product not available yet"}
+          {isAdding ? "Adding..." : canAddToCart ? "Add to cart" : "Out of stock"}
         </button>
       </div>
       {addToCartMessage ? (
@@ -1111,6 +1124,12 @@ export function ProductDetailPage() {
     if (!product?.id) {
       setAddToCartStatus("error");
       setAddToCartMessage("Product not available yet.");
+      return;
+    }
+
+    if (!isProductAvailable(product)) {
+      setAddToCartStatus("error");
+      setAddToCartMessage("This item is currently unavailable.");
       return;
     }
 

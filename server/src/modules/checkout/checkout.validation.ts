@@ -18,7 +18,7 @@ const giftSchema = z
 export const checkoutSchema = z.object({
   addressId: requiredTextSchema("Address"),
   paymentMethod: z.literal(PaymentMethod.CASH_ON_DELIVERY, {
-    message: "Only Cash on Delivery is supported in Sprint 9B",
+    message: "Cash on Delivery is currently available.",
   }),
   couponCode: z
     .string()

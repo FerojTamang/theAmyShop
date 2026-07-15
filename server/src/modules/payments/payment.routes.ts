@@ -7,11 +7,8 @@ import {
   getAdminPaymentsHandler,
   getMyPaymentByIdHandler,
   getMyPaymentsHandler,
-  initiateEsewaPaymentHandler,
-  initiateKhaltiPaymentHandler,
+  onlinePaymentUnavailableHandler,
   updateAdminPaymentStatusHandler,
-  verifyEsewaPaymentHandler,
-  verifyKhaltiPaymentHandler,
 } from "./payment.controller.js";
 
 export const paymentRoutes = Router();
@@ -20,10 +17,10 @@ export const adminPaymentRoutes = Router();
 paymentRoutes.use(authMiddleware);
 paymentRoutes.get("/my", getMyPaymentsHandler);
 paymentRoutes.get("/:id", getMyPaymentByIdHandler);
-paymentRoutes.post("/khalti/initiate", initiateKhaltiPaymentHandler);
-paymentRoutes.post("/khalti/verify", verifyKhaltiPaymentHandler);
-paymentRoutes.post("/esewa/initiate", initiateEsewaPaymentHandler);
-paymentRoutes.post("/esewa/verify", verifyEsewaPaymentHandler);
+paymentRoutes.post("/khalti/initiate", onlinePaymentUnavailableHandler);
+paymentRoutes.post("/khalti/verify", onlinePaymentUnavailableHandler);
+paymentRoutes.post("/esewa/initiate", onlinePaymentUnavailableHandler);
+paymentRoutes.post("/esewa/verify", onlinePaymentUnavailableHandler);
 
 adminPaymentRoutes.use(
   authMiddleware,

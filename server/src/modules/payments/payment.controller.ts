@@ -42,6 +42,15 @@ const getStringParam = (value: string | string[] | undefined): string => {
   return value;
 };
 
+export const onlinePaymentUnavailableHandler: RequestHandler = asyncHandler(
+  async () => {
+    throw new ApiError(
+      503,
+      "Online payments are currently unavailable. Please use Cash on Delivery.",
+    );
+  },
+);
+
 export const getMyPaymentsHandler: RequestHandler = asyncHandler(
   async (req, res) => {
     const query = validate(paymentQuerySchema, req.query);

@@ -4,7 +4,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import type { UploadedImageResult, UploadFolder } from "./upload.types.js";
 
 const uploadNotConfiguredMessage =
-  "Cloudinary is not configured. Add real CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET values to server/.env, then restart the backend.";
+  "Upload service is not configured. Please contact the administrator.";
 
 const uploadBufferToCloudinary = async (
   file: Express.Multer.File,
@@ -40,6 +40,7 @@ export const uploadImage = async (
   folder: UploadFolder,
 ): Promise<UploadedImageResult> => {
   if (!isCloudinaryConfigured()) {
+    console.error("Cloudinary upload requested before the service was configured.");
     throw new ApiError(503, uploadNotConfiguredMessage);
   }
 

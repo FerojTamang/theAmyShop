@@ -3,7 +3,7 @@ import { PackageCheck, ShieldCheck, Sparkles, Truck } from "lucide-react";
 const features = [
   { label: "Handmade details", icon: Sparkles },
   { label: "Gift-ready packing", icon: PackageCheck },
-  { label: "Backend-verified checkout", icon: ShieldCheck },
+  { label: "Order details confirmed at checkout", icon: ShieldCheck },
   { label: "Delivery-ready orders", icon: Truck },
 ];
 
