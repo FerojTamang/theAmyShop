@@ -90,10 +90,6 @@ const getApiErrorMessage = (error: unknown) => {
   return normalized.message;
 };
 
-const getItemCount = (order: CustomerOrder) => (
-  order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0
-);
-
 const displayStatus = (status: string) => status.replaceAll("_", " ");
 
 const getDisplayPaymentStatus = (order: CustomerOrder) => {
@@ -127,10 +123,12 @@ function Badge({ displayLabel, label }: { displayLabel?: string; label: string }
 }
 
 function StatCard({
+  detail,
   icon: Icon,
   label,
   value,
 }: {
+  detail: string;
   icon: typeof ShoppingBag;
   label: string;
   value: string;
@@ -141,7 +139,7 @@ function StatCard({
         <div>
           <p className="text-xs font-semibold text-[#6F6570]">{label}</p>
           <p className="mt-2 text-2xl font-bold text-[#1F1720]">{value}</p>
-          <p className="mt-1 text-xs font-semibold text-[#9D8F98]">Current view</p>
+          <p className="mt-1 text-xs font-semibold text-[#9D8F98]">{detail}</p>
         </div>
         <span className="grid h-13 w-13 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
           <Icon className="h-6 w-6" />
@@ -195,12 +193,14 @@ function OrderDetailPanel({
   const order = detailOrder ?? selectedOrder;
 
   return (
-    <aside className="border-t border-[#F7D9E2] bg-gradient-to-b from-[#FFF9FA] to-[#FFF4E8] px-5 py-7 shadow-[0_-10px_30px_rgba(115,72,86,0.05)] sm:px-6 2xl:w-[25rem] 2xl:shrink-0 2xl:border-l 2xl:border-t-0 2xl:shadow-[-12px_0_35px_rgba(115,72,86,0.06)]">
+    <div className="fixed inset-0 z-40">
+      <button aria-label="Close order details" className="absolute inset-0 bg-[#1F1720]/35 backdrop-blur-[2px]" onClick={onClose} type="button" />
+      <aside aria-labelledby="order-detail-title" aria-modal="true" className="absolute inset-y-0 right-0 w-full overflow-y-auto border-l border-[#F7D9E2] bg-gradient-to-b from-[#FFF9FA] to-[#FFF4E8] px-5 py-7 shadow-[-18px_0_50px_rgba(31,23,32,0.18)] sm:max-w-[25rem] sm:px-6" role="dialog">
       {order ? (
         <>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
+              <h2 className="text-2xl font-semibold text-[#1F1720]" id="order-detail-title" style={{ fontFamily: "Georgia, serif" }}>
                 Order #{order.orderNumber}
               </h2>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -290,19 +290,18 @@ function OrderDetailPanel({
           </PanelCard>
         </>
       ) : null}
-    </aside>
+      </aside>
+    </div>
   );
 }
 
 function OrdersTable({
-  currentStatus,
   isUpdating,
   onSelect,
   onStatusChange,
   orders,
   selectedOrderId,
 }: {
-  currentStatus: OrderStatus | "ALL";
   isUpdating: string | null;
   onSelect: (order: CustomerOrder) => void;
   onStatusChange: (order: CustomerOrder, status: OrderStatus) => void;
@@ -311,26 +310,30 @@ function OrdersTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-[1.5rem] border border-[#F7D9E2] bg-white shadow-[0_16px_40px_rgba(115,72,86,0.08)]">
-      <div className="grid min-w-[82rem] grid-cols-[8rem_1.3fr_8rem_9rem_10rem_8rem_7rem_9rem_10rem] border-b border-[#F7D9E2] px-4 py-3 text-xs font-bold text-[#6F6570]">
+      <div className="grid min-w-[64rem] grid-cols-[8rem_minmax(14rem,1.5fr)_8rem_10rem_9rem_12rem] border-b border-[#F7D9E2] bg-[#FFF9FA]/80 px-4 py-3 text-xs font-bold text-[#6F6570]">
         <span>Order</span>
         <span>Customer</span>
         <span>Date</span>
         <span>Status</span>
-        <span>Payment</span>
         <span>Total</span>
-        <span>Items</span>
-        <span>Address</span>
-        <span>Actions</span>
+        <span>Status update</span>
       </div>
-      <div className="min-w-[82rem]">
+      <div className="min-w-[64rem]">
         {orders.map((order) => (
-          <button
-            className={`grid w-full grid-cols-[8rem_1.3fr_8rem_9rem_10rem_8rem_7rem_9rem_10rem] items-center border-b border-[#F7D9E2]/70 px-4 py-4 text-left text-sm last:border-b-0 ${
+          <div
+            className={`grid w-full cursor-pointer grid-cols-[8rem_minmax(14rem,1.5fr)_8rem_10rem_9rem_12rem] items-center border-b border-[#F7D9E2]/70 px-4 py-4 text-left text-sm transition last:border-b-0 hover:bg-[#FFF9FA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#EC4C84] ${
               selectedOrderId === order.id ? "bg-[#FFF5F7]" : "bg-white"
             }`}
             key={order.id}
             onClick={() => onSelect(order)}
-            type="button"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(order);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             <span className="font-bold text-[#EC4C84]">#{order.orderNumber}</span>
             <span>
@@ -339,16 +342,8 @@ function OrdersTable({
             </span>
             <span className="text-xs text-[#6F6570]">{formatDate(order.createdAt)}</span>
             <span><Badge label={order.orderStatus} /></span>
-            <span>
-              <span className="block text-xs font-semibold text-[#6F6570]">{displayStatus(order.paymentMethod)}</span>
-              <span className="mt-1 inline-flex">
-                <Badge displayLabel={getDisplayPaymentStatusLabel(order)} label={getDisplayPaymentStatus(order)} />
-              </span>
-            </span>
             <span className="font-semibold text-[#1F1720]">{formatCurrency(order.totalAmount)}</span>
-            <span className="font-semibold text-[#6F6570]">{getItemCount(order)}</span>
-            <span className="text-xs text-[#6F6570]">{order.address ? `${order.address.city}, ${order.address.district}` : "Not provided"}</span>
-            <span onClick={(event) => event.stopPropagation()}>
+            <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
               <select
                 className="h-10 w-full rounded-xl border border-[#F7D9E2] bg-white px-3 text-xs font-bold text-[#6F6570] outline-none"
                 disabled={
@@ -362,9 +357,8 @@ function OrdersTable({
                   <option key={status} value={status}>{displayStatus(status)}</option>
                 ))}
               </select>
-              {currentStatus !== "ALL" ? <span className="sr-only">{currentStatus}</span> : null}
             </span>
-          </button>
+          </div>
         ))}
       </div>
     </div>
@@ -417,6 +411,26 @@ export function AdminOrdersPage() {
     void loadOrders(activeStatus);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStatus]);
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedOrder(null);
+        setDetailOrder(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedOrder]);
 
   const handleSelectOrder = async (order: CustomerOrder) => {
     setSelectedOrder(order);
@@ -473,7 +487,7 @@ export function AdminOrdersPage() {
   return (
     <div className="min-w-0 text-[#1F1720]">
       <div className="min-w-0 flex-1">
-        <div className={selectedOrder ? "grid 2xl:grid-cols-[minmax(0,1fr)_25rem]" : "grid"}>
+        <div className="grid">
           <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-[100rem]">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -497,10 +511,10 @@ export function AdminOrdersPage() {
               ) : null}
 
               <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <StatCard icon={ShoppingBag} label="Total Orders" value={String(meta?.total ?? orders.length)} />
-                <StatCard icon={CreditCard} label="Visible Revenue" value={formatCurrency(revenue)} />
-                <StatCard icon={TrendingUp} label="Average Order" value={formatCurrency(averageOrder)} />
-                <StatCard icon={ClipboardList} label="Pending Orders" value={String(pendingCount)} />
+                <StatCard detail="Matching the current filter" icon={ShoppingBag} label="Total Orders" value={String(meta?.total ?? orders.length)} />
+                <StatCard detail="Across loaded orders" icon={CreditCard} label="Visible Revenue" value={formatCurrency(revenue)} />
+                <StatCard detail="Across loaded orders" icon={TrendingUp} label="Average Order" value={formatCurrency(averageOrder)} />
+                <StatCard detail="Awaiting confirmation" icon={ClipboardList} label="Pending Orders" value={String(pendingCount)} />
               </div>
 
               <div className="mt-7 flex flex-wrap gap-2 rounded-[1.5rem] border border-white/90 bg-white/70 p-3 shadow-sm shadow-pink-100 ring-1 ring-[#F7D9E2]">
@@ -531,7 +545,6 @@ export function AdminOrdersPage() {
                     <StatePanel description="No orders match this view." title="No orders found" />
                   ) : (
                     <OrdersTable
-                      currentStatus={activeStatus}
                       isUpdating={updatingOrderId}
                       onSelect={(order) => void handleSelectOrder(order)}
                       onStatusChange={(order, status) => void handleStatusChange(order, status)}

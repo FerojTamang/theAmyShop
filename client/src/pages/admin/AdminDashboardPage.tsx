@@ -72,6 +72,22 @@ const formatDate = (value: string) =>
 
 const labelStatus = (value: string) => value.toLowerCase().replaceAll("_", " ");
 
+const dashboardStatusClass = (status: string) => {
+  const styles: Record<string, string> = {
+    PENDING: "bg-amber-50 text-amber-700 ring-amber-200",
+    CONFIRMED: "bg-sky-50 text-sky-700 ring-sky-200",
+    PROCESSING: "bg-blue-50 text-blue-700 ring-blue-200",
+    IN_PRODUCTION: "bg-purple-50 text-purple-700 ring-purple-200",
+    READY_TO_SHIP: "bg-teal-50 text-teal-700 ring-teal-200",
+    SHIPPED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    DELIVERED: "bg-green-50 text-green-700 ring-green-200",
+    CANCELLED: "bg-stone-100 text-stone-600 ring-stone-200",
+    RETURNED: "bg-red-50 text-red-700 ring-red-200",
+  };
+
+  return styles[status] ?? "bg-[#FFF5F7] text-[#6F6570] ring-[#F7D9E2]";
+};
+
 export function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,25 +175,7 @@ export function AdminDashboardPage() {
                   <StatCard icon={Gift} label="Products" value={String(data.summary.totalProducts)} detail={`${data.summary.lowStockProducts} currently low in stock`} />
                 </div>
 
-                <div className="mt-6 grid gap-5 lg:grid-cols-3">
-                  <Card>
-                    <p className="text-sm font-semibold text-[#6F6570]">Pending orders</p>
-                    <p className="mt-2 text-3xl font-bold">{data.summary.pendingOrders}</p>
-                    <Link className="mt-4 inline-flex text-sm font-bold text-[#EC4C84]" to="/admin/orders">Manage orders</Link>
-                  </Card>
-                  <Card>
-                    <p className="text-sm font-semibold text-[#6F6570]">Pending reviews</p>
-                    <p className="mt-2 text-3xl font-bold">{pendingReviews}</p>
-                    <Link className="mt-4 inline-flex text-sm font-bold text-[#EC4C84]" to="/admin/reviews">Moderate reviews</Link>
-                  </Card>
-                  <Card>
-                    <p className="text-sm font-semibold text-[#6F6570]">Low-stock products</p>
-                    <p className="mt-2 text-3xl font-bold">{data.summary.lowStockProducts}</p>
-                    <Link className="mt-4 inline-flex text-sm font-bold text-[#EC4C84]" to="/admin/products">Manage products</Link>
-                  </Card>
-                </div>
-
-                <div className="mt-6 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+                <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_20rem]">
                   <Card>
                     <div className="flex items-center justify-between gap-4">
                       <h2 className="text-xl font-semibold" style={{ fontFamily: "Georgia, serif" }}>Recent orders</h2>
@@ -196,7 +194,7 @@ export function AdminDashboardPage() {
                               <tr className="border-b border-[#F7D9E2]/70 last:border-0" key={order.id}>
                                 <td className="py-4 font-bold text-[#EC4C84]">{order.orderNumber}</td>
                                 <td>{order.user.fullName || order.user.email || order.user.phone || "Customer"}</td>
-                                <td className="capitalize">{labelStatus(order.orderStatus)}</td>
+                                <td><span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold capitalize ring-1 ${dashboardStatusClass(order.orderStatus)}`}>{labelStatus(order.orderStatus)}</span></td>
                                 <td>{formatDate(order.createdAt)}</td>
                                 <td className="text-right font-bold">{formatCurrency(order.totalAmount)}</td>
                               </tr>
@@ -207,19 +205,32 @@ export function AdminDashboardPage() {
                     )}
                   </Card>
 
-                  <Card>
+                  <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+                    {[
+                      ["Pending orders", data.summary.pendingOrders, "/admin/orders", "Manage orders"],
+                      ["Pending reviews", pendingReviews, "/admin/reviews", "Moderate reviews"],
+                      ["Low-stock products", data.summary.lowStockProducts, "/admin/products", "Manage products"],
+                    ].map(([label, value, to, action]) => (
+                      <Card className="flex min-h-36 flex-col justify-between" key={String(label)}>
+                        <div><p className="text-sm font-semibold text-[#6F6570]">{label}</p><p className="mt-2 text-3xl font-bold text-[#1F1720]">{value}</p></div>
+                        <Link className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#EC4C84]" to={String(to)}>{action}<ArrowRight className="h-4 w-4" /></Link>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <Card className="xl:col-span-2">
                     <h2 className="text-xl font-semibold" style={{ fontFamily: "Georgia, serif" }}>Last 7 days paid sales</h2>
                     {data.sales.every((point) => point.orderCount === 0) ? (
                       <p className="mt-6 rounded-xl bg-[#FFF5F7] p-5 text-sm text-[#6F6570]">No paid sales recorded in this period.</p>
                     ) : (
-                      <div className="mt-6 grid gap-4">
+                      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-7">
                         {data.sales.map((point) => (
-                          <div key={point.date}>
-                            <div className="mb-1 flex justify-between gap-4 text-xs text-[#6F6570]">
+                          <div className="rounded-2xl border border-[#F7D9E2] bg-[#FFF9FA] p-4" key={point.date}>
+                            <div className="mb-2 grid gap-1 text-xs text-[#6F6570]">
                               <span>{formatDate(point.date)}</span>
                               <span>{point.orderCount} order{point.orderCount === 1 ? "" : "s"} · {formatCurrency(point.revenue)}</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-[#FDECEF]">
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#FDECEF]">
                               <div className="h-full rounded-full bg-[#EC4C84]" style={{ width: `${Math.max(3, (point.revenue / maxSales) * 100)}%` }} />
                             </div>
                           </div>

@@ -602,7 +602,7 @@ export function AdminCouponsPage() {
                         <div>
                           <p className="text-xs font-semibold text-[#6F6570]">{stat.label}</p>
                           <p className="mt-2 text-2xl font-bold text-[#1F1720]">{stat.value}</p>
-                          <p className="mt-1 text-xs font-bold text-[#EC4C84]">Loaded from API</p>
+                          <p className="mt-1 text-xs font-semibold text-[#9D8F98]">Live store data</p>
                         </div>
                         <span className="grid h-13 w-13 place-items-center rounded-full bg-[#FDECEF] text-[#EC4C84]">
                           <Icon className="h-6 w-6" />
