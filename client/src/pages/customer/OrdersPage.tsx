@@ -189,12 +189,12 @@ export function OrdersPage() {
           My orders
         </h1>
         <p className="mt-3 text-[#6F6570]">
-          Track handmade gifts, payment status, delivery progress, and address details from real checkout orders.
+          Track your gifts, payment status, delivery progress, and delivery details.
         </p>
       </div>
 
       <Card className="bg-white/90">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5">
           <div className="flex h-11 min-w-0 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4 sm:w-80">
             <Search className="h-4 w-4 text-[#9D8F98]" />
             <input
@@ -204,9 +204,6 @@ export function OrdersPage() {
               value={search}
             />
           </div>
-          <button className="cursor-not-allowed rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-3 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-            Payment history Soon
-          </button>
         </div>
 
         {error ? (

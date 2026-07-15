@@ -31,7 +31,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
         {imageUrl && !imageFailed ? (
           <img alt={product.name} className="h-full w-full object-contain p-3" onError={() => setImageFailed(true)} src={imageUrl} />
         ) : (
-          <div className="grid h-full place-items-center p-8 text-center text-[#EC4C84]"><div><Gift className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-semibold">Image coming soon</p></div></div>
+          <div className="grid h-full place-items-center p-8 text-center text-[#EC4C84]"><div><Gift className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-semibold">No image available</p></div></div>
         )}
         {product.isCustomizable ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#EC4C84] shadow-sm">Personal touch planned</span> : null}
       </div>
@@ -153,7 +153,7 @@ export function ProductsPage() {
           <nav aria-label="Product pages" className="mt-10 flex flex-wrap justify-center gap-2">
             <button aria-label="Previous page" className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] disabled:opacity-40" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} type="button"><ChevronLeft className="h-4 w-4" /></button>
             {pageNumbers.map((pageNumber, index) => (
-              <span className="contents" key={pageNumber}>{index > 0 && pageNumber - pageNumbers[index - 1] > 1 ? <span className="grid h-10 place-items-center px-1">â€¦</span> : null}<button aria-current={pageNumber === page ? "page" : undefined} className={`grid h-10 min-w-10 place-items-center rounded-full border px-3 text-sm font-bold ${pageNumber === page ? "border-[#EC4C84] bg-[#EC4C84] text-white" : "border-[#F7D9E2] bg-white"}`} onClick={() => setPage(pageNumber)} type="button">{pageNumber}</button></span>
+              <span className="contents" key={pageNumber}>{index > 0 && pageNumber - pageNumbers[index - 1] > 1 ? <span className="grid h-10 place-items-center px-1">…</span> : null}<button aria-current={pageNumber === page ? "page" : undefined} className={`grid h-10 min-w-10 place-items-center rounded-full border px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 ${pageNumber === page ? "border-[#EC4C84] bg-[#EC4C84] text-white" : "border-[#F7D9E2] bg-white"}`} onClick={() => setPage(pageNumber)} type="button">{pageNumber}</button></span>
             ))}
             <button aria-label="Next page" className="grid h-10 w-10 place-items-center rounded-full border border-[#F7D9E2] disabled:opacity-40" disabled={page >= meta.totalPages} onClick={() => setPage((value) => Math.min(meta.totalPages, value + 1))} type="button"><ChevronRight className="h-4 w-4" /></button>
           </nav>

@@ -308,7 +308,7 @@ function ProductGallery({ product }: { product: DetailProduct }) {
         {selectedImage && !failedImages.has(selectedImage) ? (
           <span className="pointer-events-none absolute bottom-4 left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#F7D9E2] bg-white/90 px-3 py-2 text-[11px] font-bold text-[#6F6570] shadow-sm backdrop-blur">
             <Maximize2 className="h-3.5 w-3.5 text-[#EC4C84]" />
-            {isHoverCapable ? "Hover to zoom Â· Click to view larger" : "Tap to view larger"}
+            {isHoverCapable ? "Hover to zoom · Click to view larger" : "Tap to view larger"}
           </span>
         ) : null}
       </div>
@@ -356,7 +356,7 @@ function ProductGallery({ product }: { product: DetailProduct }) {
               <div>
                 <p className="text-sm font-bold text-[#1F1720]">{product.title}</p>
                 <p className="text-xs font-semibold text-[#9D8F98]">
-                  Image {selectedImageIndex + 1} of {images.length} Â· {lightboxZoom.toFixed(1)}x
+                  Image {selectedImageIndex + 1} of {images.length} · {lightboxZoom.toFixed(1)}x
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -473,7 +473,7 @@ function ProductInfoPanel({
   return (
     <section className="lg:pl-6">
       <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EC4C84]">Made just for you</p>
-      <h1 className="mt-4 text-5xl font-semibold leading-tight text-[#1F1720]" style={serifStyle}>
+      <h1 className="mt-4 text-4xl font-semibold leading-tight text-[#1F1720] sm:text-5xl" style={serifStyle}>
         {product.title}
       </h1>
       <p className="mt-3 text-lg text-[#6F6570]">{product.subtitle}</p>
@@ -666,7 +666,7 @@ function ProductCard({ product }: { product: RelatedProduct }) {
 export function RelatedProductsSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-      <h2 className="mb-7 text-center text-4xl font-semibold text-[#1F1720]" style={serifStyle}>You may also love <span className="text-[#EC4C84]">â™¡</span></h2>
+      <h2 className="mb-7 text-center text-4xl font-semibold text-[#1F1720]" style={serifStyle}>You may also love <span className="text-[#EC4C84]">♡</span></h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {relatedProducts.map((product) => <ProductCard key={product.title} product={product} />)}
       </div>
@@ -1194,7 +1194,7 @@ export function ProductDetailPage() {
         ) : (
           <>
             <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
-              <div className="flex items-center gap-2 text-sm text-[#6F6570]">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-[#6F6570]">
                 <Link to="/">Home</Link>
                 <ChevronRight className="h-4 w-4" />
                 <Link to="/products">Shop</Link>

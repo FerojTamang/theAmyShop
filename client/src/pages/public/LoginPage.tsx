@@ -41,11 +41,10 @@ export function LoginPage() {
           Welcome back
         </p>
         <h1 className="mt-3 text-4xl font-bold leading-tight text-[#332522]">
-          Sign in to manage gifts, orders, and rewards.
+          Sign in to manage your account and orders.
         </h1>
         <p className="mt-4 max-w-md text-[#6b5550]">
-          Your personal gift dashboard keeps orders, rewards, referrals, and
-          account details ready for future storefront workflows.
+          View your orders, manage delivery addresses, and keep your account details up to date.
         </p>
       </div>
       <Card className="bg-white/82">

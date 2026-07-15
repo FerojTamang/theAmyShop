@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  Filter,
   Heart,
   Search,
   UserCheck,
@@ -271,7 +270,7 @@ function DetailPanel({
           <h2 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
             Customer Summary
           </h2>
-          <p className="mt-2 text-sm text-[#6F6570]">Real backend account detail.</p>
+          <p className="mt-2 text-sm text-[#6F6570]">Account details and activity.</p>
         </div>
         <button onClick={onClose} type="button">
           <X className="h-5 w-5 text-[#6F6570]" />
@@ -284,7 +283,7 @@ function DetailPanel({
         </PanelCard>
       ) : customer ? (
         <>
-          <PanelCard title="Selected Customer" action="Profile edit soon">
+          <PanelCard title="Selected Customer">
             <div className="flex items-center gap-4">
               <CustomerInitials name={customer.fullName} />
               <div className="min-w-0">
@@ -320,7 +319,7 @@ function DetailPanel({
                     <span>{formatCurrency(order.totalAmount)}</span>
                   </div>
                   <p className="mt-1 text-xs text-[#6F6570]">
-                    {displayStatus(order.orderStatus)} Â· {formatDate(order.createdAt)}
+                    {displayStatus(order.orderStatus)} · {formatDate(order.createdAt)}
                   </p>
                 </div>
               )) : <p className="text-sm text-[#6F6570]">No recent orders provided.</p>}
@@ -340,11 +339,6 @@ function DetailPanel({
             </div>
           </PanelCard>
 
-          <PanelCard title="Unsupported Actions" action="Coming soon">
-            <p className="text-sm leading-6 text-[#6F6570]">
-              Password reset, manual order edits, customer segmentation, and profile edits are not supported by the current customer admin API.
-            </p>
-          </PanelCard>
         </>
       ) : (
         <StateCard description="Select a customer row to load real admin customer detail." title="No customer selected" />
@@ -503,7 +497,7 @@ export function AdminCustomersPage() {
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
                     Customers <Heart className="inline h-5 w-5 text-[#EC4C84]" />
                   </h1>
-                  <p className="mt-1 text-sm text-[#6F6570]">Manage real customers and account status</p>
+                  <p className="mt-1 text-sm text-[#6F6570]">Manage customers and account status</p>
                 </div>
               </div>
 
@@ -545,19 +539,11 @@ export function AdminCustomersPage() {
                   <button className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white" type="submit">
                     <Search className="h-4 w-4" /> Search
                   </button>
-                  <button
-                    className="flex h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#F7D9E2] bg-white px-5 text-sm font-bold text-[#C8A7B1]"
-                    disabled
-                    title="Advanced sort and date filters coming soon"
-                    type="button"
-                  >
-                    <Filter className="h-4 w-4" /> More filters soon
-                  </button>
                 </form>
 
                 <div className="mt-4 overflow-x-auto">
                   {isLoading ? (
-                    <StateCard description="Loading real customer records from the admin customers API." title="Loading customers" />
+                    <StateCard description="Loading customer records." title="Loading customers" />
                   ) : customers.length > 0 ? (
                     <CustomerTable
                       customers={customers}
@@ -568,7 +554,7 @@ export function AdminCustomersPage() {
                     />
                   ) : (
                     <StateCard
-                      description={error ? "Fix the API issue and refresh this page to try again." : "The admin customer API responded successfully, but no customers match this view."}
+                      description={error ? "Refresh the page to try again." : "No customers match this view."}
                       title={error ? "Customer API unavailable" : "No customers found"}
                     />
                   )}
@@ -576,7 +562,7 @@ export function AdminCustomersPage() {
 
                 <div className="mt-4 flex flex-col gap-3 text-sm text-[#6F6570] sm:flex-row sm:items-center sm:justify-between">
                   <span>
-                    {meta ? `Showing page ${meta.page} of ${meta.totalPages || 1} Â· ${meta.total} total` : "Pagination appears after customers load."}
+                    {meta ? `Showing page ${meta.page} of ${meta.totalPages || 1} · ${meta.total} total` : "Pagination appears after customers load."}
                   </span>
                   <div className="flex gap-2">
                     <button

@@ -581,7 +581,7 @@ export function AdminCouponsPage() {
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
                     Coupons <Heart className="inline h-5 w-5 text-[#EC4C84]" />
                   </h1>
-                  <p className="mt-1 text-sm text-[#6F6570]">Create and manage real backend coupon codes.</p>
+                  <p className="mt-1 text-sm text-[#6F6570]">Create and manage coupon codes.</p>
                 </div>
                 <button
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white shadow-lg shadow-pink-200"
@@ -661,7 +661,7 @@ export function AdminCouponsPage() {
 
                 <div className="mt-4 overflow-x-auto">
                   {isLoading ? (
-                    <StateCard description="Loading real coupon records from the backend." title="Loading coupons" />
+                    <StateCard description="Loading coupon records." title="Loading coupons" />
                   ) : coupons.length > 0 ? (
                     <div className="overflow-hidden rounded-2xl border border-[#F7D9E2] bg-white shadow-sm shadow-pink-100">
                       <div className="grid min-w-[78rem] grid-cols-[1fr_1.5fr_1.3fr_8rem_8rem_8rem_8rem_10rem] border-b border-[#F7D9E2] px-4 py-3 text-xs font-bold text-[#6F6570]">
@@ -715,7 +715,7 @@ export function AdminCouponsPage() {
                     </div>
                   ) : (
                     <StateCard
-                      description={error ? "Fix the API issue and refresh this page to try again." : "The coupon API responded successfully, but no coupons match this view."}
+                      description={error ? "Refresh the page to try again." : "No coupons match this view."}
                       title={error ? "Coupon API unavailable" : "No coupons found"}
                     />
                   )}
@@ -746,9 +746,6 @@ export function AdminCouponsPage() {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-dashed border-[#F7D9E2] bg-[#FFF9FA] p-5 text-sm text-[#6F6570]">
-                Coupon analytics, campaign automation, and redemption exports are Coming soon.
-              </div>
             </div>
           </main>
           <CouponForm

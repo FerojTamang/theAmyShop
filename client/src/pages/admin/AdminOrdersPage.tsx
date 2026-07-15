@@ -3,14 +3,11 @@ import {
   ClipboardList,
   CreditCard,
   EllipsisVertical,
-  Filter,
   Gift,
   Heart,
   Printer,
-  Search,
   ShoppingBag,
   TrendingUp,
-  Upload,
   X,
 } from "lucide-react";
 import { normalizeApiError } from "../../lib/apiError";
@@ -292,7 +289,7 @@ function OrderDetailPanel({
             {order.statusHistory?.length ? order.statusHistory.map((history) => (
               <div className="border-b border-[#F7D9E2]/70 py-3 text-sm last:border-b-0" key={history.id}>
                 <p className="font-bold text-[#1F1720]">{displayStatus(history.newStatus)}</p>
-                <p className="mt-1 text-xs text-[#6F6570]">{formatDate(history.createdAt)} Â· {history.changedBy?.fullName ?? "System"}</p>
+                <p className="mt-1 text-xs text-[#6F6570]">{formatDate(history.createdAt)} · {history.changedBy?.fullName ?? "System"}</p>
                 {history.note ? <p className="mt-1 text-xs text-[#9D8F98]">{history.note}</p> : null}
               </div>
             )) : <p className="text-sm text-[#6F6570]">Not provided.</p>}
@@ -492,15 +489,7 @@ export function AdminOrdersPage() {
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
                     Orders <Heart className="inline h-5 w-5 text-[#EC4C84]" />
                   </h1>
-                  <p className="mt-1 text-sm text-[#6F6570]">Manage and track real customer orders</p>
-                </div>
-                <div className="flex gap-3">
-                  <button className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-5 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-                    <Upload className="h-4 w-4" /> Export Soon
-                  </button>
-                  <button className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-xl bg-[#FDECEF] px-5 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-                    Create Order Soon
-                  </button>
+                  <p className="mt-1 text-sm text-[#6F6570]">Manage and track customer orders</p>
                 </div>
               </div>
 
@@ -537,21 +526,11 @@ export function AdminOrdersPage() {
                 ))}
               </div>
 
-              <div className="mt-4 rounded-2xl border border-[#F7D9E2] bg-white p-4 shadow-sm shadow-pink-100">
-                <div className="flex flex-col gap-3 lg:flex-row">
-                  <div className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-4">
-                    <Search className="h-4 w-4 text-[#9D8F98]" />
-                    <input className="min-w-0 flex-1 cursor-not-allowed bg-transparent text-sm outline-none placeholder:text-[#C8A7B1]" disabled placeholder="Search via API filter coming soon" />
-                  </div>
-                  <button className="flex h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-5 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-                    <Filter className="h-4 w-4" /> Filters Soon
-                  </button>
-                </div>
-                <div className="mt-4">
+              <div className="mt-4">
                   {isLoading ? (
-                    <StatePanel description="Loading admin orders from the backend." title="Loading orders" />
+                    <StatePanel description="Loading customer orders." title="Loading orders" />
                   ) : filteredOrders.length === 0 ? (
-                    <StatePanel description="The admin orders API responded successfully, but no orders match this view." title="No orders found" />
+                    <StatePanel description="No orders match this view." title="No orders found" />
                   ) : (
                     <OrdersTable
                       currentStatus={activeStatus}
@@ -562,7 +541,6 @@ export function AdminOrdersPage() {
                       selectedOrderId={selectedOrder?.id ?? null}
                     />
                   )}
-                </div>
               </div>
             </div>
           </main>

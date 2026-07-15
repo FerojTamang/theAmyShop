@@ -6,7 +6,7 @@ import { classNames } from "../../lib/classNames";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   classNames(
-    "rounded-full px-4 py-2 text-sm font-semibold transition",
+    "rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2",
     isActive
       ? "bg-[#FDECEF] text-[#EC4C84] shadow-sm shadow-pink-100"
       : "text-[#6F6570] hover:bg-[#FFF5F7] hover:text-[#EC4C84]",
@@ -52,7 +52,7 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden flex-1 items-center justify-center gap-1 md:flex" aria-label="Store navigation">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Store navigation">
             <NavLink className={navLinkClass} end to="/">Home</NavLink>
             <NavLink className={navLinkClass} to="/products">Shop</NavLink>
             {isAuthenticated ? (
@@ -75,7 +75,7 @@ export function Header() {
             </Link>
             {isAuthenticated ? (
               <button
-                className="hidden rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-2 text-sm font-semibold text-[#6F6570] transition hover:border-[#EC4C84] hover:text-[#EC4C84] disabled:opacity-60 sm:inline-flex"
+                className="hidden rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-2 text-sm font-semibold text-[#6F6570] transition hover:border-[#EC4C84] hover:text-[#EC4C84] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 disabled:opacity-60 lg:inline-flex"
                 disabled={isSigningOut}
                 onClick={() => void handleSignOut()}
                 type="button"
@@ -83,7 +83,7 @@ export function Header() {
                 {isSigningOut ? "Signing out..." : "Sign out"}
               </button>
             ) : (
-              <Link className="hidden sm:block" to="/login">
+              <Link className="hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 lg:block" to="/login">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-2 text-sm font-semibold text-[#6F6570] transition hover:border-[#EC4C84] hover:text-[#EC4C84]">
                   <UserRound className="h-4 w-4" /> Sign in
                 </span>
@@ -92,7 +92,7 @@ export function Header() {
             <button
               aria-expanded={isMobileMenuOpen}
               aria-label="Toggle navigation menu"
-              className="grid h-10 w-10 place-items-center rounded-full text-[#6F6570] hover:bg-[#FFF5F7] md:hidden"
+              className="grid h-10 w-10 place-items-center rounded-full text-[#6F6570] hover:bg-[#FFF5F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 lg:hidden"
               onClick={() => setIsMobileMenuOpen((current) => !current)}
               type="button"
             >
@@ -102,7 +102,7 @@ export function Header() {
         </div>
 
         {isMobileMenuOpen ? (
-          <nav className="grid gap-1 border-t border-[#F7D9E2] bg-white px-4 py-4 md:hidden" aria-label="Mobile store navigation">
+          <nav className="grid gap-1 border-t border-[#F7D9E2] bg-white px-4 py-4 lg:hidden" aria-label="Mobile store navigation">
             <NavLink className={navLinkClass} end onClick={closeMenu} to="/">Home</NavLink>
             <NavLink className={navLinkClass} onClick={closeMenu} to="/products">Shop</NavLink>
             <NavLink className={navLinkClass} onClick={closeMenu} to="/cart">Cart</NavLink>

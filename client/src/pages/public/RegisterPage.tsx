@@ -49,8 +49,7 @@ export function RegisterPage() {
           Create your gifting account.
         </h1>
         <p className="mt-4 text-[#6b5550]">
-          Save your gift details, order history, rewards, and future custom
-          gifting preferences in one calm account space.
+          Keep your order history, delivery addresses, and account details together in one place.
         </p>
       </div>
       <Card className="bg-white/82">

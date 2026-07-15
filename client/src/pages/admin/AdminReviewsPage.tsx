@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import {
   ClipboardList,
   Heart,
-  Search,
   Star,
   X,
 } from "lucide-react";
@@ -123,7 +122,7 @@ function ReviewDetailPanel({
           <h2 className="text-2xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
             Review Detail
           </h2>
-          <p className="mt-2 text-sm text-[#6F6570]">Real moderation detail from the backend.</p>
+          <p className="mt-2 text-sm text-[#6F6570]">Review details and moderation status.</p>
         </div>
         <button onClick={onClose} type="button">
           <X className="h-5 w-5 text-[#6F6570]" />
@@ -169,9 +168,6 @@ function ReviewDetailPanel({
           <Panel title="Order">
             <p className="font-bold text-[#1F1720]">#{review.order?.orderNumber ?? "Not provided"}</p>
             <p className="mt-1 text-sm text-[#6F6570]">{displayStatus(review.order?.orderStatus ?? "UNKNOWN")}</p>
-          </Panel>
-          <Panel title="Unsupported Actions" action="Coming soon">
-            <p className="text-sm leading-6 text-[#6F6570]">Bulk moderation, exports, review analytics, and automated responses are not implemented in this sprint.</p>
           </Panel>
         </>
       ) : (
@@ -369,15 +365,8 @@ export function AdminReviewsPage() {
                   <h1 className="text-4xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
                     Reviews <Heart className="inline h-5 w-5 text-[#EC4C84]" />
                   </h1>
-                  <p className="mt-1 text-sm text-[#6F6570]">Moderate real customer product reviews.</p>
+                  <p className="mt-1 text-sm text-[#6F6570]">Moderate customer product reviews.</p>
                 </div>
-                <button
-                  className="h-11 cursor-not-allowed rounded-xl border border-[#F7D9E2] bg-white px-5 text-sm font-bold text-[#C8A7B1]"
-                  disabled
-                  type="button"
-                >
-                  Export Soon
-                </button>
               </div>
 
               <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -407,11 +396,7 @@ export function AdminReviewsPage() {
               </div>
 
               <div className="mt-7 rounded-2xl border border-[#F7D9E2] bg-white p-4 shadow-sm shadow-pink-100">
-                <div className="flex flex-col gap-3 lg:flex-row">
-                  <div className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4 text-sm text-[#9D8F98]">
-                    <Search className="h-4 w-4" />
-                    Product/user filters are Coming soon
-                  </div>
+                <div>
                   <select
                     className="h-11 rounded-xl border border-[#F7D9E2] bg-white px-4 text-sm font-semibold text-[#6F6570] outline-none"
                     onChange={(event) => {
@@ -424,9 +409,6 @@ export function AdminReviewsPage() {
                       <option key={status} value={status}>{displayStatus(status)}</option>
                     ))}
                   </select>
-                  <button className="h-11 cursor-not-allowed rounded-xl border border-[#F7D9E2] bg-white px-5 text-sm font-bold text-[#C8A7B1]" disabled type="button">
-                    Bulk actions Soon
-                  </button>
                 </div>
 
                 <div className="mt-4 overflow-x-auto">
@@ -477,7 +459,7 @@ export function AdminReviewsPage() {
                   ) : (
                     <StateCard
                       title={error ? "Review API unavailable" : "No reviews found"}
-                      description={error ? "Fix the API issue and refresh this page to try again." : "The admin reviews API responded successfully, but no reviews match this view."}
+                      description={error ? "Refresh the page to try again." : "No reviews match this view."}
                     />
                   )}
                 </div>

@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import {
   Bell,
   Boxes,
-  ChevronDown,
   Copy,
   Edit3,
   ExternalLink,
-  Filter,
   Gift,
   PackageCheck,
   Plus,
-  Search,
   Trash2,
   Upload,
   X,
@@ -201,20 +198,6 @@ const buildPayload = (form: ProductFormState): ProductPayload => {
   };
 };
 
-function FilterControl({ label }: { label: string }) {
-  return (
-    <button
-      className="flex h-12 cursor-not-allowed items-center justify-between gap-5 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-4 text-sm font-semibold text-[#C8A7B1]"
-      disabled
-      title="Coming soon"
-      type="button"
-    >
-      <span>{label}</span>
-      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C8A7B1]">Soon</span>
-      <ChevronDown className="h-4 w-4" />
-    </button>
-  );
-}
 function Toggle({
   enabled = true,
   onClick,
@@ -823,8 +806,8 @@ function ProductFormPanel({
               <Upload className="h-5 w-5 text-[#EC4C84]" />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-[#F7D9E2] bg-white p-3 text-xs font-semibold text-[#6F6570]">
-              <span>Recommended: 1200 Ã— 1200 px</span>
-              <span>Minimum: 800 Ã— 800 px</span>
+              <span>Recommended: 1200 × 1200 px</span>
+              <span>Minimum: 800 × 800 px</span>
               <span>JPG, PNG, or WEBP</span>
               <span>Maximum 5 MB</span>
             </div>
@@ -1048,15 +1031,6 @@ export function AdminProductsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const tabs = useMemo(() => {
-    const categoryCounts = categories.slice(0, 5).map((category) => [
-      category.name,
-      String(products.filter((product) => product.categoryId === category.id).length),
-    ]);
-
-    return [["All", String(products.length)], ...categoryCounts, ["More", ""]];
-  }, [categories, products]);
-
   const displayedProducts = products;
 
   const loadProducts = async () => {
@@ -1202,14 +1176,6 @@ export function AdminProductsPage() {
                 </div>
                 <div className="flex gap-3">
                   <button
-                    className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-5 text-sm font-bold text-[#C8A7B1]"
-                    disabled
-                    title="Coming soon"
-                    type="button"
-                  >
-                    <Upload className="h-4 w-4" /> Export <span className="text-[10px]">Soon</span>
-                  </button>
-                  <button
                     className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#EC4C84] px-5 text-sm font-bold text-white shadow-lg shadow-pink-200"
                     onClick={handleCancelEdit}
                     type="button"
@@ -1234,53 +1200,10 @@ export function AdminProductsPage() {
                   Categories could not be loaded: {categoryError}
                 </p>
               ) : null}
-              <div className="mt-7 flex gap-3 overflow-x-auto rounded-2xl border border-[#F7D9E2] bg-white p-3 shadow-sm shadow-pink-100">
-                {tabs.map(([label, count], index) => (
-                  <button
-                    className={`shrink-0 rounded-xl px-5 py-3 text-sm font-bold ${
-                      index === 0 ? "bg-[#FDECEF] text-[#EC4C84]" : "cursor-not-allowed text-[#C8A7B1]"
-                    }`}
-                    disabled={index !== 0}
-                    key={label}
-                    title={index === 0 ? "All products" : "Coming soon"}
-                    type="button"
-                  >
-                    {label} {count ? <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-[#EC4C84]">{count}</span> : null}
-                    {index !== 0 ? <span className="ml-2 text-[10px] text-[#C8A7B1]">Soon</span> : null}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-[#F7D9E2] bg-white p-4 shadow-sm shadow-pink-100">
-                <div className="flex flex-col gap-3 lg:flex-row">
-                  <div className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#F7D9E2] bg-white px-4">
-                    <Search className="h-4 w-4 text-[#9D8F98]" />
-                    <input
-                      className="min-w-0 flex-1 cursor-not-allowed text-sm outline-none placeholder:text-[#C8A7B1]"
-                      disabled
-                      placeholder="Search coming soon"
-                      title="Coming soon"
-                    />
-                    <span className="rounded-full bg-[#FFF5F7] px-2 py-0.5 text-[10px] font-bold text-[#C8A7B1]">Soon</span>
-                  </div>
-                  <FilterControl label="All Categories" />
-                  <FilterControl label="Stock Status" />
-                  <FilterControl label="Price Range" />
-                  <button
-                    className="flex h-12 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-5 text-sm font-bold text-[#C8A7B1]"
-                    disabled
-                    title="Coming soon"
-                    type="button"
-                  >
-                    <Filter className="h-4 w-4" /> Filters <span className="text-[10px]">Soon</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-5">
+              <div className="mt-7">
                 {isLoading ? (
                   <StateCard
-                    description="Loading products from the real product API."
+                    description="Loading products."
                     title="Loading products"
                   />
                 ) : displayedProducts.length > 0 ? (
@@ -1291,7 +1214,7 @@ export function AdminProductsPage() {
                   />
                 ) : (
                   <StateCard
-                    description="The product API responded successfully, but there are no active products to show yet."
+                    description="There are no active products to show yet."
                     title="No products yet"
                   />
                 )}

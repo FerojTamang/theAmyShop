@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Gift, Heart, MapPin, ShieldCheck, Sparkles, Trash2, UserRound } from "lucide-react";
+import { Gift, Heart, MapPin, Sparkles, Trash2, UserRound } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
@@ -345,7 +345,7 @@ export function AccountPage() {
       {error ? <StateMessage message={error} /> : null}
       {successMessage ? <StateMessage message={successMessage} tone="green" /> : null}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
+      <div>
         <Card className="bg-white/90">
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-[#FDECEF] p-3 text-[#EC4C84]">
@@ -381,21 +381,6 @@ export function AccountPage() {
           </form>
         </Card>
 
-        <Card className="bg-[#FFF5F7]">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-1 h-6 w-6 text-[#39B86D]" />
-            <div>
-              <h2 className="font-bold text-[#1F1720]">Account safety</h2>
-              <p className="mt-2 text-sm leading-6 text-[#6F6570]">
-                Password changes and profile image uploads are coming soon in the customer UI.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge tone="stone">Password Soon</Badge>
-                <Badge tone="stone">Profile image Soon</Badge>
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
 
       <div className="grid gap-5 md:grid-cols-3">

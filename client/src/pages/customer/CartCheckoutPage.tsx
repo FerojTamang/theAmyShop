@@ -93,21 +93,32 @@ const inferArtLabel = (item: CartItem) => {
   return "gift";
 };
 
-function ProductImage({ item }: { item: CartItem }) {
+function ProductImage({ compact = false, item }: { compact?: boolean; item: CartItem }) {
   const imageUrl = getProductImage(item);
+  const sizeClass = compact
+    ? "h-14 w-14"
+    : "h-36 w-full max-w-56 sm:h-44 sm:w-56";
 
   if (imageUrl) {
     return (
       <img
         alt={item.product.name}
-        className="h-44 w-56 shrink-0 rounded-xl object-cover"
+        className={`${sizeClass} shrink-0 rounded-xl object-cover`}
         src={imageUrl}
       />
     );
   }
 
+  if (compact) {
+    return (
+      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#FDECEF] via-white to-[#FFF0DA] text-[#EC4C84]">
+        <Gift className="h-5 w-5" />
+      </div>
+    );
+  }
+
   return (
-    <div className="relative h-44 w-56 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#FDECEF] via-white to-[#FFF0DA]">
+    <div className={`relative ${sizeClass} shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#FDECEF] via-white to-[#FFF0DA]`}>
       <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#EC4C84]/20 blur-xl" />
       <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/80 bg-white/70 p-4 text-center shadow-sm">
         <p className="text-lg font-semibold text-[#EC4C84]" style={serifStyle}>{inferArtLabel(item)}</p>
@@ -601,7 +612,7 @@ function StoryCard() {
   return (
     <Card className="overflow-hidden bg-[radial-gradient(circle_at_85%_40%,rgba(236,76,132,0.18),transparent_9rem),linear-gradient(135deg,#FFF5F7,#fff)]">
       <h2 className="text-3xl font-semibold text-[#EC4C84]" style={serifStyle}>Every gift tells a story</h2>
-      <div className="mt-6 grid grid-cols-3 gap-4 text-center text-xs font-semibold text-[#6F6570]">
+      <div className="mt-6 grid gap-4 text-center text-xs font-semibold text-[#6F6570] min-[390px]:grid-cols-3">
         {storyItems.map(([label, Icon]) => (
           <div key={label}>
             <span className="mx-auto grid h-13 w-13 place-items-center rounded-full border border-[#F7D9E2] bg-white text-[#EC4C84]">
@@ -623,7 +634,7 @@ function ReviewOrderCard({ items }: { items: CartItem[] }) {
         {items.length > 0 ? items.map((item) => (
           <div className="flex items-center gap-3 border-b border-[#F7D9E2]/70 py-3 last:border-b-0" key={item.id}>
             <div className="h-14 w-14 overflow-hidden rounded-xl">
-              <ProductImage item={item} />
+              <ProductImage compact item={item} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-[#1F1720]">{item.product.name}</p>
@@ -1022,7 +1033,7 @@ export function CartCheckoutPage() {
           <ChevronRight className="h-4 w-4" />
           <span>Checkout</span>
         </div>
-        <h1 className="mt-6 text-5xl font-semibold text-[#1F1720]" style={serifStyle}>Your cart</h1>
+        <h1 className="mt-6 text-4xl font-semibold text-[#1F1720] sm:text-5xl" style={serifStyle}>Your cart</h1>
 
         {error ? (
           <p className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm shadow-red-100">
