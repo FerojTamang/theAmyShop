@@ -148,6 +148,29 @@ Body:
 
 Notes: only `fullName`, `phone`, and `profileImage` are allowed. Phone changes reset `phoneVerified` to `false`.
 
+## Store Settings
+
+### GET `/api/store-settings`
+
+Auth: public
+
+Returns safe storefront display settings for the footer: `footerDescription`,
+`instagramUrl`, `tiktokUrl`, and `logoUrl`. Safe defaults are returned when the
+singleton settings record does not exist.
+
+### GET `/api/admin/store-settings`
+
+Auth: `ADMIN`, `SUPER_ADMIN`
+
+Returns the current safe storefront settings.
+
+### PATCH `/api/admin/store-settings`
+
+Auth: `ADMIN`, `SUPER_ADMIN`
+
+Accepts optional `footerDescription`, `instagramUrl`, `tiktokUrl`, and `logoUrl`.
+URL fields must use HTTP or HTTPS. Blank optional values are stored as `null`.
+
 ### PATCH `/api/account/change-password`
 
 Auth: any active user

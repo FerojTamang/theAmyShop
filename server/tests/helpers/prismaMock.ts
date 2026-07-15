@@ -13,6 +13,10 @@ export const prismaMock = {
   user: {
     findFirst: vi.fn(),
   },
+  storeSettings: {
+    findUnique: vi.fn(),
+    upsert: vi.fn(),
+  },
 };
 
 export const createCheckoutTransactionMock = () => ({

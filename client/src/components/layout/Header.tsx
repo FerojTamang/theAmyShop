@@ -2,7 +2,9 @@ import { Gift, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 import { classNames } from "../../lib/classNames";
+import { NavigationSuccessNotice } from "../ui/NavigationSuccessNotice";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   classNames(
@@ -14,9 +16,12 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Header() {
   const { isAuthenticated, logout, user } = useAuth();
+  const settings = usePublicStoreSettings();
   const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showLogo = Boolean(settings.logoUrl && !logoFailed);
 
   const closeMenu = () => setIsMobileMenuOpen(false);
   const handleSignOut = async () => {
@@ -41,9 +46,18 @@ export function Header() {
       <header className="sticky top-0 z-40 border-b border-[#F7D9E2]/80 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link className="flex min-w-0 items-center gap-3" to="/">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-              <Gift className="h-6 w-6" />
-            </span>
+            {showLogo ? (
+              <img
+                alt="The AMY Shop logo"
+                className="h-11 w-11 shrink-0 rounded-full border-2 border-white object-cover shadow-lg shadow-pink-200 ring-1 ring-[#F7D9E2] sm:h-12 sm:w-12"
+                onError={() => setLogoFailed(true)}
+                src={settings.logoUrl ?? ""}
+              />
+            ) : (
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200 sm:h-12 sm:w-12">
+                <Gift className="h-6 w-6" />
+              </span>
+            )}
             <span className="min-w-0">
               <span className="block truncate text-xl font-semibold text-[#1F1720]" style={{ fontFamily: "Georgia, serif" }}>
                 The AMY Shop
@@ -53,13 +67,13 @@ export function Header() {
           </Link>
 
           <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Store navigation">
-            <NavLink className={navLinkClass} end to="/">Home</NavLink>
+            {!isAdmin ? <NavLink className={navLinkClass} end to="/">Home</NavLink> : null}
+            {isAdmin ? <NavLink className={navLinkClass} to="/admin">Admin Dashboard</NavLink> : null}
             <NavLink className={navLinkClass} to="/products">Shop</NavLink>
-            {isAuthenticated ? (
+            {isAuthenticated && !isAdmin ? (
               <>
                 <NavLink className={navLinkClass} to="/orders">My Orders</NavLink>
                 <NavLink className={navLinkClass} to="/account">My Account</NavLink>
-                {isAdmin ? <NavLink className={navLinkClass} to="/admin">Admin</NavLink> : null}
               </>
             ) : null}
           </nav>
@@ -103,14 +117,14 @@ export function Header() {
 
         {isMobileMenuOpen ? (
           <nav className="grid gap-1 border-t border-[#F7D9E2] bg-white px-4 py-4 lg:hidden" aria-label="Mobile store navigation">
-            <NavLink className={navLinkClass} end onClick={closeMenu} to="/">Home</NavLink>
+            {!isAdmin ? <NavLink className={navLinkClass} end onClick={closeMenu} to="/">Home</NavLink> : null}
+            {isAdmin ? <NavLink className={navLinkClass} onClick={closeMenu} to="/admin">Admin Dashboard</NavLink> : null}
             <NavLink className={navLinkClass} onClick={closeMenu} to="/products">Shop</NavLink>
             <NavLink className={navLinkClass} onClick={closeMenu} to="/cart">Cart</NavLink>
             {isAuthenticated ? (
               <>
-                <NavLink className={navLinkClass} onClick={closeMenu} to="/orders">My Orders</NavLink>
-                <NavLink className={navLinkClass} onClick={closeMenu} to="/account">My Account</NavLink>
-                {isAdmin ? <NavLink className={navLinkClass} onClick={closeMenu} to="/admin">Admin</NavLink> : null}
+                {!isAdmin ? <NavLink className={navLinkClass} onClick={closeMenu} to="/orders">My Orders</NavLink> : null}
+                {!isAdmin ? <NavLink className={navLinkClass} onClick={closeMenu} to="/account">My Account</NavLink> : null}
                 <button
                   className="rounded-full px-4 py-2 text-left text-sm font-semibold text-[#6F6570] hover:bg-[#FFF5F7] hover:text-[#EC4C84] disabled:opacity-60"
                   disabled={isSigningOut}
@@ -126,6 +140,7 @@ export function Header() {
           </nav>
         ) : null}
       </header>
+      <NavigationSuccessNotice />
     </>
   );
 }

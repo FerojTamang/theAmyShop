@@ -1,9 +1,12 @@
 import { Gift, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { NavigationSuccessNotice } from "../ui/NavigationSuccessNotice";
 import {
   AdminNavigation,
+  AdminProfileLink,
+  AdminSettingsLink,
   AdminSidebar,
   ViewStoreLink,
 } from "./AdminSidebar";
@@ -15,6 +18,8 @@ const sectionTitles: Record<string, string> = {
   "/admin/customers": "Customers",
   "/admin/coupons": "Coupons",
   "/admin/reviews": "Reviews",
+  "/admin/profile": "Profile",
+  "/admin/settings": "Store Settings",
 };
 
 export function AdminLayout() {
@@ -59,16 +64,16 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbf4f3] text-[#1F1720] lg:flex">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(253,236,239,0.85),transparent_32%),linear-gradient(135deg,#FFFCFD_0%,#FBF4F3_55%,#FFF8F1_100%)] text-[#1F1720] lg:flex">
       <AdminSidebar />
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-[#F7D9E2] bg-white/95 px-4 py-4 shadow-sm shadow-pink-100/60 backdrop-blur sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 border-b border-white/80 bg-white/90 px-4 py-4 shadow-[0_12px_35px_rgba(115,72,86,0.07)] backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 aria-expanded={isDrawerOpen}
                 aria-label="Open admin navigation"
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] text-[#EC4C84] shadow-sm shadow-pink-100 lg:hidden"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] text-[#EC4C84] shadow-sm shadow-pink-100 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 lg:hidden"
                 onClick={() => setIsDrawerOpen(true)}
                 type="button"
               >
@@ -84,13 +89,19 @@ export function AdminLayout() {
               </div>
             </div>
             <div className="flex min-w-0 items-center gap-3">
-              <span className="hidden h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FDECEF] text-sm font-bold text-[#EC4C84] ring-1 ring-[#F7D9E2] sm:grid">
-                {adminInitials}
-              </span>
-              <div className="hidden min-w-0 text-left sm:block">
-                <p className="max-w-56 truncate text-sm font-bold text-[#1F1720]">{adminIdentity}</p>
-                <p className="mt-0.5 text-xs capitalize text-[#6F6570]">{(user?.role ?? "ADMIN").toLowerCase().replaceAll("_", " ")}</p>
-              </div>
+              <Link
+                aria-label="Open admin profile"
+                className="hidden min-w-0 items-center gap-3 rounded-xl p-1.5 transition hover:bg-[#FFF5F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EC4C84] focus-visible:ring-offset-2 sm:flex"
+                to="/admin/profile"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FDECEF] text-sm font-bold text-[#EC4C84] ring-1 ring-[#F7D9E2]">
+                  {adminInitials}
+                </span>
+                <span className="min-w-0 text-left">
+                  <span className="block max-w-56 truncate text-sm font-bold text-[#1F1720]">{adminIdentity}</span>
+                  <span className="mt-0.5 block text-xs capitalize text-[#6F6570]">{(user?.role ?? "ADMIN").toLowerCase().replaceAll("_", " ")}</span>
+                </span>
+              </Link>
               <button
                 className="hidden items-center gap-2 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] px-4 py-2.5 text-sm font-bold text-[#EC4C84] shadow-sm shadow-pink-100 transition hover:border-[#EC4C84] hover:bg-white disabled:opacity-60 sm:inline-flex"
                 disabled={isLoggingOut}
@@ -104,7 +115,9 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="min-w-0">
+        <NavigationSuccessNotice />
+
+        <main className="min-w-0 pb-10">
           <Outlet />
         </main>
       </div>
@@ -144,6 +157,8 @@ export function AdminLayout() {
             </div>
             <AdminNavigation onNavigate={() => setIsDrawerOpen(false)} />
             <div className="mt-auto grid gap-2 pt-6">
+              <AdminSettingsLink onNavigate={() => setIsDrawerOpen(false)} />
+              <AdminProfileLink onNavigate={() => setIsDrawerOpen(false)} />
               <ViewStoreLink onNavigate={() => setIsDrawerOpen(false)} />
               <button
                 className="flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-left text-sm font-semibold text-[#5E5962] transition hover:border-[#F7D9E2] hover:bg-white/75 hover:text-[#EC4C84] disabled:opacity-60"

@@ -535,3 +535,15 @@ model OrderStatusHistory {
   @@index([newStatus])
   @@map("order_status_histories")
 }
+
+model StoreSettings {
+  id                String   @id
+  footerDescription String?
+  instagramUrl      String?
+  tiktokUrl         String?
+  logoUrl           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("store_settings")
+}

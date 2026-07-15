@@ -29,6 +29,14 @@ Auth headers use `Authorization: Bearer <accessToken>`.
 | PATCH | `/api/account/profile` | Yes | Any active user | Update safe account fields |
 | PATCH | `/api/account/change-password` | Yes | Any active user | Change own password |
 
+## Store Settings
+
+| Method | Path | Auth | Role | Purpose |
+| --- | --- | --- | --- | --- |
+| GET | `/api/store-settings` | No | Public | Get safe storefront display settings |
+| GET | `/api/admin/store-settings` | Yes | ADMIN, SUPER_ADMIN | Get store settings |
+| PATCH | `/api/admin/store-settings` | Yes | ADMIN, SUPER_ADMIN | Update store settings |
+
 ## Addresses
 
 | Method | Path | Auth | Role | Purpose |

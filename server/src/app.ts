@@ -54,6 +54,10 @@ import {
   adminUploadRoutes,
   uploadRoutes,
 } from "./modules/uploads/upload.routes.js";
+import {
+  adminStoreSettingsRoutes,
+  storeSettingsRoutes,
+} from "./modules/store-settings/storeSettings.routes.js";
 import { ApiResponse } from "./utils/ApiResponse.js";
 import { asyncHandler } from "./utils/asyncHandler.js";
 
@@ -124,6 +128,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin/payments", adminPaymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
+app.use("/api/store-settings", storeSettingsRoutes);
+app.use("/api/admin/store-settings", adminStoreSettingsRoutes);
 app.use("/api/rewards", rewardRoutes);
 app.use("/api/admin/rewards", adminRewardRoutes);
 app.use("/api/referrals", referralRoutes);

@@ -6,8 +6,10 @@ import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage";
 import { AdminCouponsPage } from "../pages/admin/AdminCouponsPage";
 import { AdminCustomersPage } from "../pages/admin/AdminCustomersPage";
 import { AdminOrdersPage } from "../pages/admin/AdminOrdersPage";
+import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdminProductsPage } from "../pages/admin/AdminProductsPage";
 import { AdminReviewsPage } from "../pages/admin/AdminReviewsPage";
+import { AdminSettingsPage } from "../pages/admin/AdminSettingsPage";
 import { AccountPage } from "../pages/customer/AccountPage";
 import { CartPage } from "../pages/customer/CartPage";
 import { CheckoutPage } from "../pages/customer/CheckoutPage";
@@ -18,6 +20,7 @@ import { ProductDetailPage } from "../pages/public/ProductDetailPage";
 import { ProductsPage } from "../pages/public/ProductsPage";
 import { RegisterPage } from "../pages/public/RegisterPage";
 import { AdminRoute } from "../routes/AdminRoute";
+import { CustomerAccountRoute } from "../routes/CustomerAccountRoute";
 import { ProtectedRoute } from "../routes/ProtectedRoute";
 
 export function AppRouter() {
@@ -33,7 +36,9 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<CustomerLayout />}>
-          <Route path="account" element={<AccountPage />} />
+          <Route element={<CustomerAccountRoute />}>
+            <Route path="account" element={<AccountPage />} />
+          </Route>
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="orders" element={<OrdersPage />} />
@@ -48,6 +53,8 @@ export function AppRouter() {
           <Route path="customers" element={<AdminCustomersPage />} />
           <Route path="coupons" element={<AdminCouponsPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Route>
 
