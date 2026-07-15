@@ -3,7 +3,6 @@ import {
   ChevronRight,
   Gift,
   Heart,
-  Mail,
   Maximize2,
   Minus,
   PackageCheck,
@@ -528,12 +527,9 @@ function FeatureIcons() {
 
 function CustomizationNotice() {
   return (
-    <section className="mt-8 rounded-2xl border border-[#F7D9E2] bg-gradient-to-br from-[#FFF9FA] to-[#FFF5F7] p-5 shadow-sm shadow-pink-100">
-      <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EC4C84]">
-        Custom orders coming soon
-      </p>
-      <p className="mt-2 text-sm leading-6 text-[#6F6570]">
-        More personalization options are being prepared. This gift is currently available with the options shown here.
+    <section className="mt-6 rounded-xl border border-[#F7D9E2] bg-[#FFF9FA] px-4 py-3">
+      <p className="text-sm leading-6 text-[#6F6570]">
+        Personalization options vary by product. The available options for this gift are shown above.
       </p>
     </section>
   );
@@ -617,14 +613,6 @@ function ActionButtons({
           {addToCartMessage}
         </p>
       ) : null}
-      <button
-        className="h-14 cursor-not-allowed rounded-xl bg-[#FDECEF] text-base font-bold text-[#C8A7B1]"
-        disabled
-        title="Coming soon"
-        type="button"
-      >
-        Buy it now Soon
-      </button>
     </div>
   );
 }
@@ -774,7 +762,7 @@ function ReviewsSection({
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-[#9D8F98]">Distribution uses loaded real reviews only.</p>
+            <p className="mt-3 text-xs text-[#9D8F98]">Based on customer reviews</p>
           </div>
           <div className="mt-6 rounded-xl border border-[#F7D9E2] bg-[#FFF5F7] p-4">
             <p className="font-bold text-[#1F1720]">Write a review</p>
@@ -821,9 +809,6 @@ function ReviewsSection({
                   placeholder="Share your thoughts"
                   value={reviewComment}
                 />
-                <div className="rounded-xl border border-dashed border-[#F7D9E2] bg-white px-3 py-4 text-sm font-semibold text-[#C08A9D]">
-                  Photo reviews coming soon.
-                </div>
                 <button
                   className="rounded-xl bg-[#EC4C84] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-200 disabled:cursor-not-allowed disabled:bg-[#EAB5C6] disabled:shadow-none"
                   disabled={isSubmitting}
@@ -843,7 +828,7 @@ function ReviewsSection({
           ) : reviewError ? (
             <ReviewState title="Reviews unavailable" description={reviewError} />
           ) : loadedReviews.length === 0 ? (
-            <ReviewState title="No reviews yet" description="Approved customer reviews will appear here after moderation." />
+            <ReviewState title="No reviews yet" description="Customer reviews will appear here once published." />
           ) : (
             <div>
               <div className="mb-4 flex flex-wrap gap-2">
@@ -882,14 +867,6 @@ function ReviewsSection({
                     {sort.label}
                   </button>
                 ))}
-                <button
-                  className="cursor-not-allowed rounded-full border border-[#F7D9E2] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#C08A9D]"
-                  disabled
-                  title="Photo reviews coming soon"
-                  type="button"
-                >
-                  With photos Soon
-                </button>
               </div>
               {visibleReviews.length === 0 ? (
                 <ReviewState title="No matching reviews" description="Try another rating filter to see more customer feedback." />
@@ -948,36 +925,7 @@ function ReviewCard({ review }: { review: ProductReview }) {
         ) : null}
       </div>
       <p className="mt-4 min-h-20 text-sm leading-6 text-[#6F6570]">{review.comment ?? "No written comment provided."}</p>
-      <div className="mt-5 flex flex-wrap gap-2">
-        <button className="cursor-not-allowed rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-3 py-1.5 text-xs font-bold text-[#C08A9D]" disabled type="button">
-          Helpful Soon
-        </button>
-        <button className="cursor-not-allowed rounded-full border border-[#F7D9E2] bg-[#FFF9FA] px-3 py-1.5 text-xs font-bold text-[#C08A9D]" disabled type="button">
-          Report Soon
-        </button>
-      </div>
     </div>
-  );
-}
-
-export function NewsletterSection() {
-  return (
-    <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-      <div className="grid items-center gap-6 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-6 md:grid-cols-[auto_1fr_1.4fr]">
-        <span className="grid h-20 w-20 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200"><Mail className="h-10 w-10" /></span>
-        <div>
-          <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Stay in the loop</h2>
-          <p className="mt-2 text-sm text-[#6F6570]">Be the first to know about new arrivals, exclusive offers, and special surprises.</p>
-        </div>
-        <div>
-          <div className="flex gap-3 rounded-full border border-[#F7D9E2] bg-white p-1">
-            <input className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Enter your email address" />
-            <button className="rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white">Subscribe</button>
-          </div>
-          <p className="mt-2 px-4 text-xs text-[#9D8F98]">No spam, unsubscribe anytime.</p>
-        </div>
-      </div>
-    </section>
   );
 }
 

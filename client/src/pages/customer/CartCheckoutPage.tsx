@@ -2,11 +2,8 @@ import {
   Check,
   ChevronRight,
   Gift,
-  Headphones,
   Heart,
-  Mail,
   Minus,
-  PackageCheck,
   ShieldCheck,
   Trash2,
   Truck,
@@ -187,9 +184,7 @@ function CartItemCard({
         <p className="text-xl font-bold text-[#1F1720]">{formatCurrency(item.lineTotal)}</p>
         <div className="grid gap-3">
           <QuantitySelector disabled={isBusy} item={item} onUpdate={onUpdate} />
-          <div className="flex justify-end gap-4 text-xs font-semibold text-[#9D8F98]">
-            <button className="cursor-not-allowed underline opacity-60" disabled type="button">Edit Soon</button>
-            <span>|</span>
+          <div className="flex justify-end text-xs font-semibold text-[#9D8F98]">
             <button
               className="inline-flex items-center gap-1 underline disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isBusy}
@@ -212,14 +207,14 @@ function FreeShippingBanner() {
       <div className="flex items-center gap-3">
         <Truck className="h-5 w-5 shrink-0 text-[#EC4C84]" />
         <p className="text-sm font-semibold text-[#6F6570]">
-          Free standard shipping is applied to every order by the server.
+          Free standard shipping is included with your order.
         </p>
       </div>
     </div>
   );
 }
 
-function CouponRewardsBox({
+function CouponBox({
   couponCode,
   couponError,
   couponValidation,
@@ -243,13 +238,8 @@ function CouponRewardsBox({
   return (
     <section className="rounded-xl border border-[#F7D9E2] bg-white">
       <div className="flex items-center justify-between border-b border-[#F7D9E2] px-5 py-4">
-        <h2 className="font-bold text-[#1F1720]">Have a coupon, referral or rewards?</h2>
+        <h2 className="font-bold text-[#1F1720]">Have a coupon code?</h2>
         <ChevronRight className="h-4 w-4 -rotate-90 text-[#EC4C84]" />
-      </div>
-      <div className="grid grid-cols-3 border-b border-[#F7D9E2] text-center text-sm font-semibold text-[#6F6570]">
-        <button className="border-b-2 border-[#EC4C84] py-4 text-[#EC4C84]" type="button">Coupon code</button>
-        <button className="cursor-not-allowed text-[#C8A7B1]" disabled type="button">Referral Soon</button>
-        <button className="cursor-not-allowed text-[#C8A7B1]" disabled type="button">Rewards Soon</button>
       </div>
       <div className="p-5">
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -450,15 +440,11 @@ function CheckoutSteps({
       </Step>
       <Step title="Shipping method" number="2">
         <RadioRow active label="Standard Shipping" value="FREE" />
-        <RadioRow disabled label="Expedited Shipping" value="Coming soon" />
-        <RadioRow disabled label="Express Shipping" value="Coming soon" />
       </Step>
       <Step title="Payment method" number="3">
         <RadioRow active label="Cash on Delivery" value="CASH_ON_DELIVERY" />
-        <RadioRow disabled label="Khalti" value="Coming soon" />
-        <RadioRow disabled label="eSewa" value="Coming soon" />
         <p className="mt-3 text-xs text-[#9D8F98]">
-          Online payments are currently unavailable. Please choose Cash on Delivery to continue.
+          Online payments will be available later.
         </p>
       </Step>
       <Step title="Gift details" number="4">
@@ -521,9 +507,9 @@ function Step({ children, number, title }: { children: ReactNode; number: string
   );
 }
 
-function RadioRow({ active = false, disabled = false, label, value }: { active?: boolean; disabled?: boolean; label: string; value: string }) {
+function RadioRow({ active = false, label, value }: { active?: boolean; label: string; value: string }) {
   return (
-    <div className={`flex items-center justify-between border border-[#F7D9E2] px-4 py-2 text-sm first:rounded-t-xl last:rounded-b-xl ${active ? "bg-[#FFF5F7]" : "bg-white"} ${disabled ? "opacity-60" : ""}`}>
+    <div className={`flex items-center justify-between rounded-xl border border-[#F7D9E2] px-4 py-2 text-sm ${active ? "bg-[#FFF5F7]" : "bg-white"}`}>
       <span className="flex items-center gap-3 text-[#6F6570]">
         <span className={`grid h-4 w-4 place-items-center rounded-full border ${active ? "border-[#EC4C84]" : "border-[#F7D9E2]"}`}>
           {active ? <span className="h-2 w-2 rounded-full bg-[#EC4C84]" /> : null}
@@ -673,13 +659,11 @@ function FeatureStrip() {
   const features: Array<[string, string, typeof Heart]> = [
     ["Secure checkout", "Order details confirmed", ShieldCheck],
     ["Handmade with love", "Every gift is made to order", Heart],
-    ["24/7 support", "We're here to help", Headphones],
-    ["Hassle-free returns", "Love it or return it", PackageCheck],
   ];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="grid gap-4 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-5 md:grid-cols-4">
+      <div className="grid gap-4 rounded-2xl border border-[#F7D9E2] bg-[#FFF5F7] p-5 md:grid-cols-2">
         {features.map(([title, subtitle, Icon]) => (
           <div className="flex gap-4 md:border-r md:border-[#F7D9E2] md:last:border-r-0" key={title}>
             <Icon className="h-8 w-8 shrink-0 text-[#EC4C84]" />
@@ -689,29 +673,6 @@ function FeatureStrip() {
             </div>
           </div>
         ))}
-      </div>
-    </section>
-  );
-}
-
-function NewsletterSection() {
-  return (
-    <section className="border-y border-[#F7D9E2] bg-[#FFF5F7]">
-      <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 py-8 sm:px-6 md:grid-cols-[auto_1fr_1.4fr] lg:px-8">
-        <span className="grid h-20 w-20 place-items-center rounded-full bg-[#EC4C84] text-white shadow-lg shadow-pink-200">
-          <Mail className="h-10 w-10" />
-        </span>
-        <div>
-          <h2 className="text-3xl font-semibold text-[#1F1720]" style={serifStyle}>Stay in the loop</h2>
-          <p className="mt-2 text-sm text-[#6F6570]">Be the first to know about new arrivals, exclusive offers, and special surprises.</p>
-        </div>
-        <div>
-          <div className="flex gap-3 rounded-full border border-[#F7D9E2] bg-white p-1">
-            <input className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#9D8F98]" placeholder="Enter your email address" />
-            <button className="rounded-full bg-[#EC4C84] px-7 text-sm font-bold text-white" type="button">Subscribe</button>
-          </div>
-          <p className="mt-2 px-4 text-xs text-[#9D8F98]">No spam, unsubscribe anytime.</p>
-        </div>
       </div>
     </section>
   );
@@ -1127,7 +1088,7 @@ export function CartCheckoutPage() {
                     Clear cart
                   </button>
                 </div>
-                <CouponRewardsBox
+                <CouponBox
                   couponCode={couponCode}
                   couponError={couponError}
                   couponValidation={couponValidation}
@@ -1178,7 +1139,6 @@ export function CartCheckoutPage() {
         </div>
       </main>
       <FeatureStrip />
-      <NewsletterSection />
     </div>
   );
 }
