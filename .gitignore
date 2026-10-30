@@ -29,3 +29,6 @@ server/generated/
 Thumbs.db
 .vscode/
 .idea/
+
+# Private project documentation
+docs/
