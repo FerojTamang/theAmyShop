@@ -1,41 +1,15 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
 import { authApi } from "../services/authApi";
 import type { AuthTokens, AuthUser } from "../types/auth";
 import { authStorage } from "../lib/authStorage";
-
-type LoginInput = {
-  identifier: string;
-  password: string;
-};
-
-type RegisterInput = {
-  fullName: string;
-  email?: string;
-  phone: string;
-  password: string;
-  referralCode?: string;
-};
-
-type AuthContextValue = {
-  user: AuthUser | null;
-  tokens: AuthTokens | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (input: LoginInput) => Promise<AuthUser>;
-  register: (input: RegisterInput) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshMe: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type LoginInput, type RegisterInput, type AuthContextValue } from "./auth-context";
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [tokens, setTokens] = useState<AuthTokens | null>(() =>
@@ -43,6 +17,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(tokens));
+  const refreshRequestId = useRef(0);
+  const sessionOperationId = useRef(0);
 
   useEffect(() => {
     return authStorage.subscribe((nextTokens) => {
@@ -56,32 +32,47 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const storeSession = useCallback((nextUser: AuthUser, nextTokens: AuthTokens) => {
+    sessionOperationId.current += 1;
+    refreshRequestId.current += 1;
     authStorage.setTokens(nextTokens);
     setTokens(nextTokens);
     setUser(nextUser);
   }, []);
 
   const refreshMe = useCallback(async () => {
+    const requestId = refreshRequestId.current + 1;
+    refreshRequestId.current = requestId;
+
     if (!authStorage.getTokens()) {
-      setIsLoading(false);
+      if (refreshRequestId.current === requestId) setIsLoading(false);
       return;
     }
 
     try {
-      setIsLoading(true);
+      if (refreshRequestId.current === requestId) setIsLoading(true);
       const currentUser = await authApi.me();
-      setUser(currentUser);
+      if (refreshRequestId.current === requestId) setUser(currentUser);
     } catch {
-      authStorage.clearTokens();
-      setTokens(null);
-      setUser(null);
+      if (refreshRequestId.current === requestId) {
+        authStorage.clearTokens();
+        setTokens(null);
+        setUser(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (refreshRequestId.current === requestId) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void refreshMe();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void refreshMe();
+    });
+
+    return () => {
+      isActive = false;
+      refreshRequestId.current += 1;
+    };
   }, [refreshMe]);
 
   const login = useCallback(
@@ -102,12 +93,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const logout = useCallback(async () => {
+    const operationId = sessionOperationId.current + 1;
+    sessionOperationId.current = operationId;
     try {
       await authApi.logout();
     } finally {
-      authStorage.clearTokens();
-      setTokens(null);
-      setUser(null);
+      if (sessionOperationId.current === operationId) {
+        refreshRequestId.current += 1;
+        authStorage.clearTokens();
+        setTokens(null);
+        setUser(null);
+      }
     }
   }, []);
 
@@ -126,14 +122,4 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const value = useContext(AuthContext);
-
-  if (!value) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-
-  return value;
 }

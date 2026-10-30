@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ClipboardList,
   Heart,
@@ -253,8 +253,11 @@ export function AdminReviewsPage() {
   const [updatingReviewId, setUpdatingReviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const listRequestIdRef = useRef(0);
+  const detailRequestIdRef = useRef(0);
 
   const loadReviews = useCallback(async () => {
+    const requestId = ++listRequestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -263,6 +266,7 @@ export function AdminReviewsPage() {
         page,
         status: activeStatus === "ALL" ? undefined : activeStatus,
       });
+      if (requestId !== listRequestIdRef.current) return;
       setReviews(result.reviews);
       setMeta(result.meta);
       setSelectedReview((current) => {
@@ -273,39 +277,61 @@ export function AdminReviewsPage() {
         return result.reviews[0] ?? null;
       });
     } catch (apiError) {
+      if (requestId !== listRequestIdRef.current) return;
       setError(getApiErrorMessage(apiError));
       setReviews([]);
       setMeta(null);
       setSelectedReview(null);
       setDetailReview(null);
     } finally {
-      setIsLoading(false);
+      if (requestId === listRequestIdRef.current) setIsLoading(false);
     }
   }, [activeStatus, page]);
 
   const loadReviewDetail = useCallback(async (reviewId: string) => {
+    const requestId = ++detailRequestIdRef.current;
     try {
       setIsDetailLoading(true);
       const review = await reviewApi.getAdmin(reviewId);
+      if (requestId !== detailRequestIdRef.current) return;
       setDetailReview(review);
     } catch (apiError) {
+      if (requestId !== detailRequestIdRef.current) return;
       setError(getApiErrorMessage(apiError));
       setDetailReview(null);
     } finally {
-      setIsDetailLoading(false);
+      if (requestId === detailRequestIdRef.current) setIsDetailLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadReviews();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadReviews();
+    });
+    return () => {
+      isActive = false;
+    };
   }, [loadReviews]);
 
   useEffect(() => {
     if (selectedReview) {
-      void loadReviewDetail(selectedReview.id);
-    } else {
-      setDetailReview(null);
+      let isActive = true;
+      queueMicrotask(() => {
+        if (isActive) void loadReviewDetail(selectedReview.id);
+      });
+      return () => {
+        isActive = false;
+      };
     }
+
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) setDetailReview(null);
+    });
+    return () => {
+      isActive = false;
+    };
   }, [loadReviewDetail, selectedReview]);
 
   const stats = useMemo(() => {

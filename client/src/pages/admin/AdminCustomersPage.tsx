@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Heart,
@@ -361,8 +361,11 @@ export function AdminCustomersPage() {
   const [updatingCustomerId, setUpdatingCustomerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const listRequestIdRef = useRef(0);
+  const detailRequestIdRef = useRef(0);
 
   const loadCustomers = useCallback(async () => {
+    const requestId = ++listRequestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -372,6 +375,7 @@ export function AdminCustomersPage() {
         search: search.trim() || undefined,
         status: statusFilter === "ALL" ? undefined : statusFilter,
       });
+      if (requestId !== listRequestIdRef.current) return;
       setCustomers(result.customers);
       setMeta(result.meta);
       setSelectedCustomer((current) => {
@@ -382,39 +386,61 @@ export function AdminCustomersPage() {
         return result.customers[0] ?? null;
       });
     } catch (apiError) {
+      if (requestId !== listRequestIdRef.current) return;
       setError(getApiErrorMessage(apiError));
       setCustomers([]);
       setMeta(null);
       setSelectedCustomer(null);
       setDetail(null);
     } finally {
-      setIsLoading(false);
+      if (requestId === listRequestIdRef.current) setIsLoading(false);
     }
   }, [page, search, statusFilter]);
 
   const loadCustomerDetail = useCallback(async (customerId: string) => {
+    const requestId = ++detailRequestIdRef.current;
     try {
       setIsDetailLoading(true);
       const result = await adminCustomerApi.get(customerId);
+      if (requestId !== detailRequestIdRef.current) return;
       setDetail(result);
     } catch (apiError) {
+      if (requestId !== detailRequestIdRef.current) return;
       setError(getApiErrorMessage(apiError));
       setDetail(null);
     } finally {
-      setIsDetailLoading(false);
+      if (requestId === detailRequestIdRef.current) setIsDetailLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadCustomers();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadCustomers();
+    });
+    return () => {
+      isActive = false;
+    };
   }, [loadCustomers]);
 
   useEffect(() => {
     if (selectedCustomer) {
-      void loadCustomerDetail(selectedCustomer.id);
-    } else {
-      setDetail(null);
+      let isActive = true;
+      queueMicrotask(() => {
+        if (isActive) void loadCustomerDetail(selectedCustomer.id);
+      });
+      return () => {
+        isActive = false;
+      };
     }
+
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) setDetail(null);
+    });
+    return () => {
+      isActive = false;
+    };
   }, [loadCustomerDetail, selectedCustomer]);
 
   const stats = useMemo<Stat[]>(() => {

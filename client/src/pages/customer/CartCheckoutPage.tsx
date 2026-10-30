@@ -9,7 +9,7 @@ import {
   Truck,
   Plus,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { normalizeApiError } from "../../lib/apiError";
 import { addressApi, type Address, type AddressPayload } from "../../services/addressApi";
@@ -721,15 +721,12 @@ export function CartCheckoutPage() {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null);
+  const requestIdRef = useRef(0);
 
   const items = cart?.cart.items ?? [];
-  const subtotal = useMemo(() => {
-    if (cart?.summary?.subtotal !== undefined) {
-      return asNumber(cart.summary.subtotal);
-    }
-
-    return items.reduce((sum, item) => sum + asNumber(item.lineTotal), 0);
-  }, [cart?.summary?.subtotal, items]);
+  const subtotal = cart?.summary?.subtotal !== undefined
+    ? asNumber(cart.summary.subtotal)
+    : items.reduce((sum, item) => sum + asNumber(item.lineTotal), 0);
   const giftFee = giftForm.enabled && giftForm.giftWrapRequired ? giftWrapFee : 0;
   const normalizedCouponCode = couponCode.trim().toUpperCase();
   const isCouponStale = Boolean(
@@ -752,7 +749,8 @@ export function CartCheckoutPage() {
     setCart(result);
   };
 
-  const loadPageData = async () => {
+  const loadPageData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -760,25 +758,35 @@ export function CartCheckoutPage() {
         cartApi.get(),
         addressApi.listMine(),
       ]);
+      if (requestId !== requestIdRef.current) return;
       setCart(cartResult);
       setAddresses(addressResult);
 
-      if (!selectedAddressId) {
-        setSelectedAddressId(addressResult.find((address) => address.isDefault)?.id ?? addressResult[0]?.id ?? "");
-      }
+      setSelectedAddressId((current) => (
+        current ||
+        addressResult.find((address) => address.isDefault)?.id ||
+        addressResult[0]?.id ||
+        ""
+      ));
 
       setShowAddressForm(addressResult.length === 0);
     } catch (loadError) {
+      if (requestId !== requestIdRef.current) return;
       setError(getApiErrorMessage(loadError));
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void loadPageData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadPageData();
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [loadPageData]);
 
   const handleUpdateQuantity = async (itemId: string, quantity: number) => {
     try {

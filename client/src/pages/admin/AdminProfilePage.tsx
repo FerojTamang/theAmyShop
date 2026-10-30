@@ -1,7 +1,7 @@
 import { BadgeCheck, CalendarDays, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { Input } from "../../components/ui/Input";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { normalizeApiError } from "../../lib/apiError";
 import { accountApi, type AccountProfile } from "../../services/accountApi";
 import { formatDate } from "../../utils/formatDate";

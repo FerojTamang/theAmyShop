@@ -13,7 +13,7 @@ import {
 import { Link, NavLink } from "react-router-dom";
 import { classNames } from "../../lib/classNames";
 
-export const adminLinks = [
+const adminLinks = [
   { label: "Dashboard", to: "/admin", icon: BarChart3 },
   { label: "Products", to: "/admin/products", icon: Boxes },
   { label: "Orders", to: "/admin/orders", icon: ClipboardList },

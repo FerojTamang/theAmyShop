@@ -12,11 +12,8 @@ const getPrimaryImage = (product: PublicProduct) =>
 
 function HeroSection({ product }: { product?: PublicProduct }) {
   const imageUrl = product ? getPrimaryImage(product) : undefined;
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [imageUrl]);
+  const [failedImageUrl, setFailedImageUrl] = useState<string>();
+  const imageFailed = Boolean(imageUrl && failedImageUrl === imageUrl);
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-10 pt-7 sm:px-6 sm:pt-10 lg:px-8">
@@ -52,7 +49,7 @@ function HeroSection({ product }: { product?: PublicProduct }) {
             <Link className="group relative w-full max-w-md" to={`/products/${product.slug}`}>
               <div className="rotate-2 overflow-hidden rounded-[1.75rem] border border-white/90 bg-white p-5 shadow-[0_32px_90px_rgba(143,64,88,0.22)] transition duration-300 group-hover:rotate-0">
                 <div className="aspect-square overflow-hidden rounded-[1.25rem] bg-gradient-to-br from-[#FFF9FA] to-white">
-                  <img alt={product.name} className="h-full w-full object-contain p-5" onError={() => setImageFailed(true)} src={imageUrl} />
+                  <img alt={product.name} className="h-full w-full object-contain p-5" onError={() => setFailedImageUrl(imageUrl)} src={imageUrl} />
                 </div>
                 <div className="flex items-end justify-between gap-4 px-2 pb-1 pt-5">
                   <div className="min-w-0">

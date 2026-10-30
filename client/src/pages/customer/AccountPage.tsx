@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Gift, Heart, MapPin, Sparkles, Trash2, UserRound } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { normalizeApiError } from "../../lib/apiError";
 import { accountApi, type AccountProfile } from "../../services/accountApi";
 import { addressApi, type Address, type AddressPayload } from "../../services/addressApi";
@@ -167,6 +167,7 @@ export function AccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const accountCards = useMemo<Array<[string, string, typeof Heart]>>(
     () => [
@@ -178,6 +179,7 @@ export function AccountPage() {
   );
 
   const loadAccount = async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -185,6 +187,7 @@ export function AccountPage() {
         accountApi.profile(),
         addressApi.listMine(),
       ]);
+      if (requestId !== requestIdRef.current) return;
       setProfile(profileResult);
       setAddresses(addressResult);
       setProfileForm({
@@ -192,14 +195,21 @@ export function AccountPage() {
         phone: profileResult.phone,
       });
     } catch (loadError) {
+      if (requestId !== requestIdRef.current) return;
       setError(getApiErrorMessage(loadError));
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    void loadAccount();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadAccount();
+    });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {

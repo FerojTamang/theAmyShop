@@ -17,9 +17,9 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { normalizeApiError } from "../../lib/apiError";
 import { cartApi } from "../../services/cartApi";
 import { orderApi, type CustomerOrder } from "../../services/orderApi";
@@ -165,14 +165,6 @@ function ProductGallery({ product }: { product: DetailProduct }) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
   const selectedImage = images[selectedImageIndex];
-
-  useEffect(() => {
-    setSelectedImageIndex(0);
-    setFailedImages(new Set());
-    setIsHoveringImage(false);
-    setIsLightboxOpen(false);
-    setLightboxZoom(1);
-  }, [product.id, product.title]);
 
   useEffect(() => {
     const hoverMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -720,7 +712,10 @@ function ReviewsSection({
   setReviewRating: (value: number) => void;
   setSelectedOrderId: (value: string) => void;
 }) {
-  const loadedReviews = reviewResult?.reviews ?? [];
+  const loadedReviews = useMemo(
+    () => reviewResult?.reviews ?? [],
+    [reviewResult?.reviews],
+  );
   const summary = reviewResult?.summary ?? { averageRating: 0, reviewCount: 0 };
   const [ratingFilter, setRatingFilter] = useState<"ALL" | "5" | "4">("ALL");
   const [reviewSort, setReviewSort] = useState<"LATEST" | "TOP_RATED">("LATEST");
@@ -992,6 +987,7 @@ export function ProductDetailPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
+  const reviewRequestIdRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -1043,6 +1039,7 @@ export function ProductDetailPage() {
   const product = apiProduct;
 
   const loadProductReviews = async (productId: string) => {
+    const requestId = ++reviewRequestIdRef.current;
     try {
       setIsReviewsLoading(true);
       setReviewError(null);
@@ -1050,31 +1047,47 @@ export function ProductDetailPage() {
         limit: 20,
         page: 1,
       });
+      if (requestId !== reviewRequestIdRef.current) return;
       setReviewResult(result);
     } catch (reviewsError) {
+      if (requestId !== reviewRequestIdRef.current) return;
       setReviewError(normalizeApiError(reviewsError).message);
       setReviewResult(null);
     } finally {
-      setIsReviewsLoading(false);
+      if (requestId === reviewRequestIdRef.current) setIsReviewsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!apiProduct?.id) {
-      setReviewResult(null);
-      setReviewError(null);
-      setIsReviewsLoading(false);
+    const productId = apiProduct?.id;
+    let isActive = true;
+
+    if (!productId) {
+      queueMicrotask(() => {
+        if (!isActive) return;
+        setReviewResult(null);
+        setReviewError(null);
+        setIsReviewsLoading(false);
+      });
       return;
     }
 
-    void loadProductReviews(apiProduct.id);
+    queueMicrotask(() => {
+      if (isActive) void loadProductReviews(productId);
+    });
+    return () => {
+      isActive = false;
+      reviewRequestIdRef.current += 1;
+    };
   }, [apiProduct?.id]);
 
   useEffect(() => {
     let isMounted = true;
+    const productId = apiProduct?.id;
 
     async function loadEligibleOrders(productId: string) {
       if (!isAuthenticated) {
+        if (!isMounted) return;
         setEligibleReviewOrders([]);
         setSelectedReviewOrderId("");
         return;
@@ -1108,11 +1121,16 @@ export function ProductDetailPage() {
       }
     }
 
-    if (apiProduct?.id) {
-      void loadEligibleOrders(apiProduct.id);
+    if (productId) {
+      queueMicrotask(() => {
+        if (isMounted) void loadEligibleOrders(productId);
+      });
     } else {
-      setEligibleReviewOrders([]);
-      setSelectedReviewOrderId("");
+      queueMicrotask(() => {
+        if (!isMounted) return;
+        setEligibleReviewOrders([]);
+        setSelectedReviewOrderId("");
+      });
     }
 
     return () => {
@@ -1223,7 +1241,7 @@ export function ProductDetailPage() {
                 <span>{product.title}</span>
               </div>
               <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_0.82fr]">
-                <ProductGallery product={product} />
+                <ProductGallery key={`${product.id}:${product.title}`} product={product} />
                 <ProductInfoPanel
                   addToCartMessage={addToCartMessage}
                   addToCartStatus={addToCartStatus}

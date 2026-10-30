@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ChevronDown,
   Heart,
@@ -449,8 +449,10 @@ export function AdminCouponsPage() {
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const loadCoupons = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -461,19 +463,27 @@ export function AdminCouponsPage() {
         page,
         search: search.trim() || undefined,
       });
+      if (requestId !== requestIdRef.current) return;
       setCoupons(result.coupons);
       setMeta(result.meta);
     } catch (apiError) {
+      if (requestId !== requestIdRef.current) return;
       setError(getApiErrorMessage(apiError));
       setCoupons([]);
       setMeta(null);
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
   }, [activeFilter, discountType, page, search]);
 
   useEffect(() => {
-    void loadCoupons();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadCoupons();
+    });
+    return () => {
+      isActive = false;
+    };
   }, [loadCoupons]);
 
   const stats = useMemo(() => {

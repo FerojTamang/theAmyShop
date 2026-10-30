@@ -1030,41 +1030,56 @@ export function AdminProductsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const productsRequestIdRef = useRef(0);
+  const categoriesRequestIdRef = useRef(0);
 
   const displayedProducts = products;
 
   const loadProducts = async () => {
+    const requestId = ++productsRequestIdRef.current;
     try {
       setIsLoading(true);
       setLoadError(null);
       const result = await productApi.list({ page: 1, limit: 100 });
+      if (requestId !== productsRequestIdRef.current) return;
       setProducts(result.products);
     } catch (error) {
+      if (requestId !== productsRequestIdRef.current) return;
       setLoadError(normalizeApiError(error).message);
       setProducts([]);
     } finally {
-      setIsLoading(false);
+      if (requestId === productsRequestIdRef.current) setIsLoading(false);
     }
   };
 
   const loadCategories = async () => {
+    const requestId = ++categoriesRequestIdRef.current;
     try {
       setCategoryError(null);
       const result = await categoryApi.list();
+      if (requestId !== categoriesRequestIdRef.current) return;
       setCategories(result);
       setForm((currentForm) => ({
         ...currentForm,
         categoryId: currentForm.categoryId || result[0]?.id || "",
       }));
     } catch (error) {
+      if (requestId !== categoriesRequestIdRef.current) return;
       setCategoryError(normalizeApiError(error).message);
       setCategories([]);
     }
   };
 
   useEffect(() => {
-    void loadProducts();
-    void loadCategories();
+    let isActive = true;
+    queueMicrotask(() => {
+      if (!isActive) return;
+      void loadProducts();
+      void loadCategories();
+    });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

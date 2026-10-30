@@ -1,7 +1,7 @@
 import { Gift, Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { usePublicStoreSettings } from "../../hooks/usePublicStoreSettings";
 import { classNames } from "../../lib/classNames";
 import { NavigationSuccessNotice } from "../ui/NavigationSuccessNotice";

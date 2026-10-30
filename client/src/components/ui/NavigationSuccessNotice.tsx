@@ -14,11 +14,20 @@ export function NavigationSuccessNotice() {
   useEffect(() => {
     if (!navigationMessage) return;
 
-    setMessage(navigationMessage);
-    navigate(
-      { pathname: location.pathname, search: location.search, hash: location.hash },
-      { replace: true, state: null },
-    );
+    let isActive = true;
+    queueMicrotask(() => {
+      if (!isActive) return;
+
+      setMessage(navigationMessage);
+      navigate(
+        { pathname: location.pathname, search: location.search, hash: location.hash },
+        { replace: true, state: null },
+      );
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, [location.hash, location.pathname, location.search, navigate, navigationMessage]);
 
   useEffect(() => {

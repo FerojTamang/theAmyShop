@@ -1,7 +1,7 @@
 import { Gift, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { NavigationSuccessNotice } from "../ui/NavigationSuccessNotice";
 import {
   AdminNavigation,
@@ -37,7 +37,13 @@ export function AdminLayout() {
     .join("") || "A";
 
   useEffect(() => {
-    setIsDrawerOpen(false);
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) setIsDrawerOpen(false);
+    });
+    return () => {
+      isActive = false;
+    };
   }, [location.pathname]);
 
   useEffect(() => {

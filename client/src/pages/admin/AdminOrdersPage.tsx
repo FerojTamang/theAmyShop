@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ClipboardList,
   CreditCard,
@@ -376,13 +376,17 @@ export function AdminOrdersPage() {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const listRequestIdRef = useRef(0);
+  const detailRequestIdRef = useRef(0);
+  const selectedOrderIdRef = useRef<string | null>(null);
 
   const filteredOrders = orders;
   const pendingCount = orders.filter((order) => order.orderStatus === "PENDING").length;
   const revenue = orders.reduce((sum, order) => sum + asNumber(order.totalAmount), 0);
   const averageOrder = orders.length ? revenue / orders.length : 0;
 
-  const loadOrders = async (status: OrderStatus | "ALL" = activeStatus) => {
+  const loadOrders = useCallback(async (status: OrderStatus | "ALL" = activeStatus) => {
+    const requestId = ++listRequestIdRef.current;
     try {
       setIsLoading(true);
       setError(null);
@@ -391,26 +395,37 @@ export function AdminOrdersPage() {
         limit: 100,
         ...(status !== "ALL" && { orderStatus: status }),
       });
+      if (requestId !== listRequestIdRef.current) return;
+      if (selectedOrderIdRef.current && !result.orders.some((order) => order.id === selectedOrderIdRef.current)) {
+        detailRequestIdRef.current += 1;
+        selectedOrderIdRef.current = null;
+        setSelectedOrder(null);
+        setDetailOrder(null);
+        setIsDetailLoading(false);
+      }
       setOrders(result.orders);
       setMeta(result.meta);
 
-      if (selectedOrder && !result.orders.some((order) => order.id === selectedOrder.id)) {
-        setSelectedOrder(null);
-        setDetailOrder(null);
-      }
     } catch (loadError) {
+      if (requestId !== listRequestIdRef.current) return;
       setError(getApiErrorMessage(loadError));
       setOrders([]);
       setMeta(null);
     } finally {
-      setIsLoading(false);
+      if (requestId === listRequestIdRef.current) setIsLoading(false);
     }
-  };
+  }, [activeStatus]);
 
   useEffect(() => {
-    void loadOrders(activeStatus);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStatus]);
+    let isActive = true;
+    queueMicrotask(() => {
+      if (isActive) void loadOrders(activeStatus);
+    });
+    return () => {
+      isActive = false;
+      listRequestIdRef.current += 1;
+    };
+  }, [activeStatus, loadOrders]);
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -420,8 +435,11 @@ export function AdminOrdersPage() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        detailRequestIdRef.current += 1;
+        selectedOrderIdRef.current = null;
         setSelectedOrder(null);
         setDetailOrder(null);
+        setIsDetailLoading(false);
       }
     };
 
@@ -433,6 +451,9 @@ export function AdminOrdersPage() {
   }, [selectedOrder]);
 
   const handleSelectOrder = async (order: CustomerOrder) => {
+    const requestId = detailRequestIdRef.current + 1;
+    detailRequestIdRef.current = requestId;
+    selectedOrderIdRef.current = order.id;
     setSelectedOrder(order);
     setDetailOrder(null);
 
@@ -440,11 +461,17 @@ export function AdminOrdersPage() {
       setIsDetailLoading(true);
       setError(null);
       const detail = await orderApi.getAdmin(order.id);
-      setDetailOrder(detail);
+      if (detailRequestIdRef.current === requestId) {
+        setDetailOrder(detail);
+      }
     } catch (detailError) {
-      setError(getApiErrorMessage(detailError));
+      if (detailRequestIdRef.current === requestId) {
+        setError(getApiErrorMessage(detailError));
+      }
     } finally {
-      setIsDetailLoading(false);
+      if (detailRequestIdRef.current === requestId) {
+        setIsDetailLoading(false);
+      }
     }
   };
 
@@ -461,6 +488,8 @@ export function AdminOrdersPage() {
     }
 
     const note = `Admin changed status from ${order.orderStatus} to ${orderStatus}`;
+    const selectedOrderIdAtStart = selectedOrderIdRef.current;
+    const detailRequestIdAtStart = detailRequestIdRef.current;
 
     try {
       setUpdatingOrderId(order.id);
@@ -473,8 +502,16 @@ export function AdminOrdersPage() {
       setOrders((currentOrders) => currentOrders.map((item) => (
         item.id === updatedOrder.id ? updatedOrder : item
       )));
-      setSelectedOrder(updatedOrder);
-      setDetailOrder(updatedOrder);
+      if (
+        selectedOrderIdAtStart === order.id &&
+        selectedOrderIdRef.current === order.id &&
+        detailRequestIdRef.current === detailRequestIdAtStart
+      ) {
+        detailRequestIdRef.current += 1;
+        setSelectedOrder(updatedOrder);
+        setDetailOrder(updatedOrder);
+        setIsDetailLoading(false);
+      }
       setSuccessMessage(`Order #${updatedOrder.orderNumber} updated to ${displayStatus(updatedOrder.orderStatus)}.`);
       await loadOrders(activeStatus);
     } catch (updateError) {
@@ -483,6 +520,10 @@ export function AdminOrdersPage() {
       setUpdatingOrderId(null);
     }
   };
+
+  useEffect(() => () => {
+    detailRequestIdRef.current += 1;
+  }, []);
 
   return (
     <div className="min-w-0 text-[#1F1720]">
@@ -560,8 +601,11 @@ export function AdminOrdersPage() {
               detailOrder={detailOrder}
               isLoading={isDetailLoading}
               onClose={() => {
+                detailRequestIdRef.current += 1;
+                selectedOrderIdRef.current = null;
                 setSelectedOrder(null);
                 setDetailOrder(null);
+                setIsDetailLoading(false);
               }}
               selectedOrder={selectedOrder}
             />

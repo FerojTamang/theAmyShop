@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { Loader } from "../components/ui/Loader";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 export function AdminRoute() {
   const { isAuthenticated, isLoading, user } = useAuth();
